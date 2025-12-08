@@ -6,25 +6,72 @@
 process_mode = 3
 script = ExtResource("1_hdmo1")
 
-[node name="ColorRect" type="ColorRect" parent="."]
+[node name="Control" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Panel" type="Panel" parent="Control"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="ColorRect" type="ColorRect" parent="Control/Panel"]
+layout_mode = 0
 offset_right = 1168.0
 offset_bottom = 667.0
 color = Color(0, 0, 0, 0.24705882)
 
-[node name="CenterContainer" type="CenterContainer" parent="."]
-offset_right = 1156.0
-offset_bottom = 655.0
+[node name="MainButtons" type="VBoxContainer" parent="Control/Panel"]
+layout_mode = 0
+offset_left = 169.0
+offset_top = 288.0
+offset_right = 325.0
+offset_bottom = 360.0
 
-[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer"]
+[node name="PAUSE" type="Label" parent="Control/Panel/MainButtons"]
 layout_mode = 2
+text = "PAUSE"
 
-[node name="go_back_game_Button" type="Button" parent="CenterContainer/VBoxContainer"]
+[node name="go_back_game_Button" type="Button" parent="Control/Panel/MainButtons"]
 layout_mode = 2
 text = "ゲームに戻る"
 
-[node name="go_to_title_Button" type="Button" parent="CenterContainer/VBoxContainer"]
+[node name="ToSaveMenuButton" type="Button" parent="Control/Panel/MainButtons"]
+layout_mode = 2
+text = "セーブする"
+
+[node name="go_to_title_Button" type="Button" parent="Control/Panel/MainButtons"]
 layout_mode = 2
 text = "タイトルへ"
 
-[connection signal="pressed" from="CenterContainer/VBoxContainer/go_back_game_Button" to="." method="_on_go_back_game_button_pressed"]
-[connection signal="pressed" from="CenterContainer/VBoxContainer/go_to_title_Button" to="." method="_on_go_to_title_button_pressed"]
+[node name="SaveSlotsMenu" type="VBoxContainer" parent="Control/Panel"]
+visible = false
+layout_mode = 0
+offset_left = 334.0
+offset_top = 313.0
+offset_right = 700.0
+offset_bottom = 423.0
+
+[node name="Label" type="Label" parent="Control/Panel/SaveSlotsMenu"]
+layout_mode = 2
+text = "セーブするスロットを選んでください"
+
+[node name="Slot1_Button" type="Button" parent="Control/Panel/SaveSlotsMenu"]
+layout_mode = 2
+
+[node name="Slot2_Button" type="Button" parent="Control/Panel/SaveSlotsMenu"]
+layout_mode = 2
+
+[node name="Slot3_Button" type="Button" parent="Control/Panel/SaveSlotsMenu"]
+layout_mode = 2
+
+[node name="BackButton" type="Button" parent="Control/Panel/SaveSlotsMenu"]
+layout_mode = 2
+text = "戻る"
+
+[connection signal="pressed" from="Control/Panel/MainButtons/go_back_game_Button" to="." method="_on_go_back_game_button_pressed"]
+[connection signal="pressed" from="Control/Panel/MainButtons/ToSaveMenuButton" to="." method="_on_to_save_menu_button_pressed"]
+[connection signal="pressed" from="Control/Panel/MainButtons/go_to_title_Button" to="." method="_on_go_to_title_button_pressed"]
+[connection signal="pressed" from="Control/Panel/SaveSlotsMenu/BackButton" to="." method="_on_back_button_pressed"]

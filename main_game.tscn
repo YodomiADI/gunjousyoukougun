@@ -44,3 +44,5 @@ mouse_filter = 2
 color = Color(0, 0, 0, 1)
 
 [node name="PauseMenu" parent="." instance=ExtResource("2_yx7mw")]
+
+[node name="BGMPlayer" type="AudioStreamPlayer" parent="."]

@@ -6,8 +6,19 @@ var background_images = {
 	"prologue": preload("res://images/ステグラと星空.jpg"),
 	"chapter_1": preload("res://images/田舎の線路沿いの道（夕方）.jpg")
 }
-# ColorRectからTextureRectに変えたので、それを取得
+
+# BGMのパス設定
+# "res://..." の部分は用意した音楽ファイルのパスに書き換えてください
+var bgm_list = {
+	"prologue": preload("res://BGM/プロローグ.mp3"), # プロローグ用BGM
+	"chapter_1": preload("res://BGM/プロローグ.mp3") # 第一章用BGM
+}
+
+# TextureRectを取得
 @onready var background_rect = $Background
+
+# BGMプレイヤーを取得
+@onready var bgm_player = $BGMPlayer
 
 # ここには直接書かず、空にしておきます
 var dialogue_list = []
@@ -46,8 +57,12 @@ func _ready():
 # 章のデータをセットする関数
 func setup_current_chapter():
 	var chapter_id = Global.current_chapter_id
-	#ここで背景も更新する
+	#背景を更新する
 	update_background()
+	
+	# BGMも更新する
+	update_bgm()
+	
 	# Globalの辞書からテキスト配列を取得
 	if Global.scenarios.has(chapter_id):
 		dialogue_list = Global.scenarios[chapter_id]
@@ -63,6 +78,25 @@ func update_background():
 	else:
 		print("背景画像が設定されていません: ", chapter_id)
 		# 必要ならデフォルト画像を設定するなど
+
+# 現在の章に合わせてBGMを再生する関数
+func update_bgm():
+	var chapter_id = Global.current_chapter_id
+	
+	# 辞書にその章のBGMが登録されているか確認
+	if bgm_list.has(chapter_id):
+		var next_stream = bgm_list[chapter_id]
+		
+		# 「今流れている曲」と「次に流す曲」が違う場合のみ切り替える
+		# (同じ章をロードした時などに最初から再生されるのを防ぐため)
+		if bgm_player.stream != next_stream:
+			bgm_player.stream = next_stream
+			bgm_player.play()
+	else:
+		# 辞書にない場合は音楽を止める（無音のシーンなど）
+		print("BGMが設定されていません: ", chapter_id)
+		bgm_player.stop()
+
 
 func _input(event):
 	# 画面切り替え中なら、クリックしても反応させない
