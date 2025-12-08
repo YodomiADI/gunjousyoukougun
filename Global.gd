@@ -118,3 +118,15 @@ func format_time(seconds: float) -> String:
 	var m = (total_sec % 3600) / 60.0
 	var s = total_sec % 60
 	return "%02d:%02d:%02d" % [h, m, s]
+
+# --- 削除機能 ---
+func delete_save(slot_id: int):
+	var path = SAVE_PATH_TEMPLATE % slot_id
+	
+	# ファイルが存在する場合のみ削除を実行
+	if FileAccess.file_exists(path):
+		# Godot 4系でのファイル削除方法
+		DirAccess.remove_absolute(path)
+		print("スロット", slot_id, "のデータを削除しました")
+		return true
+	return false

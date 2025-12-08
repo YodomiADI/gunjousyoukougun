@@ -38,6 +38,13 @@ text = "やめる"
 layout_mode = 2
 text = "ロード"
 
+[node name="DeleteConfirmDialog" type="ConfirmationDialog" parent="."]
+oversampling_override = 1.0
+ok_button_text = "削除"
+dialog_text = "削除の確認"
+dialog_autowrap = true
+cancel_button_text = "キャンセル"
+
 [node name="LoadMenu" type="Panel" parent="."]
 layout_mode = 0
 offset_right = 40.0
@@ -53,6 +60,10 @@ offset_bottom = 234.0
 [node name="Label" type="Label" parent="LoadMenu/VBoxContainer"]
 layout_mode = 2
 text = "ロードするファイルを選択"
+
+[node name="DeletModeButton" type="CheckButton" parent="LoadMenu/VBoxContainer"]
+layout_mode = 2
+text = "削除モード"
 
 [node name="AutoSaveButton" type="Button" parent="LoadMenu/VBoxContainer"]
 layout_mode = 2
@@ -73,6 +84,7 @@ text = "戻る"
 [connection signal="pressed" from="MainMenu/StartButton" to="." method="_on_start_button_pressed"]
 [connection signal="pressed" from="MainMenu/QuitButton" to="." method="_on_quit_button_pressed"]
 [connection signal="pressed" from="MainMenu/LoadButton" to="." method="_on_load_menu_button_pressed"]
+[connection signal="pressed" from="LoadMenu/VBoxContainer/DeletModeButton" to="." method="_on_delet_mode_button_pressed"]
 [connection signal="pressed" from="LoadMenu/VBoxContainer/AutoSaveButton" to="." method="_on_auto_save_button_pressed"]
 [connection signal="pressed" from="LoadMenu/VBoxContainer/Slot1Button" to="." method="_on_slot_1_button_pressed"]
 [connection signal="pressed" from="LoadMenu/VBoxContainer/Slot2Button" to="." method="_on_slot_2_button_pressed"]

@@ -6,6 +6,10 @@ extends Control
 # ロードメニュー（各スロットボタンがある親ノード）
 @onready var load_menu = $LoadMenu
 
+# 確認ダイアログと削除モードボタン
+@onready var delete_confirm_dialog = $DeleteConfirmDialog
+@onready var delete_mode_button = $LoadMenu/VBoxContainer/DeletModeButton
+
 # --- ロード用ボタンの配列 ---
 # 0番目はオートセーブ、1～3番目は手動セーブに対応させます
 # エディタ上のノードパスに合わせて書き換えてください
@@ -15,6 +19,9 @@ extends Control
 	$LoadMenu/VBoxContainer/Slot2Button, # Slot 2
 	$LoadMenu/VBoxContainer/Slot3Button# Slot 3
 ]
+
+# 削除しようとしているスロット番号を一時保存する変数
+var pending_delete_slot_id: int = -1
 
 func _ready():
 	# 初期化：メインメニューを表示し、ロード画面を隠す
@@ -34,6 +41,15 @@ func _ready():
 	# if not FileAccess.file_exists(Global.SAVE_PATH_TEMPLATE % Global.AUTO_SAVE_SLOT):
 	# 	# もしContinueButtonがあれば、ここで無効化する
 	# 	pass 
+	
+	# ★ 追加: ダイアログの「OK(削除)」が押されたときのシグナル接続
+	if !delete_confirm_dialog.confirmed.is_connected(_on_delete_confirmed):
+		delete_confirm_dialog.confirmed.connect(_on_delete_confirmed)
+		
+	# ★ 追加: 削除モードボタンを押したときの表示更新（任意）
+	if !delete_mode_button.toggled.is_connected(_on_delete_mode_toggled):
+		delete_mode_button.toggled.connect(_on_delete_mode_toggled)
+	
 	pass
 
 
@@ -57,14 +73,43 @@ func _on_quit_button_pressed():
 
 # 各スロットボタンが押されたときの共通処理
 func _on_slot_button_pressed(slot_id):
-	# ロードを試みる
-	if Global.load_game(slot_id):
-		# 成功したらゲーム画面へ
-		print("スロット", slot_id, "をロードしてゲームを開始します")
-		get_tree().change_scene_to_file("res://main_game.tscn")
+	# 　1. 削除モードがONの場合の処理
+	if delete_mode_button.button_pressed:
+		# データが存在するか確認（データがないボタンを押しても何も起きないようにする）
+		var data = Global.get_slot_info(slot_id)
+		if data.is_empty():
+			return # データがないなら削除処理もしない
+			
+		# 削除対象のスロットIDを記録
+		pending_delete_slot_id = slot_id
+		
+		# 確認ダイアログを画面中央に表示
+		delete_confirm_dialog.popup_centered()
+	# 　 2. 通常（ロード）モードの場合の処理
 	else:
-		# データがない、ロード失敗などの場合
-		print("ロードに失敗しました")
+		if Global.load_game(slot_id):
+			print("スロット", slot_id, "をロードしてゲームを開始します")
+			get_tree().change_scene_to_file("res://main_game.tscn")
+		else:
+			print("ロードに失敗しました")
+
+#  ダイアログで「削除（OK）」が押されたときに実行される関数
+func _on_delete_confirmed():
+	if pending_delete_slot_id != -1:
+		# Globalの削除関数を呼ぶ
+		Global.delete_save(pending_delete_slot_id)
+		
+		# 画面の表示を更新（「データなし」にするため）
+		update_load_slots_display()
+		
+		# 変数をリセット
+		pending_delete_slot_id = -1
+
+#  削除モードボタンを切り替えたときの見た目更新
+func _on_delete_mode_toggled(_toggled_on):
+	update_load_slots_display()
+
+
 
 # ロード画面の「戻る」ボタン
 func _on_back_button_pressed():
@@ -82,6 +127,8 @@ func switch_to_load_menu():
 
 # スロットボタンの表示（テキスト・有効無効）を更新する
 func update_load_slots_display():
+	# 現在、削除モードかどうか取得
+	var is_delete_mode = delete_mode_button.button_pressed
 	for i in range(load_slot_buttons.size()):
 		var slot_id = i # 配列のインデックスとスロットIDを一致させます（0=オートセーブ）
 		var btn = load_slot_buttons[i]
@@ -98,6 +145,9 @@ func update_load_slots_display():
 			
 			# データがないボタンは押せないようにする
 			btn.disabled = true
+			
+			# 見た目の調整: データなしなら通常色
+			btn.modulate = Color(1, 1, 1, 1)
 		else:
 			# データあり
 			var ch_name = Global.chapter_names.get(data["chapter_id"], data["chapter_id"])
@@ -110,7 +160,12 @@ func update_load_slots_display():
 			
 			# データがあるので押せるようにする
 			btn.disabled = false
-
+			# 見た目の調整: 削除モード中はボタンを赤っぽくして警告する
+			if is_delete_mode:
+				btn.modulate = Color(1, 0.5, 0.5, 1) # 赤みがかった色
+				btn.text = "[削除] " + btn.text # テキストにも[削除]とつける
+			else:
+				btn.modulate = Color(1, 1, 1, 1) # 通常色（白）
 
 func _on_load_button_pressed() -> void:
 	pass # Replace with function body.
@@ -129,4 +184,8 @@ func _on_slot_2_button_pressed() -> void:
 
 
 func _on_slot_3_button_pressed() -> void:
+	pass # Replace with function body.
+
+
+func _on_delet_mode_button_pressed() -> void:
 	pass # Replace with function body.
