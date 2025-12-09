@@ -10,6 +10,19 @@ extends Control
 @onready var delete_confirm_dialog = $DeleteConfirmDialog
 @onready var delete_mode_button = $LoadMenu/VBoxContainer/DeletModeButton
 
+# 効果音用のプレイヤーを取得
+@onready var se_player = $SEPlayer
+
+# 効果音のファイルをロード（※ファイルパスは実際の場所に合わせて書き換えてください！）
+var sound_si = preload("res://SE/シ.mp3") # 「シ」
+var scale_sounds = [
+	preload("res://SE/ド.mp3"), # 「ド」 AutoSaveButton用
+	preload("res://SE/レ.mp3"), # 「レ」 Slot1Button用
+	preload("res://SE/ミ.mp3"), # 「ミ」 Slot2Button用
+	preload("res://SE/ファ.mp3"), # 「ファ」 Slot3Button用
+	preload("res://SE/ソ.mp3")  # 「ソ」 BackButton用
+]
+
 # --- ロード用ボタンの配列 ---
 # 0番目はオートセーブ、1～3番目は手動セーブに対応させます
 # エディタ上のノードパスに合わせて書き換えてください
@@ -19,6 +32,9 @@ extends Control
 	$LoadMenu/VBoxContainer/Slot2Button, # Slot 2
 	$LoadMenu/VBoxContainer/Slot3Button# Slot 3
 ]
+
+# ロード画面の「戻る」ボタンも取得（音階の「ソ」を鳴らすため）
+@onready var load_back_button = $LoadMenu/VBoxContainer/BackButton
 
 # 削除しようとしているスロット番号を一時保存する変数
 var pending_delete_slot_id: int = -1
@@ -42,13 +58,57 @@ func _ready():
 	# 	# もしContinueButtonがあれば、ここで無効化する
 	# 	pass 
 	
-	# ★ 追加: ダイアログの「OK(削除)」が押されたときのシグナル接続
+	#  ダイアログの「OK(削除)」が押されたときのシグナル接続
 	if !delete_confirm_dialog.confirmed.is_connected(_on_delete_confirmed):
 		delete_confirm_dialog.confirmed.connect(_on_delete_confirmed)
 		
-	# ★ 追加: 削除モードボタンを押したときの表示更新（任意）
+	#  削除モードボタンを押したときの表示更新（任意）
 	if !delete_mode_button.toggled.is_connected(_on_delete_mode_toggled):
 		delete_mode_button.toggled.connect(_on_delete_mode_toggled)
+	
+	# 効果音（SE）のセットアップ
+	setup_sound_effects()
+	
+	# すべてのボタンに音を割り当てる関数
+func setup_sound_effects():
+	# 1. タイトル画面のボタン（Start, Load, Quit） -> 「シ」の音
+	# VBoxContainerの中にあるボタンを取得して設定します
+	var title_buttons = [
+		$MainMenu/StartButton,
+		$MainMenu/LoadButton, # メインメニューにある「つづきから」ボタン
+		$MainMenu/QuitButton
+	]
+	
+	for btn in title_buttons:
+		# マウスが入ったとき（ホバー）
+		if !btn.mouse_entered.is_connected(play_se):
+			btn.mouse_entered.connect(play_se.bind(sound_si))
+		# 押したとき
+		if !btn.pressed.is_connected(play_se):
+			btn.pressed.connect(play_se.bind(sound_si))
+
+	# 2. ロードメニューのボタン（AutoSave～Back） -> 「ドレミファソ」
+	# 既存のload_slot_buttons（4つ）に BackButton（1つ）を足してリストを作ります
+	var scale_buttons = load_slot_buttons + [load_back_button]
+	
+	for i in range(scale_buttons.size()):
+		# scale_soundsの数が足りているか確認
+		if i < scale_sounds.size():
+			var btn = scale_buttons[i]
+			var sound = scale_sounds[i]
+			
+			# マウスが入ったとき（ホバー）
+			if !btn.mouse_entered.is_connected(play_se):
+				btn.mouse_entered.connect(play_se.bind(sound))
+			# 押したとき（必要であれば。ホバーだけで良ければここは削除可）
+			if !btn.pressed.is_connected(play_se):
+				btn.pressed.connect(play_se.bind(sound))
+
+# 音を再生する共通関数
+func play_se(stream_data):
+	if se_player and stream_data:
+		se_player.stream = stream_data
+		se_player.play()
 	
 	pass
 
