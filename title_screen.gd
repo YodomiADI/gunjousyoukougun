@@ -22,7 +22,8 @@ var scale_sounds = [
 	preload("res://SE/ファ.mp3"), # 「ファ」 Slot3Button用
 	preload("res://SE/ソ.mp3")  # 「ソ」 BackButton用
 ]
-
+# クリック（決定）用の音をロード
+var sound_click = preload("res://SE/時計の針マウスオーバー.mp3")
 # --- ロード用ボタンの配列 ---
 # 0番目はオートセーブ、1～3番目は手動セーブに対応させます
 # エディタ上のノードパスに合わせて書き換えてください
@@ -84,8 +85,10 @@ func setup_sound_effects():
 		if !btn.mouse_entered.is_connected(play_se):
 			btn.mouse_entered.connect(play_se.bind(sound_si))
 		# 押したとき
+		# クリック時は「決定音」 (sound_click)
 		if !btn.pressed.is_connected(play_se):
-			btn.pressed.connect(play_se.bind(sound_si))
+			btn.pressed.connect(play_se.bind(sound_click))
+
 
 	# 2. ロードメニューのボタン（AutoSave～Back） -> 「ドレミファソ」
 	# 既存のload_slot_buttons（4つ）に BackButton（1つ）を足してリストを作ります
@@ -100,16 +103,24 @@ func setup_sound_effects():
 			# マウスが入ったとき（ホバー）
 			if !btn.mouse_entered.is_connected(play_se):
 				btn.mouse_entered.connect(play_se.bind(sound))
-			# 押したとき（必要であれば。ホバーだけで良ければここは削除可）
+			# クリック時は統一して「決定音」(sound_click) 
+			# もしクリック時も音階を鳴らしたい場合は bind(sound_hover) のままにします
 			if !btn.pressed.is_connected(play_se):
-				btn.pressed.connect(play_se.bind(sound))
+				btn.pressed.connect(play_se.bind(sound_click))
 
 # 音を再生する共通関数
+# ★修正: 安全な再生関数
 func play_se(stream_data):
+	# ノード自体がシーンツリーにいない（画面切り替え中など）場合は再生処理をスキップしてエラーを防ぐ
+	if not is_inside_tree():
+		return
+		
 	if se_player and stream_data:
-		se_player.stream = stream_data
-		se_player.play()
-	
+		# 念のためPlayerノードもツリーにいるか確認
+		if se_player.is_inside_tree():
+			se_player.stream = stream_data
+			se_player.play()
+
 	pass
 
 

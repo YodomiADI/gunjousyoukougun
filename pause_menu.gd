@@ -14,6 +14,12 @@ const TITLE_SCENE_PATH =  "res://title_screen.tscn"
 	$Control/Panel/SaveSlotsMenu/Slot2_Button,
 	$Control/Panel/SaveSlotsMenu/Slot3_Button
 ]
+# ★追加: SEPlayerを取得
+@onready var se_player = $SEPlayer # エディタでAudioStreamPlayerを追加しておくこと
+
+# ★追加: 音源のロード
+var sound_hover = preload("res://SE/時計の針マウスオーバー.mp3") # ※ホバー用の音
+var sound_click = preload("res://SE/シ.mp3")      # ※クリック用の音
 
 func _ready():
 	# ゲーム開始時は見えないように隠しておく
@@ -28,6 +34,39 @@ func _ready():
 		# slot_id は 1 から始めたいので i + 1 を渡す
 		if !btn.pressed.is_connected(_on_save_slot_pressed):
 			btn.pressed.connect(_on_save_slot_pressed.bind(i + 1))
+	#SEのセットアップを実行
+	setup_pause_sound_effects()
+# ポーズ画面の全ボタンにSEを設定する関数
+func setup_pause_sound_effects():
+	# ポーズ画面にあるボタンをすべてリストアップする
+	# ※階層が変わった場合はパスを修正してください
+	var all_buttons = [
+		$Control/Panel/MainButtons/go_back_game_Button,
+		$Control/Panel/MainButtons/ToSaveMenuButton,
+		$Control/Panel/MainButtons/go_to_title_Button,
+		$Control/Panel/SaveSlotsMenu/BackButton
+	] + slot_buttons # スロットボタン配列も結合
+	
+	for btn in all_buttons:
+		# マウスオーバー時 -> ホバー音
+		if !btn.mouse_entered.is_connected(play_se):
+			btn.mouse_entered.connect(play_se.bind(sound_hover))
+			
+		# クリック時 -> 決定音
+		# 注意: 既にシグナル接続されているボタンも多いですが、
+		# play_seは「音を鳴らすだけ」の独立した関数として追加接続してOKです
+		if !btn.pressed.is_connected(play_se):
+			btn.pressed.connect(play_se.bind(sound_click))
+
+# SE再生用関数
+func play_se(stream_data):
+	# エラー回避：ノードがシーンツリーから削除されている（画面遷移中など）場合は何もしない
+	if not is_inside_tree():
+		return
+
+	if se_player and stream_data:
+		se_player.stream = stream_data
+		se_player.play()
 
 func _input(event):
 	if event.is_action_pressed("ui_cancel"):
