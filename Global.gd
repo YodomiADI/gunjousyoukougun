@@ -9,34 +9,40 @@ const AUTO_SAVE_SLOT = 0 # オートセーブ用スロット番号（0番とす�
 var current_chapter_id = "prologue"
 # ゲームの状態を保持する変数（例：現在のテキスト行数）
 var current_line_index = 0
-
 # 総プレイ時間（秒）
 var total_play_time: float = 0.0
+# クリアフラグ（第2部解放用）
+var is_part1_cleared: bool = false
 
-# シナリオデータを辞書で管理 
-# キー（"prologue"など）を使ってテキストを取り出します
-var scenarios = {
-	"prologue": [
-		"死期が見えるようになった。\n西暦何年何月何日。\n時間までは書いていない。\nでもその日に必ず死は訪れる。",
-		"いつから見えるようになったかは覚えていない。\n最初はただ数字が頭上に浮かんでいるだけだと思っていた。\n俺は不謹慎にもその数字が当日と一致する日を待ちわびてしまった。というのも、\n毎朝元気な挨拶をしてくれる近所のおじいさんがもうすぐでその数字が近づいていたのだ。\n",
-		"当日の朝、おじいさんの挨拶はなかった。\n	その日の夕方、",
-		"パトカーが物々しく赤いランプを音を立てずに回っていたのが脳裏にこびりついている。\n原因は夜中の心筋梗塞。発見に至ったのはおじいさんと面識のある町内会のおばさん達。\n毎朝のご近所づきあいに決められた時間に世間話しに来なかったため確認しに行ったところ、\n違和感を感じ警察を呼びそのまま確認に至る。\n",
-		"そんな詳しい話を晩ご飯の最中に聞かされ、食べ物が喉を通りにくかったことを覚えている。\n	だが、もっと喉を通らなくなったことがある。",
-		"近所の野良猫だ。"
-	],
-	"chapter_1": [
-		"【第一章】\n猫の額には、明日の日付が浮かんでいた。",
-		"俺はどうすべきか迷った。",
-		"運命は変えられるのだろうか？"
-	]
+
+# ★変更：シナリオIDと、リソースファイルのパスを紐付ける辞書
+# ここで登録しておけば、ファイル名を変えてもIDで呼び出せます
+var chapter_registry = {
+	"prologue": "res://scenarios/prologue.tres",
+	"day_1": "res://scenarios/day_1.tres",
+	"day_2": "res://scenarios/day_2.tres",
+	"day_3": "res://scenarios/day_3.tres",
+	"day_4": "res://scenarios/day_4.tres",
+	"day_5": "res://scenarios/day_5.tres",
+	"day_6": "res://scenarios/day_6.tres",
+	"day_7": "res://scenarios/day_7.tres",
+	"happy_end": "res://scenarios/happy_end.tres",
+	"bad_end": "res://scenarios/bad_end.tres"
 }
 
 # 章IDを日本語の表示名に変換する辞書（表示用）
 var chapter_names = {
 	"prologue": "プロローグ",
-	"chapter_1": "第一章"
+	"day_1": "Day 1",
+	"day_2": "Day 2",
+	"day_3": "Day 3",
+	"day_4": "Day 4",
+	"day_5": "Day 5",
+	"day_6": "Day 6",
+	"day_7": "Day 7 (分岐点)",
+	"happy_end": "ハッピーエンド",
+	"bad_end": "バッドエンド"
 }
-
 
 func _ready():
 	# GlobalはAutoloadされているので、ゲーム中ずっと動いています。
@@ -69,7 +75,8 @@ func save_game(slot_id: int = AUTO_SAVE_SLOT):
 		"chapter_id": current_chapter_id,
 		"line_index": current_line_index,
 		"play_time": total_play_time, # 時間も保存
-		"timestamp": Time.get_datetime_dict_from_system() # 実際の現実時間（任意）	
+		"timestamp": Time.get_datetime_dict_from_system(), # 実際の現実時間（任意）	
+		"is_part1_cleared": is_part1_cleared # ★クリア状況も保存する
 	}
 	# JSON形式の文字列にして保存
 	file.store_string(JSON.stringify(data))
@@ -93,9 +100,20 @@ func load_game(slot_id: int = AUTO_SAVE_SLOT):
 		current_chapter_id = data.get("chapter_id", "prologue")
 		current_line_index = data.get("line_index", 0)
 		total_play_time = data.get("play_time", 0.0) # 時間を復元
+		is_part1_cleared = data.get("is_part1_cleared", false) # ★復元
 		print("ロード完了: ", current_chapter_id)
 		return true
 	return false
+	
+# IDからリソースデータをロードして返す便利関数
+func get_scenario_data(id: String) -> ScenarioData:
+	if chapter_registry.has(id):
+		var path = chapter_registry[id]
+		# ResourceLoaderを使ってtresファイルを読み込む
+		return ResourceLoader.load(path) as ScenarioData
+	else:
+		push_error("未登録のチャプターID: " + id)
+		return null
 # 指定したスロットの「表示用情報」だけを取得する関数
 # セーブデータの存在確認や、ボタンのラベル表示に使います
 func get_slot_info(slot_id: int) -> Dictionary:
@@ -130,3 +148,39 @@ func delete_save(slot_id: int):
 		print("スロット", slot_id, "のデータを削除しました")
 		return true
 	return false
+
+
+#-----システムセーブ機能-----
+# システムデータ（クリア状況やCG回収率など、全体で共有するデータ）
+const SYSTEM_SAVE_PATH = "user://system_data.save"
+var system_data = {
+	"is_part1_cleared": false,  # 第1部クリアフラグ
+	"unlocked_gallery": []      # (将来用) CGギャラリーなど
+}
+
+# システムデータを保存する
+func save_system_data():
+	var file = FileAccess.open(SYSTEM_SAVE_PATH, FileAccess.WRITE)
+	file.store_string(JSON.stringify(system_data))
+	print("システムデータを保存しました")
+
+# システムデータを読み込む（起動時に呼ぶ）
+func load_system_data():
+	if not FileAccess.file_exists(SYSTEM_SAVE_PATH):
+		return # ファイルがない場合は初期値のまま
+
+	var file = FileAccess.open(SYSTEM_SAVE_PATH, FileAccess.READ)
+	var json = JSON.new()
+	var error = json.parse(file.get_as_text())
+	
+	if error == OK:
+		var data = json.data
+		# 既存の辞書にマージする（キーが足りない場合のエラー防止）
+		if data.has("is_part1_cleared"):
+			system_data["is_part1_cleared"] = data["is_part1_cleared"]
+		# 必要に応じて他のデータも読み込む
+
+# 第1部クリア時に呼ぶ便利関数
+func complete_part1():
+	system_data["is_part1_cleared"] = true
+	save_system_data() # 即座にファイルに書き込む

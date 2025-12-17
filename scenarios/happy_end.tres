@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ScenarioData" load_steps=4 format=3 uid="uid://tdlbxhqmix1p"]
+
+[ext_resource type="Texture2D" uid="uid://2bsifjo7yiq0" path="res://images/ステグラと星空.jpg" id="1_6f8ii"]
+[ext_resource type="Script" uid="uid://nsjru0u7n42l" path="res://scenario_date.gd" id="1_x1gve"]
+[ext_resource type="AudioStream" uid="uid://c3mhfmvky2vhi" path="res://BGM/回想.mp3" id="2_dulkt"]
+
+[resource]
+script = ExtResource("1_x1gve")
+chapter_id = "happy_end"
+background = ExtResource("1_6f8ii")
+bgm = ExtResource("2_dulkt")
+texts = Array[String](["happy!", ""])
+is_end_of_part1 = true
+metadata/_custom_type_script = "uid://nsjru0u7n42l"

@@ -1,35 +1,22 @@
 extends Control
 
-# 背景画像のパス設定
-# "res://..." の部分は、あなたが用意した実際の画像パスに書き換えてください
-var background_images = {
-	"prologue": preload("res://images/ステグラと星空.jpg"),
-	"chapter_1": preload("res://images/田舎の線路沿いの道（夕方）.jpg")
-}
-
-# BGMのパス設定
-# "res://..." の部分は用意した音楽ファイルのパスに書き換えてください
-var bgm_list = {
-	"prologue": preload("res://BGM/プロローグ.mp3"), # プロローグ用BGM
-	"chapter_1": preload("res://BGM/プロローグ.mp3") # 第一章用BGM
-}
 
 # TextureRectを取得
 @onready var background_rect = $Background
-
 # BGMプレイヤーを取得
 @onready var bgm_player = $BGMPlayer
 
-# ここには直接書かず、空にしておきます
-var dialogue_list = []
-var current_index = 0
 @onready var text_label = $Panel/Label
-
 # 「FadeOverlay」を取得
 # もしPanelの中に作ってしまった場合は $Panel/FadeOverlay になりますが、
 # 基本的にはControl直下（$FadeOverlay）にある想定です。
 @onready var fade_overlay = $FadeOverLay
 
+
+# 現在読み込んでいるシナリオデータ
+var current_scenario_data: ScenarioData
+var dialogue_list = []
+var current_index = 0
 # アニメーションを管理するための変数
 var current_tween: Tween
 
@@ -57,45 +44,24 @@ func _ready():
 # 章のデータをセットする関数
 func setup_current_chapter():
 	var chapter_id = Global.current_chapter_id
-	#背景を更新する
-	update_background()
-	
-	# BGMも更新する
-	update_bgm()
-	
-	# Globalの辞書からテキスト配列を取得
-	if Global.scenarios.has(chapter_id):
-		dialogue_list = Global.scenarios[chapter_id]
-	else:
-		print("エラー: 指定された章が見つかりません -> ", chapter_id)
-		dialogue_list = ["エラー：テキストデータがありません"]
+# Globalからリソースを取得
+	current_scenario_data = Global.get_scenario_data(chapter_id)
 
-# 現在の章に合わせて背景画像をセットする関数 背景更新ロジック
-func update_background():
-	var chapter_id = Global.current_chapter_id
-	if background_images.has(chapter_id):
-		background_rect.texture = background_images[chapter_id]
-	else:
-		print("背景画像が設定されていません: ", chapter_id)
-		# 必要ならデフォルト画像を設定するなど
-
-# 現在の章に合わせてBGMを再生する関数
-func update_bgm():
-	var chapter_id = Global.current_chapter_id
-	
-	# 辞書にその章のBGMが登録されているか確認
-	if bgm_list.has(chapter_id):
-		var next_stream = bgm_list[chapter_id]
+	if current_scenario_data:
+		# リソース内のデータを取り出す
+		dialogue_list = current_scenario_data.texts
 		
-		# 「今流れている曲」と「次に流す曲」が違う場合のみ切り替える
-		# (同じ章をロードした時などに最初から再生されるのを防ぐため)
-		if bgm_player.stream != next_stream:
-			bgm_player.stream = next_stream
-			bgm_player.play()
+		# 背景設定
+		if current_scenario_data.background:
+			background_rect.texture = current_scenario_data.background
+			
+		# BGM設定
+		if current_scenario_data.bgm:
+			if bgm_player.stream != current_scenario_data.bgm:
+				bgm_player.stream = current_scenario_data.bgm
+				bgm_player.play()
 	else:
-		# 辞書にない場合は音楽を止める（無音のシーンなど）
-		print("BGMが設定されていません: ", chapter_id)
-		bgm_player.stop()
+		dialogue_list = ["データ読み込みエラー"]
 
 
 func _input(event):
@@ -115,33 +81,71 @@ func _input(event):
 		else:
 			current_index += 1
 			
-			# ページが進んだタイミングで、今の場所をGlobalに記録してセーブを実行する
+			# 現在の行数を更新
 			Global.current_line_index = current_index
-			Global.save_game() 
 			
 			if current_index < dialogue_list.size():
 				# まだこの章のテキストがある場合
-				Global.current_line_index = current_index
+				# ここで1回だけセーブすればOKです
 				Global.save_game()
 				update_text()
 			else:
-				# ★章の終わり！次の章へ遷移する処理
+				# 章の終わり！
+				# ここではセーブせず、次の章へ遷移する処理に任せます
+				# (go_to_next_chapter -> change_chapter 内でセーブされるため)
 				go_to_next_chapter()
-
 # 次の章へ進む処理
 func go_to_next_chapter():
-	print("章の終了判定: ", Global.current_chapter_id)
+	# Day7の場合、ここで分岐処理を入れる
+	if Global.current_chapter_id == "day_7":
+		show_route_selection() # 選択肢ボタンを表示する関数（後述）を作る
+		return
+
+	# 現在のデータの「次の章ID」を確認
+	if current_scenario_data and current_scenario_data.next_chapter_id != "":
+		play_chapter_transition(current_scenario_data.next_chapter_id)
 	
-	if Global.current_chapter_id == "prologue":
-		# プロローグが終わったら第一章へ
-		# ★ここで直接 change_chapter を呼ばず、演出用の関数を呼びます
-		play_chapter_transition("chapter_1")
-		
-	elif Global.current_chapter_id == "chapter_1":
-		# 第一章が終わったら（例：タイトルへ戻る、第二章へ、など）
-		print("第一章終了。タイトルへ戻ります")
-		# get_tree().change_scene_to_file("res://title_screen.tscn")
-		text_label.text = "（続く……）"
+	# 第1部終了フラグが立っている場合
+	elif current_scenario_data and current_scenario_data.is_end_of_part1:
+		finish_part1()
+
+	else:
+		# 次がない場合はとりあえずタイトルへ
+		get_tree().change_scene_to_file("res://title_screen.tscn")
+
+# 第1部クリア処理
+func finish_part1():
+# ★ここを変更：システムデータに「クリアした」と書き込む
+	Global.complete_part1()
+	
+	# 第2部のメインゲームシーンへ移動
+	# 演出を入れるならここにフェード処理など
+	get_tree().change_scene_to_file("res://main_game2.tscn")
+
+# 分岐ボタンを表示する（簡易例）
+func show_route_selection():
+	# 本来は専用のUIパネルを用意して .show() するのが良いです
+	# ここではコードでボタンを生成する例を書きます
+	var vbox = VBoxContainer.new()
+	vbox.position = Vector2(400, 300) # 画面中央あたり
+	add_child(vbox)
+	
+	var btn_happy = Button.new()
+	btn_happy.text = "希望を見出す (Happy Route)"
+	btn_happy.pressed.connect(func(): 
+		vbox.queue_free()
+		play_chapter_transition("happy_end")
+	)
+	vbox.add_child(btn_happy)
+	
+	var btn_bad = Button.new()
+	btn_bad.text = "運命を受け入れる (Bad Route)"
+	btn_bad.pressed.connect(func(): 
+		vbox.queue_free()
+		play_chapter_transition("bad_end")
+	)
+	vbox.add_child(btn_bad)
+
 
 # フェードアウト → 章切り替え → フェードイン を行う関数
 func play_chapter_transition(next_chapter_id):
