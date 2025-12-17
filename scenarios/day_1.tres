@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ScenarioData" load_steps=4 format=3 uid="uid://cq7k8d2fx1kkw"]
+
+[ext_resource type="Script" uid="uid://nsjru0u7n42l" path="res://scenario_date.gd" id="1_3hovr"]
+[ext_resource type="Texture2D" uid="uid://3n01xsxeogug" path="res://images/田舎の線路沿いの道（夕方）.jpg" id="1_5mpmk"]
+[ext_resource type="AudioStream" uid="uid://c3mhfmvky2vhi" path="res://BGM/回想.mp3" id="2_ph64e"]
+
+[resource]
+script = ExtResource("1_3hovr")
+chapter_id = "day_1"
+title = "DAY1"
+background = ExtResource("1_5mpmk")
+bgm = ExtResource("2_ph64e")
+texts = Array[String](["テステス", ""])
+next_chapter_id = "day_2"
+metadata/_custom_type_script = "uid://nsjru0u7n42l"

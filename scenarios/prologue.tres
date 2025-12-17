@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ScenarioData" load_steps=4 format=3 uid="uid://bxlid8u80h413"]
+
+[ext_resource type="Texture2D" uid="uid://2bsifjo7yiq0" path="res://images/ステグラと星空.jpg" id="1_4mfdp"]
+[ext_resource type="Script" uid="uid://nsjru0u7n42l" path="res://scenario_date.gd" id="1_phd66"]
+[ext_resource type="AudioStream" uid="uid://dpxbbwvug6m60" path="res://BGM/プロローグ.mp3" id="2_esxl7"]
+
+[resource]
+script = ExtResource("1_phd66")
+title = "プロローグ"
+background = ExtResource("1_4mfdp")
+bgm = ExtResource("2_esxl7")
+texts = Array[String](["死期が見えるようになった。", "西暦何年何月何日。\\n時間までは書いていない。", "でもその日に必ず死は訪れる。", "
+"])
+next_chapter_id = "day_1"
+is_end_of_part1 = true
+metadata/_custom_type_script = "uid://nsjru0u7n42l"

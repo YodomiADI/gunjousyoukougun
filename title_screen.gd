@@ -6,6 +6,13 @@ extends Control
 # ロードメニュー（各スロットボタンがある親ノード）
 @onready var load_menu = $LoadMenu
 
+# 第2部・チャプターセレクトボタン
+@onready var part2_button = $MainMenu/Part2Button
+@onready var chapter_select_button = $MainMenu/ChapterSelectButton
+
+# チャプターセレクト画面
+@onready var chapter_select_menu = $ChapterSelectMenu
+
 # 確認ダイアログと削除モードボタン
 @onready var delete_confirm_dialog = $DeleteConfirmDialog
 @onready var delete_mode_button = $LoadMenu/VBoxContainer/DeletModeButton
@@ -41,9 +48,39 @@ var sound_click = preload("res://SE/時計の針マウスオーバー.mp3")
 var pending_delete_slot_id: int = -1
 
 func _ready():
-	# 初期化：メインメニューを表示し、ロード画面を隠す
+	# 1. まずシステムデータを読み込む（最新の状態にする）
+	Global.load_system_data()
+	
+	# 2. フラグの状態を取得
+	var is_cleared = Global.system_data.get("is_part1_cleared", false)
+	print("第1部クリア状況: ", is_cleared)
+	
+	# 3. 画面の初期化（メニューを表示、サブ画面を隠す）
 	main_menu.visible = true
 	load_menu.visible = false
+	chapter_select_menu.visible = false
+	# --- ここから「グレーアウト」の組み込み ---
+	
+	# 第2部ボタンとチャプターセレクトボタンを常に表示する
+	part2_button.visible = true
+	chapter_select_button.visible = true
+	
+	# クリアしていない場合はボタンを押せなくする（disabled = true）
+	# !is_cleared は「クリアしていないなら」という意味
+	part2_button.disabled = !is_cleared
+	chapter_select_button.disabled = !is_cleared
+	
+	# (オプション) クリアしていない時のボタンテキストを変更する場合
+	if not is_cleared:
+		part2_button.text = "??? (第1部クリアで解放)"
+		chapter_select_button.text = "Locked"
+	else:
+		part2_button.text = "第2部：日々の章"
+		chapter_select_button.text = "チャプターセレクト"
+		
+	# --- ここまで ---
+
+	setup_chapter_buttons()
 	
 	# ロードボタンのシグナル接続
 	for i in range(load_slot_buttons.size()):
@@ -122,7 +159,9 @@ func play_se(stream_data):
 			se_player.play()
 
 	pass
-
+	
+# ★追加：チャプター選択ボタンたちのセットアップ
+	setup_chapter_buttons()
 
 # --- ボタン処理（メインメニュー） ---
 
@@ -139,6 +178,66 @@ func _on_load_menu_button_pressed():
 # 「終了」 (統合された定義)
 func _on_quit_button_pressed():
 	get_tree().quit()
+
+# 第2部開始ボタン
+func _on_part2_button_pressed():
+	# 第2部のメインシーンへ移動
+	get_tree().change_scene_to_file("res://main_game2.tscn")
+	
+	
+# --- ボタン処理（チャプターセレクト画面） ---
+
+# ■ チャプターセレクト画面を開くボタンが押されたとき
+func _on_chapter_select_button_pressed():
+	# 1. メインメニュー（はじめから等のボタン群）を隠す
+	main_menu.visible = false
+	# 2. チャプターセレクト画面を表示する
+	chapter_select_menu.visible = true
+
+# ■ チャプターセレクト画面の「戻る」ボタンが押されたとき
+func _on_chapter_back_button_pressed():
+	# 1. チャプターセレクト画面を隠す
+	chapter_select_menu.visible = false
+	# 2. メインメニューを再び表示する
+	main_menu.visible = true
+	
+# チャプターボタンをまとめて設定する関数
+func setup_chapter_buttons():
+	# 1. ノードを辞書にまとめる（IDとボタンを正しくペアにする）
+	var chapter_map = {
+		"prologue": get_node_or_null("ChapterSelectMenu/VBoxContainer/GridContainer/Btn_Prologue"),
+		"day_1":    get_node_or_null("ChapterSelectMenu/VBoxContainer/GridContainer/Btn_Day1"),
+		"day_2":    get_node_or_null("ChapterSelectMenu/VBoxContainer/GridContainer/Btn_Day2"),
+		"day_3":    get_node_or_null("ChapterSelectMenu/VBoxContainer/GridContainer/Btn_Day3"),
+		"day_4":    get_node_or_null("ChapterSelectMenu/VBoxContainer/GridContainer/Btn_Day4"),
+		"day_5":    get_node_or_null("ChapterSelectMenu/VBoxContainer/GridContainer/Btn_Day5"),
+		"day_6":    get_node_or_null("ChapterSelectMenu/VBoxContainer/GridContainer/Btn_Day6"),
+		"day_7":    get_node_or_null("ChapterSelectMenu/VBoxContainer/GridContainer/Btn_Day7")
+	}
+	
+	for chapter_id in chapter_map.keys():
+		var btn = chapter_map[chapter_id]
+		if btn:
+			# すでにエディタ側で接続されているかもしれないので、一旦切断するか、
+			# 重複接続を避けるためにチェックを入れる
+			if btn.pressed.is_connected(_start_chapter):
+				btn.pressed.disconnect(_start_chapter)
+			
+			# 共通の開始関数にIDを渡して接続
+			btn.pressed.connect(_start_chapter.bind(chapter_id))
+			print("Connected: ", chapter_id) # デバッグ用にログを出す
+	
+# 実際に章を開始する関数
+func _start_chapter(chapter_id_to_start):
+	# 1. Global変数をリセット・設定
+	Global.reset_game_progress() # 一旦リセット
+	Global.current_chapter_id = chapter_id_to_start
+	
+	# 2. ゲーム画面へ移動
+	print("チャプター選択から開始: ", chapter_id_to_start)
+	get_tree().change_scene_to_file("res://main_game.tscn")
+
+
 
 # --- ボタン処理（ロードメニュー） ---
 
@@ -238,10 +337,6 @@ func update_load_slots_display():
 			else:
 				btn.modulate = Color(1, 1, 1, 1) # 通常色（白）
 
-func _on_load_button_pressed() -> void:
-	pass # Replace with function body.
-
-
 func _on_auto_save_button_pressed() -> void:
 	pass # Replace with function body.
 
@@ -259,4 +354,8 @@ func _on_slot_3_button_pressed() -> void:
 
 
 func _on_delet_mode_button_pressed() -> void:
+	pass # Replace with function body.
+
+
+func _on_part_2_button_pressed() -> void:
 	pass # Replace with function body.

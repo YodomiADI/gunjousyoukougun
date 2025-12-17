@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ScenarioData" load_steps=4 format=3 uid="uid://bu14gysf8q3kh"]
+
+[ext_resource type="Script" uid="uid://nsjru0u7n42l" path="res://scenario_date.gd" id="1_8p0i1"]
+[ext_resource type="Texture2D" uid="uid://cdgpogq0w2wis" path="res://images/心.png" id="1_xwohb"]
+[ext_resource type="AudioStream" uid="uid://c3mhfmvky2vhi" path="res://BGM/回想.mp3" id="2_ha1kd"]
+
+[resource]
+script = ExtResource("1_8p0i1")
+chapter_id = "day_3"
+title = "DAY3"
+background = ExtResource("1_xwohb")
+bgm = ExtResource("2_ha1kd")
+texts = Array[String](["null", ""])
+next_chapter_id = "day_4"
+metadata/_custom_type_script = "uid://nsjru0u7n42l"

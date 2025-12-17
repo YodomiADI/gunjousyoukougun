@@ -12,7 +12,7 @@ dest_files=["res://.godot/imported/プロローグ.mp3-5f2de28ce8d96cd5c2f67f493
 
 [params]
 
-loop=false
+loop=true
 loop_offset=0
 bpm=0
 beat_count=0

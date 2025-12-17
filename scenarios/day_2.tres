@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ScenarioData" load_steps=4 format=3 uid="uid://d4iilvgohy2wt"]
+
+[ext_resource type="Texture2D" uid="uid://bfb7im23ao1cd" path="res://images/死.png" id="1_lo4qs"]
+[ext_resource type="Script" uid="uid://nsjru0u7n42l" path="res://scenario_date.gd" id="1_vn743"]
+[ext_resource type="AudioStream" uid="uid://dpxbbwvug6m60" path="res://BGM/プロローグ.mp3" id="2_3dx0b"]
+
+[resource]
+script = ExtResource("1_vn743")
+chapter_id = "day_2"
+title = "DAY2"
+background = ExtResource("1_lo4qs")
+bgm = ExtResource("2_3dx0b")
+texts = Array[String](["tesuting", ""])
+next_chapter_id = "day_3"
+metadata/_custom_type_script = "uid://nsjru0u7n42l"

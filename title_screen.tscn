@@ -30,13 +30,23 @@ offset_bottom = 40.0
 layout_mode = 2
 text = "はじめから"
 
-[node name="QuitButton" type="Button" parent="MainMenu"]
-layout_mode = 2
-text = "やめる"
-
 [node name="LoadButton" type="Button" parent="MainMenu"]
 layout_mode = 2
 text = "ロード"
+
+[node name="Part2Button" type="Button" parent="MainMenu"]
+visible = false
+layout_mode = 2
+text = "日々の章"
+
+[node name="ChapterSelectButton" type="Button" parent="MainMenu"]
+visible = false
+layout_mode = 2
+text = "読み直し"
+
+[node name="QuitButton" type="Button" parent="MainMenu"]
+layout_mode = 2
+text = "やめる"
 
 [node name="DeleteConfirmDialog" type="ConfirmationDialog" parent="."]
 oversampling_override = 1.0
@@ -83,12 +93,70 @@ text = "戻る"
 
 [node name="SEPlayer" type="AudioStreamPlayer" parent="."]
 
+[node name="ChapterSelectMenu" type="Panel" parent="."]
+visible = false
+layout_mode = 0
+offset_top = 105.0
+offset_right = 73.0
+offset_bottom = 105.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="ChapterSelectMenu"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Label" type="Label" parent="ChapterSelectMenu/VBoxContainer"]
+layout_mode = 2
+text = "チャプター選択"
+
+[node name="GridContainer" type="GridContainer" parent="ChapterSelectMenu/VBoxContainer"]
+layout_mode = 2
+
+[node name="Btn_Prologue" type="Button" parent="ChapterSelectMenu/VBoxContainer/GridContainer"]
+layout_mode = 2
+text = "プロローグ"
+
+[node name="Btn_Day1" type="Button" parent="ChapterSelectMenu/VBoxContainer/GridContainer"]
+layout_mode = 2
+text = "DAY1"
+
+[node name="Btn_Day2" type="Button" parent="ChapterSelectMenu/VBoxContainer/GridContainer"]
+layout_mode = 2
+text = "DAY2"
+
+[node name="Btn_Day3" type="Button" parent="ChapterSelectMenu/VBoxContainer/GridContainer"]
+layout_mode = 2
+text = "DAY3"
+
+[node name="Btn_Day4" type="Button" parent="ChapterSelectMenu/VBoxContainer/GridContainer"]
+layout_mode = 2
+text = "DAY4"
+
+[node name="Btn_Day5" type="Button" parent="ChapterSelectMenu/VBoxContainer/GridContainer"]
+layout_mode = 2
+text = "DAY5"
+
+[node name="Btn_Day6" type="Button" parent="ChapterSelectMenu/VBoxContainer/GridContainer"]
+layout_mode = 2
+text = "DAY6"
+
+[node name="Btn_Day7" type="Button" parent="ChapterSelectMenu/VBoxContainer/GridContainer"]
+layout_mode = 2
+text = "DAY7"
+
+[node name="BackButton" type="Button" parent="ChapterSelectMenu/VBoxContainer"]
+layout_mode = 2
+text = "戻る"
+
 [connection signal="pressed" from="MainMenu/StartButton" to="." method="_on_start_button_pressed"]
-[connection signal="pressed" from="MainMenu/QuitButton" to="." method="_on_quit_button_pressed"]
 [connection signal="pressed" from="MainMenu/LoadButton" to="." method="_on_load_menu_button_pressed"]
+[connection signal="pressed" from="MainMenu/Part2Button" to="." method="_on_part_2_button_pressed"]
+[connection signal="pressed" from="MainMenu/ChapterSelectButton" to="." method="_on_chapter_select_button_pressed"]
+[connection signal="pressed" from="MainMenu/QuitButton" to="." method="_on_quit_button_pressed"]
 [connection signal="pressed" from="LoadMenu/VBoxContainer/DeletModeButton" to="." method="_on_delet_mode_button_pressed"]
 [connection signal="pressed" from="LoadMenu/VBoxContainer/AutoSaveButton" to="." method="_on_auto_save_button_pressed"]
 [connection signal="pressed" from="LoadMenu/VBoxContainer/Slot1Button" to="." method="_on_slot_1_button_pressed"]
 [connection signal="pressed" from="LoadMenu/VBoxContainer/Slot2Button" to="." method="_on_slot_2_button_pressed"]
 [connection signal="pressed" from="LoadMenu/VBoxContainer/Slot3Button" to="." method="_on_slot_3_button_pressed"]
 [connection signal="pressed" from="LoadMenu/VBoxContainer/BackButton" to="." method="_on_back_button_pressed"]
+[connection signal="pressed" from="ChapterSelectMenu/VBoxContainer/BackButton" to="." method="_on_chapter_back_button_pressed"]
