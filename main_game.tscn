@@ -80,3 +80,21 @@ color = Color(0, 0, 0, 1)
 [node name="BGMPlayer" type="AudioStreamPlayer" parent="."]
 
 [node name="SEPlayer" type="AudioStreamPlayer" parent="."]
+
+[node name="SystemButtons" type="HBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 1054.0
+offset_top = 2.0
+offset_right = 1149.0
+offset_bottom = 55.0
+
+[node name="AutoButton" type="Button" parent="SystemButtons"]
+layout_mode = 2
+text = "Auto"
+
+[node name="SkipButton" type="Button" parent="SystemButtons"]
+layout_mode = 2
+text = "Skip"
+
+[connection signal="pressed" from="SystemButtons/AutoButton" to="." method="_on_auto_button_pressed"]
+[connection signal="pressed" from="SystemButtons/SkipButton" to="." method="_on_skip_button_pressed"]
