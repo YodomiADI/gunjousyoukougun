@@ -1,6 +1,7 @@
 extends Control
 
-
+@onready var name_label = $Panel/NameBox/NameLabel # パスは自分の構成に合わせてください
+@onready var char_sprite = $CharacterSprite
 # TextureRectを取得
 @onready var background_rect = $Background
 # BGMプレイヤーを取得
@@ -199,7 +200,27 @@ func update_text():
 	
 	var current_event = dialogue_list[current_index]
 	
-	# 1. 演出の実行
+	if current_event == null:
+		return
+
+	# --- 1. 立ち絵の更新 ---
+	if current_event.character_sprite:
+		char_sprite.texture = current_event.character_sprite
+		char_sprite.show() # 画像があるなら表示
+	else:
+		# 画像が設定されていない場合、立ち絵を消すか前のままにするか選べます
+		# 完全に消したい場合は：
+		char_sprite.hide() 
+
+	# --- 2. 名前欄の更新 ---
+	if current_event.character_name != "":
+		name_label.text = current_event.character_name
+		name_label.show() # 名前があるなら表示
+	else:
+		name_label.hide() # 名前が空なら名前枠自体を隠す
+	
+	
+	# --- 3. 演出の実行（背景・BGM・SE：これまでの処理） ---
 	# 背景の変更
 	if current_event.change_background:
 		background_rect.texture = current_event.change_background
@@ -217,7 +238,7 @@ func update_text():
 			$SEPlayer.stream = current_event.play_se
 			$SEPlayer.play()
 
-	# 2. テキストの表示
+# --- 4. テキストの表示 ---
 	text_label.text = current_event.text
 	
 	# アニメーション設定

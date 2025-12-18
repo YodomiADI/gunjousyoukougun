@@ -1,9 +1,12 @@
-[gd_resource type="Resource" script_class="ScenarioData" load_steps=7 format=3 uid="uid://bxlid8u80h413"]
+[gd_resource type="Resource" script_class="ScenarioData" load_steps=10 format=3 uid="uid://bxlid8u80h413"]
 
 [ext_resource type="Texture2D" uid="uid://2bsifjo7yiq0" path="res://images/ステグラと星空.jpg" id="1_4mfdp"]
 [ext_resource type="Script" uid="uid://cl3bhx8qa8d5x" path="res://dialogue_event.gd" id="1_phd66"]
 [ext_resource type="Script" uid="uid://nsjru0u7n42l" path="res://scenario_date.gd" id="2_4mfdp"]
 [ext_resource type="AudioStream" uid="uid://dpxbbwvug6m60" path="res://BGM/プロローグ.mp3" id="2_l5nuy"]
+[ext_resource type="Texture2D" uid="uid://3n01xsxeogug" path="res://images/田舎の線路沿いの道（夕方）.jpg" id="4_fh20x"]
+[ext_resource type="AudioStream" uid="uid://c3mhfmvky2vhi" path="res://BGM/回想.mp3" id="5_4gooj"]
+[ext_resource type="AudioStream" uid="uid://cjr83ywdey50u" path="res://SE/ド.mp3" id="6_igjyp"]
 
 [sub_resource type="Resource" id="Resource_8x785"]
 script = ExtResource("1_phd66")
@@ -17,6 +20,10 @@ metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
 
 [sub_resource type="Resource" id="Resource_l5nuy"]
 script = ExtResource("1_phd66")
+text = "aaaaaaa"
+change_background = ExtResource("4_fh20x")
+change_bgm = ExtResource("5_4gooj")
+play_se = ExtResource("6_igjyp")
 metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
 
 [resource]
