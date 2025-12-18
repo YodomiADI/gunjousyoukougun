@@ -11,11 +11,13 @@ layout_mode = 3
 anchors_preset = 0
 offset_right = 40.0
 offset_bottom = 40.0
+mouse_filter = 2
 
 [node name="Panel" type="Panel" parent="Control"]
 layout_mode = 0
-offset_right = 40.0
-offset_bottom = 40.0
+offset_right = 1148.0
+offset_bottom = 660.0
+mouse_filter = 2
 
 [node name="ColorRect" type="ColorRect" parent="Control/Panel"]
 layout_mode = 0
@@ -27,12 +29,13 @@ color = Color(0, 0, 0, 0.24705882)
 layout_mode = 0
 offset_left = 169.0
 offset_top = 288.0
-offset_right = 325.0
-offset_bottom = 360.0
+offset_right = 948.0
+offset_bottom = 416.0
 
 [node name="PAUSE" type="Label" parent="Control/Panel/MainButtons"]
 layout_mode = 2
 text = "PAUSE"
+horizontal_alignment = 1
 
 [node name="go_back_game_Button" type="Button" parent="Control/Panel/MainButtons"]
 layout_mode = 2
@@ -50,9 +53,9 @@ text = "タイトルへ"
 visible = false
 layout_mode = 0
 offset_left = 334.0
-offset_top = 313.0
-offset_right = 700.0
-offset_bottom = 423.0
+offset_top = 429.0
+offset_right = 786.0
+offset_bottom = 621.0
 
 [node name="Label" type="Label" parent="Control/Panel/SaveSlotsMenu"]
 layout_mode = 2

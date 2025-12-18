@@ -9,6 +9,7 @@ layout_mode = 3
 anchors_preset = 0
 offset_right = 1150.0
 offset_bottom = 651.0
+mouse_filter = 2
 script = ExtResource("1_1oj5k")
 
 [node name="Background" type="TextureRect" parent="."]
@@ -17,6 +18,7 @@ offset_left = -17.0
 offset_top = -13.0
 offset_right = 1175.0
 offset_bottom = 686.0
+mouse_filter = 2
 expand_mode = 1
 stretch_mode = 6
 
@@ -24,6 +26,7 @@ stretch_mode = 6
 layout_mode = 0
 offset_right = 1171.0
 offset_bottom = 669.0
+mouse_filter = 2
 expand_mode = 2
 stretch_mode = 5
 
@@ -33,6 +36,7 @@ offset_left = 21.0
 offset_top = 458.0
 offset_right = 1139.0
 offset_bottom = 629.0
+mouse_filter = 2
 
 [node name="NameBox" type="NinePatchRect" parent="Panel"]
 self_modulate = Color(1, 1, 1, 0.49803922)
@@ -64,6 +68,7 @@ theme_override_font_sizes/font_size = 24
 layout_mode = 0
 offset_right = 1112.0
 offset_bottom = 184.0
+mouse_filter = 2
 theme_override_colors/default_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/normal_font_size = 34
 bbcode_enabled = true
@@ -83,9 +88,9 @@ color = Color(0, 0, 0, 1)
 
 [node name="SystemButtons" type="HBoxContainer" parent="."]
 layout_mode = 0
-offset_left = 1054.0
+offset_left = 1008.0
 offset_top = 2.0
-offset_right = 1149.0
+offset_right = 1184.0
 offset_bottom = 55.0
 
 [node name="AutoButton" type="Button" parent="SystemButtons"]
@@ -96,5 +101,40 @@ text = "Auto"
 layout_mode = 2
 text = "Skip"
 
+[node name="LogButton" type="Button" parent="SystemButtons"]
+layout_mode = 2
+text = "Log"
+
+[node name="LogPanel" type="Panel" parent="."]
+visible = false
+modulate = Color(1, 1, 1, 0.78431374)
+layout_mode = 0
+offset_right = 1151.0
+offset_bottom = 655.0
+
+[node name="ScrollContainer" type="ScrollContainer" parent="LogPanel"]
+layout_mode = 0
+offset_left = 43.0
+offset_top = 65.0
+offset_right = 1111.0
+offset_bottom = 605.0
+horizontal_scroll_mode = 0
+
+[node name="LogContainer" type="VBoxContainer" parent="LogPanel/ScrollContainer"]
+clip_contents = true
+custom_minimum_size = Vector2(1050, 550)
+layout_mode = 2
+
+[node name="LogCloseButton" type="Button" parent="LogPanel"]
+layout_mode = 0
+offset_left = 1007.0
+offset_top = 23.0
+offset_right = 1078.0
+offset_bottom = 56.0
+text = "閉じる"
+icon_alignment = 1
+
 [connection signal="pressed" from="SystemButtons/AutoButton" to="." method="_on_auto_button_pressed"]
 [connection signal="pressed" from="SystemButtons/SkipButton" to="." method="_on_skip_button_pressed"]
+[connection signal="pressed" from="SystemButtons/LogButton" to="." method="_on_log_button_pressed"]
+[connection signal="pressed" from="LogPanel/LogCloseButton" to="." method="_on_log_close_button_pressed"]
