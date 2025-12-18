@@ -6,16 +6,21 @@ extends Control
 @onready var background_rect = $Background
 # BGMプレイヤーを取得
 @onready var bgm_player = $BGMPlayer
-
 @onready var text_label = $Panel/Label
 # 「FadeOverlay」を取得
 # もしPanelの中に作ってしまった場合は $Panel/FadeOverlay になりますが、
 # 基本的にはControl直下（$FadeOverlay）にある想定です。
 @onready var fade_overlay = $FadeOverLay
-
 # システムボタン（非表示にしたり文字色を変えたりするため）
 @onready var auto_btn = $SystemButtons/AutoButton
 @onready var skip_btn = $SystemButtons/SkipButton
+
+# ログ関連の参照
+@onready var log_btn = $SystemButtons/LogButton
+@onready var log_panel = $LogPanel
+@onready var log_container = $LogPanel/ScrollContainer/LogContainer
+@onready var log_close_btn = $LogPanel/LogCloseButton
+@onready var log_scroll = $LogPanel/ScrollContainer
 
 # 現在読み込んでいるシナリオデータ
 var current_scenario_data: ScenarioData
@@ -39,11 +44,6 @@ func _ready():
 	if fade_overlay:
 		fade_overlay.color.a = 0.0
 	
-#   # ロード処理を削除
-	# タイトル画面で「つづきから」が選ばれた場合にのみGlobal.load_game()が実行されます
-	# 「はじめから」が選ばれた場合はGlobal変数がリセットされた状態で遷移してきます
-	
-	# ★Globalから現在の章のテキストを取得してセットする
 	setup_current_chapter()
 	# Globalの現在の状態（行番号）を適用
 	current_index = Global.current_line_index
@@ -51,6 +51,8 @@ func _ready():
 	if current_index >= dialogue_list.size():
 		current_index = 0 # 最初に戻すか、クリア画面へ飛ばす処理などを入れる
 	update_text()
+	
+
 
 # 章のデータをセットする関数
 func setup_current_chapter():
@@ -66,25 +68,32 @@ func setup_current_chapter():
 		# エラー処理用
 		pass
 
+
 # --- 入力処理 ---
 # ユーザーがクリックしたら、オートやスキップを解除する
-func _input(event):
-	if is_transitioning:
+func _unhandled_input(event):
+	# トランジション中やログが開いている時は入力を受け付けない
+	# (ログパネル自体のMouseFilterがStopなら、ログ表示中のクリックはそもそもここまで来ませんが、念のため残します)
+	if is_transitioning or log_panel.visible:
 		return
 	
+	# 左クリック、または決定キー(Enter/Space)が押された場合
 	if event.is_action_pressed("ui_accept") or (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT):
+		# UIボタン（Auto/Skip/Log）をクリックしたときは本編を進めない
+		# ※ボタンの Mouse Filter が Stop になっていればここは通りません
 		
-		# ★重要：クリックされたらオート・スキップを強制解除
+		# ★重要：ここに来た時点で「ボタン等はクリックされていない」ことが確定しています
+			
+		# オート・スキップを強制解除
 		if is_auto_mode or is_skip_mode:
 			stop_auto_skip()
-			return # 解除した瞬間は進まないようにする（誤操作防止）
+			return 
 
 		# 文字が表示途中なら一気に表示（スキップ）
 		if text_label.visible_ratio < 1.0:
 			if current_tween:
 				current_tween.kill()
 			text_label.visible_ratio = 1.0
-			# ★手動スキップ後も、「読み終わった処理」へつなげる
 			_on_text_fully_displayed()
 			
 		# 文字が全部表示されているなら、次の文章へ
@@ -215,9 +224,10 @@ func update_text():
 	if current_index < 0 or current_index >= dialogue_list.size():
 		return
 	
-	
 	var current_event = dialogue_list[current_index]
 	if current_event == null: return # 安全策
+	#履歴に今のセリフを追加する
+	add_log_entry(current_event)
 
 	# --- 1. 立ち絵の更新 ---
 	if current_event.character_sprite:
@@ -277,21 +287,28 @@ func _on_text_fully_displayed():
 	# オートやスキップでないなら何もしない（クリック待ち）
 	if not (is_auto_mode or is_skip_mode):
 		return
+	# ログパネルが開いている間は、自動進行をストップする
+	if log_panel.visible:
+		return
 
 	# 待ち時間を決定
 	var wait_time = AUTO_WAIT_TIME
 	if is_skip_mode:
 		wait_time = SKIP_WAIT_TIME
-	
-	# 指定時間待機してから、次の行へ進む
-	# create_timerはシーン遷移などで消えるとエラーになることがあるので、
-	# シーンツリーにいるか確認するのが安全です
+		
 	if is_inside_tree():
 		await get_tree().create_timer(wait_time).timeout
+# --- ここが重要：待機が終わった瞬間の再チェック ---
+		# 1. 待っている間にオート/スキップを解除した
+		# 2. 待っている間にログを開いた
+		# 3. 待っている間にフェード（章移動）が始まった
+		# これらに当てはまるなら、load_next_line() を実行させない
+		if not (is_auto_mode or is_skip_mode): return
+		if log_panel.visible: return
+		if is_transitioning: return
 		
-		# 待っている間にユーザーがモード解除したかもしれないので再確認
-		if (is_auto_mode or is_skip_mode) and not is_transitioning:
-			load_next_line()
+		# すべてクリアしていれば次の行へ
+		load_next_line()
 
 
 # --- ボタン制御用関数 ---
@@ -314,9 +331,10 @@ func start_auto_mode():
 	is_auto_mode = true
 	is_skip_mode = false # Skipはオフにする
 	print("Auto Mode Start")
-	# すでに文字が表示し終わっている状態でAutoを押した場合、即座に進める必要がある
+
+# 文字がすでに表示し終わっているなら、オート進行を開始させる
 	if text_label.visible_ratio >= 1.0:
-		load_next_line()
+		_on_text_fully_displayed()
 
 func start_skip_mode():
 	is_skip_mode = true
@@ -329,6 +347,7 @@ func start_skip_mode():
 		text_label.visible_ratio = 1.0
 		_on_text_fully_displayed() # 完了処理へ
 	elif text_label.visible_ratio >= 1.0:
+		# すでに文字が出ていたら即座に次へ
 		load_next_line()
 
 func stop_auto_skip():
@@ -336,3 +355,52 @@ func stop_auto_skip():
 	is_skip_mode = false
 	print("Mode Stopped")
 	
+# --- ログ追加処理 ---
+# 履歴を追加する関数
+func add_log_entry(event: DialogueEvent):
+	if event == null:
+		return
+	
+	# ラベルを作成
+	var entry_label = RichTextLabel.new()
+	
+	# ログの中身を作る（名前 + 改行 + セリフ）
+	var log_text = ""
+	if event.character_name != "":
+		# 名前を黄色にして強調する例
+		log_text += "[color=yellow]" + event.character_name + "[/color]\n"
+	
+	log_text += "[color=white]" + event.text + "[/color]\n" # 下に少し余白用の改行
+	
+	# ラベル設定
+	entry_label.text = log_text
+	entry_label.bbcode_enabled = true
+	entry_label.fit_content = true # 内容に合わせて高さを自動調整
+	
+	# フォントサイズ（必要なら調整してください）
+	entry_label.add_theme_font_size_override("normal_font_size", 24)
+	
+	# コンテナに追加
+	log_container.add_child(entry_label)
+	
+	# ログが増えすぎたら古いのを消す（メモリ節約）
+	if log_container.get_child_count() > 50:
+		log_container.get_child(0).queue_free()
+
+# ログボタンが押されたとき
+func _on_log_button_pressed():
+	# ログを開くときはオート・スキップを止めるだけで、進ませない
+	stop_auto_skip()
+	log_panel.show()
+	# スクロールを一番下に下げる（最新の会話を見せる）
+	await get_tree().process_frame
+	if log_scroll:
+		log_scroll.scroll_vertical = log_scroll.get_v_scroll_bar().max_value
+
+# 閉じるボタンが押されたとき
+func _on_log_close_button_pressed():
+	log_panel.hide()
+	# もしオートモードのままログを閉じたなら、改めて進行をチェックさせる
+	if is_auto_mode or is_skip_mode:
+		_on_text_fully_displayed()
+		
