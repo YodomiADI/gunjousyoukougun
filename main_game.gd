@@ -13,6 +13,9 @@ extends Control
 # 基本的にはControl直下（$FadeOverlay）にある想定です。
 @onready var fade_overlay = $FadeOverLay
 
+# システムボタン（非表示にしたり文字色を変えたりするため）
+@onready var auto_btn = $SystemButtons/AutoButton
+@onready var skip_btn = $SystemButtons/SkipButton
 
 # 現在読み込んでいるシナリオデータ
 var current_scenario_data: ScenarioData
@@ -20,9 +23,16 @@ var dialogue_list: Array[DialogueEvent] = []
 var current_index = 0
 # アニメーションを管理するための変数
 var current_tween: Tween
-
 # アニメーション中に入力を受け付けないようにするためのフラグ
 var is_transitioning = false
+# モード管理フラグ
+var is_auto_mode = false
+var is_skip_mode = false
+# オートモードの待ち時間（秒）
+const AUTO_WAIT_TIME = 1.5
+# スキップモードの待ち時間（秒・ほぼ一瞬）
+const SKIP_WAIT_TIME = 0.1
+
 
 func _ready():
 	# 初期化：フェード用の幕を透明にしておく
@@ -56,37 +66,45 @@ func setup_current_chapter():
 		# エラー処理用
 		pass
 
-
+# --- 入力処理 ---
+# ユーザーがクリックしたら、オートやスキップを解除する
 func _input(event):
-	# 画面切り替え中なら、クリックしても反応させない
 	if is_transitioning:
 		return
 	
 	if event.is_action_pressed("ui_accept") or (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT):
 		
-		# 文字がまだ全部表示されていなかったら（スキップ）
+		# ★重要：クリックされたらオート・スキップを強制解除
+		if is_auto_mode or is_skip_mode:
+			stop_auto_skip()
+			return # 解除した瞬間は進まないようにする（誤操作防止）
+
+		# 文字が表示途中なら一気に表示（スキップ）
 		if text_label.visible_ratio < 1.0:
 			if current_tween:
 				current_tween.kill()
 			text_label.visible_ratio = 1.0
+			# ★手動スキップ後も、「読み終わった処理」へつなげる
+			_on_text_fully_displayed()
 			
 		# 文字が全部表示されているなら、次の文章へ
 		else:
-			current_index += 1
-			
-			# 現在の行数を更新
-			Global.current_line_index = current_index
-			
-			if current_index < dialogue_list.size():
-				# まだこの章のテキストがある場合
-				# ここで1回だけセーブすればOKです
-				Global.save_game()
-				update_text()
-			else:
-				# 章の終わり！
-				# ここではセーブせず、次の章へ遷移する処理に任せます
-				# (go_to_next_chapter -> change_chapter 内でセーブされるため)
-				go_to_next_chapter()
+			load_next_line()
+
+# 次の行へ進む処理を関数として独立させる
+func load_next_line():
+	current_index += 1
+	Global.current_line_index = current_index
+	
+	if current_index < dialogue_list.size():
+		Global.save_game()
+		update_text()
+	else:
+		# 章の終わり
+		stop_auto_skip() # 章をまたぐ時は一旦止める
+		go_to_next_chapter()
+		
+		
 # 次の章へ進む処理
 func go_to_next_chapter():
 	# Day7の場合、ここで分岐処理を入れる
@@ -199,9 +217,7 @@ func update_text():
 	
 	
 	var current_event = dialogue_list[current_index]
-	
-	if current_event == null:
-		return
+	if current_event == null: return # 安全策
 
 	# --- 1. 立ち絵の更新 ---
 	if current_event.character_sprite:
@@ -240,12 +256,83 @@ func update_text():
 
 # --- 4. テキストの表示 ---
 	text_label.text = current_event.text
-	
 	# アニメーション設定
 	text_label.visible_ratio = 0.0
-	var duration = text_label.get_total_character_count() * 0.05
+	# ★速度調整：スキップモードなら0秒（一瞬）、それ以外は文字数ベース
+	var duration = 0.0
+	if is_skip_mode:
+		duration = 0.0
+	else:
+		duration = text_label.get_total_character_count() * 0.05
 	
 	if current_tween:
 		current_tween.kill()
 	current_tween = create_tween()
 	current_tween.tween_property(text_label, "visible_ratio", 1.0, duration)
+	
+	# ★重要：Tweenが終わった（文字が表示しきった）時の合図を受け取る
+	current_tween.finished.connect(_on_text_fully_displayed)
+	# 文字が全部表示された後に呼ばれる関数
+func _on_text_fully_displayed():
+	# オートやスキップでないなら何もしない（クリック待ち）
+	if not (is_auto_mode or is_skip_mode):
+		return
+
+	# 待ち時間を決定
+	var wait_time = AUTO_WAIT_TIME
+	if is_skip_mode:
+		wait_time = SKIP_WAIT_TIME
+	
+	# 指定時間待機してから、次の行へ進む
+	# create_timerはシーン遷移などで消えるとエラーになることがあるので、
+	# シーンツリーにいるか確認するのが安全です
+	if is_inside_tree():
+		await get_tree().create_timer(wait_time).timeout
+		
+		# 待っている間にユーザーがモード解除したかもしれないので再確認
+		if (is_auto_mode or is_skip_mode) and not is_transitioning:
+			load_next_line()
+
+
+# --- ボタン制御用関数 ---
+
+# Autoボタンが押されたとき
+func _on_auto_button_pressed():
+	if is_auto_mode:
+		stop_auto_skip()
+	else:
+		start_auto_mode()
+
+# Skipボタンが押されたとき
+func _on_skip_button_pressed():
+	if is_skip_mode:
+		stop_auto_skip()
+	else:
+		start_skip_mode()
+
+func start_auto_mode():
+	is_auto_mode = true
+	is_skip_mode = false # Skipはオフにする
+	print("Auto Mode Start")
+	# すでに文字が表示し終わっている状態でAutoを押した場合、即座に進める必要がある
+	if text_label.visible_ratio >= 1.0:
+		load_next_line()
+
+func start_skip_mode():
+	is_skip_mode = true
+	is_auto_mode = false # Autoはオフにする
+	print("Skip Mode Start")
+	
+	# 現在表示中のTweenを強制終了して即座に表示完了にする
+	if current_tween and current_tween.is_running():
+		current_tween.kill()
+		text_label.visible_ratio = 1.0
+		_on_text_fully_displayed() # 完了処理へ
+	elif text_label.visible_ratio >= 1.0:
+		load_next_line()
+
+func stop_auto_skip():
+	is_auto_mode = false
+	is_skip_mode = false
+	print("Mode Stopped")
+	
