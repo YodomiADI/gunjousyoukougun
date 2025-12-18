@@ -1,8 +1,17 @@
-[gd_resource type="Resource" script_class="ScenarioData" load_steps=4 format=3 uid="uid://d15igp3lvopi4"]
+[gd_resource type="Resource" script_class="ScenarioData" load_steps=7 format=3 uid="uid://d15igp3lvopi4"]
 
 [ext_resource type="Script" uid="uid://nsjru0u7n42l" path="res://scenario_date.gd" id="1_4qn67"]
 [ext_resource type="Texture2D" uid="uid://cet55aba4s5ik" path="res://images/炎.png" id="1_6gcop"]
 [ext_resource type="AudioStream" uid="uid://c3mhfmvky2vhi" path="res://BGM/回想.mp3" id="2_87cer"]
+[ext_resource type="Script" uid="uid://cl3bhx8qa8d5x" path="res://dialogue_event.gd" id="3_ay0kt"]
+
+[sub_resource type="Resource" id="Resource_ewoti"]
+script = ExtResource("3_ay0kt")
+metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
+
+[sub_resource type="Resource" id="Resource_nofuk"]
+script = ExtResource("3_ay0kt")
+metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
 
 [resource]
 script = ExtResource("1_4qn67")
@@ -10,6 +19,6 @@ chapter_id = "day_5"
 title = "DAY5"
 background = ExtResource("1_6gcop")
 bgm = ExtResource("2_87cer")
-texts = Array[String](["哀、藍、愛、眼、、、", ""])
+events = Array[ExtResource("3_ay0kt")]([SubResource("Resource_ewoti"), SubResource("Resource_nofuk")])
 next_chapter_id = "day_6"
 metadata/_custom_type_script = "uid://nsjru0u7n42l"

@@ -19,7 +19,15 @@ config/icon="res://icon.svg"
 
 Global="*res://Global.gd"
 
+[filesystem]
+
+import/fbx2gltf/enabled=false
+
 [internationalization]
 
 locale/autoload_on_startup=false
 locale/main_scene="uid://dhtpye5urrv38"
+
+[rendering]
+
+textures/vram_compression/import_etc2_astc=true

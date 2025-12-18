@@ -13,8 +13,8 @@ class_name ScenarioData
 # BGM
 @export var bgm: AudioStream
 
-# テキストデータの配列（マルチライン文字列で入力しやすくする）
-@export_multiline var texts: Array[String] = []
+# ★ここを String の配列から DialogueEvent の配列に変更
+@export var events: Array[DialogueEvent] = []
 
 # 次に進む章のID（自動で進む場合）
 # 分岐がある場合や、この章で終わりの場合は空欄にする

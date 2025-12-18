@@ -1,10 +1,7 @@
-[gd_scene load_steps=4 format=3 uid="uid://cllpcuaeq424j"]
+[gd_scene load_steps=3 format=3 uid="uid://cllpcuaeq424j"]
 
 [ext_resource type="Script" uid="uid://b7scfg1k3ox20" path="res://main_game.gd" id="1_1oj5k"]
 [ext_resource type="PackedScene" uid="uid://ogtf4xhup2vi" path="res://pause_menu.tscn" id="2_yx7mw"]
-
-[sub_resource type="LabelSettings" id="LabelSettings_1oj5k"]
-font_size = 30
 
 [node name="MainGame" type="Control"]
 layout_mode = 3
@@ -29,12 +26,11 @@ offset_top = 442.0
 offset_right = 1139.0
 offset_bottom = 629.0
 
-[node name="Label" type="Label" parent="Panel"]
+[node name="Label" type="RichTextLabel" parent="Panel"]
 layout_mode = 0
 offset_right = 1112.0
 offset_bottom = 184.0
-label_settings = SubResource("LabelSettings_1oj5k")
-autowrap_mode = 3
+bbcode_enabled = true
 
 [node name="FadeOverLay" type="ColorRect" parent="."]
 layout_mode = 0
@@ -46,3 +42,5 @@ color = Color(0, 0, 0, 1)
 [node name="PauseMenu" parent="." instance=ExtResource("2_yx7mw")]
 
 [node name="BGMPlayer" type="AudioStreamPlayer" parent="."]
+
+[node name="SEPlayer" type="AudioStreamPlayer" parent="."]

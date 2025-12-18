@@ -15,7 +15,7 @@ extends Control
 
 # 現在読み込んでいるシナリオデータ
 var current_scenario_data: ScenarioData
-var dialogue_list = []
+var dialogue_list: Array[DialogueEvent] = []
 var current_index = 0
 # アニメーションを管理するための変数
 var current_tween: Tween
@@ -49,19 +49,11 @@ func setup_current_chapter():
 
 	if current_scenario_data:
 		# リソース内のデータを取り出す
-		dialogue_list = current_scenario_data.texts
-		
-		# 背景設定
-		if current_scenario_data.background:
-			background_rect.texture = current_scenario_data.background
-			
-		# BGM設定
-		if current_scenario_data.bgm:
-			if bgm_player.stream != current_scenario_data.bgm:
-				bgm_player.stream = current_scenario_data.bgm
-				bgm_player.play()
+		dialogue_list = current_scenario_data.events
+		# ※初期背景・BGMは、最初のイベント(0番目)で設定するようにすればOK
 	else:
-		dialogue_list = ["データ読み込みエラー"]
+		# エラー処理用
+		pass
 
 
 func _input(event):
@@ -194,10 +186,43 @@ func change_chapter(next_chapter_id):
 	update_text()
 
 func update_text():
-	text_label.text = dialogue_list[current_index]
+	# データの存在チェック
+	if dialogue_list.is_empty():
+		push_warning("シナリオデータが空です！")
+		text_label.text = "（シナリオデータが登録されていません）"
+		return
+
+	# 現在のインデックスが配列の範囲内かチェック
+	if current_index < 0 or current_index >= dialogue_list.size():
+		return
 	
+	
+	var current_event = dialogue_list[current_index]
+	
+	# 1. 演出の実行
+	# 背景の変更
+	if current_event.change_background:
+		background_rect.texture = current_event.change_background
+	
+	# BGMの変更
+	if current_event.change_bgm:
+		if bgm_player.stream != current_event.change_bgm:
+			bgm_player.stream = current_event.change_bgm
+			bgm_player.play()
+			
+	# SEの再生
+	if current_event.play_se:
+		# ノードツリーに $SEPlayer があることを確認してください
+		if has_node("SEPlayer"):
+			$SEPlayer.stream = current_event.play_se
+			$SEPlayer.play()
+
+	# 2. テキストの表示
+	text_label.text = current_event.text
+	
+	# アニメーション設定
 	text_label.visible_ratio = 0.0
-	var duration = text_label.text.length() * 0.05
+	var duration = text_label.get_total_character_count() * 0.05
 	
 	if current_tween:
 		current_tween.kill()
