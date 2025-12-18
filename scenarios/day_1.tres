@@ -1,13 +1,16 @@
-[gd_resource type="Resource" script_class="ScenarioData" load_steps=7 format=3 uid="uid://cq7k8d2fx1kkw"]
+[gd_resource type="Resource" script_class="ScenarioData" load_steps=8 format=3 uid="uid://cq7k8d2fx1kkw"]
 
 [ext_resource type="Script" uid="uid://nsjru0u7n42l" path="res://scenario_date.gd" id="1_3hovr"]
 [ext_resource type="Texture2D" uid="uid://3n01xsxeogug" path="res://images/田舎の線路沿いの道（夕方）.jpg" id="1_5mpmk"]
 [ext_resource type="AudioStream" uid="uid://c3mhfmvky2vhi" path="res://BGM/回想.mp3" id="2_ph64e"]
 [ext_resource type="Script" uid="uid://cl3bhx8qa8d5x" path="res://dialogue_event.gd" id="3_qn13f"]
+[ext_resource type="Texture2D" uid="uid://dvwhndg86gpni" path="res://立ち絵/仮立ち絵.png" id="4_0qbs8"]
 
 [sub_resource type="Resource" id="Resource_0qbs8"]
 script = ExtResource("3_qn13f")
 text = "あ"
+character_name = "かりな"
+character_sprite = ExtResource("4_0qbs8")
 change_background = ExtResource("1_5mpmk")
 change_bgm = ExtResource("2_ph64e")
 metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"

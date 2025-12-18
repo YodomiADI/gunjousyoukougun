@@ -4,7 +4,10 @@ class_name DialogueEvent
 
 # 表示するテキスト（RichTextLabel用なのでBBCodeが使えます）
 @export_multiline var text: String = ""
-
+# キャラクター名
+@export var character_name: String = ""
+# 表示したい立ち絵（画像）
+@export var character_sprite: Texture2D
 # --- この行が表示される瞬間に切り替えたい場合のみ設定する ---
 @export var change_background: Texture2D # 変更後の背景
 @export var change_bgm: AudioStream    # 変更後のBGM
