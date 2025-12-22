@@ -148,6 +148,33 @@ func delete_save(slot_id: int):
 		print("スロット", slot_id, "のデータを削除しました")
 		return true
 	return false
+	
+# --- 全データ初期化（初期化ボタン用） ---
+func initialize_all_data():
+	# 1. メモリ上の変数をすべて初期値に戻す
+	current_chapter_id = "prologue"
+	current_line_index = 0
+	total_play_time = 0.0
+	is_part1_cleared = false
+	
+	# システムデータ辞書も初期化
+	system_data = {
+		"is_part1_cleared": false,
+		"unlocked_gallery": []
+	}
+	
+	# 2. 物理ファイルの削除
+	# スロット0〜20を削除
+	for i in range(21):
+		var path = SAVE_PATH_TEMPLATE % i
+		if FileAccess.file_exists(path):
+			DirAccess.remove_absolute(path)
+			print("削除成功: ", path)
+	
+	# システムデータの削除
+	if FileAccess.file_exists(SYSTEM_SAVE_PATH):
+		DirAccess.remove_absolute(SYSTEM_SAVE_PATH)
+		print("システムデータを削除しました")
 
 
 #-----システムセーブ機能-----

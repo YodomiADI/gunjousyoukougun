@@ -14,9 +14,11 @@ extends Control
 @onready var chapter_select_menu = $ChapterSelectMenu
 
 # 確認ダイアログと削除モードボタン
-@onready var delete_confirm_dialog = $DeleteConfirmDialog
+@onready var delete_confirm_dialog = $DeletConfirmDialog
+@onready var confirmation_dialog = $ConfirmationDialog # ← 全初期化用も追加
 @onready var delete_mode_button = $LoadMenu/VBoxContainer/DeletModeButton
-
+# 設定画面自体も % を付けておくと楽です
+@onready var settings_canvas = $SettingCanvas
 # 効果音用のプレイヤーを取得
 @onready var se_player = $SEPlayer
 
@@ -97,13 +99,16 @@ func _ready():
 	# 	pass 
 	
 	#  ダイアログの「OK(削除)」が押されたときのシグナル接続
-	if !delete_confirm_dialog.confirmed.is_connected(_on_delete_confirmed):
-		delete_confirm_dialog.confirmed.connect(_on_delete_confirmed)
-		
-	#  削除モードボタンを押したときの表示更新（任意）
-	if !delete_mode_button.toggled.is_connected(_on_delete_mode_toggled):
-		delete_mode_button.toggled.connect(_on_delete_mode_toggled)
-	
+	# 安全に接続するためのチェック
+		if delete_confirm_dialog:
+			if !delete_confirm_dialog.confirmed.is_connected(_on_delete_confirmed):
+				delete_confirm_dialog.confirmed.connect(_on_delete_confirmed)
+		else:
+			print("警告: DeleteConfirmDialogが見つかりません。名前や階層を確認してください。")
+			 # 全初期化ダイアログの接続もここで行うと確実です
+		if confirmation_dialog:
+			if !confirmation_dialog.confirmed.is_connected(_on_confirmation_dialog_confirmed):
+				confirmation_dialog.confirmed.connect(_on_confirmation_dialog_confirmed)
 	# 効果音（SE）のセットアップ
 	setup_sound_effects()
 	
@@ -337,6 +342,7 @@ func update_load_slots_display():
 			else:
 				btn.modulate = Color(1, 1, 1, 1) # 通常色（白）
 
+
 func _on_auto_save_button_pressed() -> void:
 	pass # Replace with function body.
 
@@ -359,3 +365,27 @@ func _on_delet_mode_button_pressed() -> void:
 
 func _on_part_2_button_pressed() -> void:
 	pass # Replace with function body.
+
+# 設定画面を開く
+func _on_setting_button_pressed():
+	# SettingsCanvasも「シーン固有の名前」に設定して %SettingsCanvas にするのがおすすめ
+	if has_node("SettingCanvas"):
+		$SettingCanvas.visible = true
+		print("設定画面を表示しました")
+	else:
+		print("エラー: SettingsCanvasが見つかりません")
+
+# 設定画面内の「初期化ボタン」
+func _on_init_button_pressed():
+	if confirmation_dialog:
+		confirmation_dialog.dialog_text = "すべてのセーブデータと進行状況を消去します。\nよろしいですか？"
+		confirmation_dialog.popup_centered()
+	else:
+		print("エラー: ConfirmationDialogが見つかりません")
+
+# 全初期化の確定（OKが押された時）
+func _on_confirmation_dialog_confirmed():
+	print("全データの初期化を実行します...")
+	Global.initialize_all_data()
+	# 画面をリロードして反映
+	get_tree().reload_current_scene()

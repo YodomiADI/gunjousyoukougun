@@ -1,6 +1,9 @@
-[gd_scene load_steps=4 format=3 uid="uid://dhtpye5urrv38"]
+[gd_scene load_steps=6 format=3 uid="uid://dhtpye5urrv38"]
 
 [ext_resource type="Script" uid="uid://b7pngiy78imfl" path="res://title_screen.gd" id="1_v6p8y"]
+[ext_resource type="Texture2D" uid="uid://dft5bkrvkpcie" path="res://images/立ち絵.png" id="2_ak2if"]
+
+[sub_resource type="CanvasTexture" id="CanvasTexture_ig5kc"]
 
 [sub_resource type="FontVariation" id="FontVariation_v6p8y"]
 
@@ -17,14 +20,28 @@ grow_vertical = 2
 script = ExtResource("1_v6p8y")
 
 [node name="Background" type="TextureRect" parent="."]
+modulate = Color(0.046292678, 0.28165057, 0.3929016, 1)
 layout_mode = 0
 offset_right = 1161.0
 offset_bottom = 656.0
+texture = SubResource("CanvasTexture_ig5kc")
+
+[node name="画像立ち絵" type="TextureRect" parent="."]
+layout_mode = 0
+offset_left = 244.0
+offset_top = 12.0
+offset_right = 996.0
+offset_bottom = 645.0
+texture = ExtResource("2_ak2if")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="TitleLabel" type="Label" parent="."]
 layout_mode = 0
-offset_right = 1148.0
-offset_bottom = 414.0
+offset_left = 14.0
+offset_top = 59.0
+offset_right = 1162.0
+offset_bottom = 473.0
 theme_override_colors/font_color = Color(0.00026472422, 0.0017993086, 0.0026963148, 1)
 theme_override_colors/font_shadow_color = Color(1, 1, 1, 0)
 theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
@@ -61,11 +78,15 @@ visible = false
 layout_mode = 2
 text = "読み直し"
 
+[node name="SettingButton" type="Button" parent="MainMenu"]
+layout_mode = 2
+text = "設定"
+
 [node name="QuitButton" type="Button" parent="MainMenu"]
 layout_mode = 2
 text = "やめる"
 
-[node name="DeleteConfirmDialog" type="ConfirmationDialog" parent="."]
+[node name="DeletConfirmDialog" type="ConfirmationDialog" parent="."]
 oversampling_override = 1.0
 ok_button_text = "削除"
 dialog_text = "削除の確認"
@@ -73,6 +94,7 @@ dialog_autowrap = true
 cancel_button_text = "キャンセル"
 
 [node name="LoadMenu" type="Panel" parent="."]
+visible = false
 layout_mode = 0
 offset_right = 1139.0
 offset_bottom = 644.0
@@ -166,10 +188,51 @@ text = "DAY7"
 layout_mode = 2
 text = "戻る"
 
+[node name="SettingCanvas" type="CanvasLayer" parent="."]
+visible = false
+
+[node name="SettingPanel" type="Panel" parent="SettingCanvas"]
+anchors_preset = -1
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -90.0
+offset_top = -4.0
+offset_right = 93.0
+offset_bottom = 84.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="SettingCanvas/SettingPanel"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -28.0
+offset_top = -33.0
+offset_right = 28.0
+offset_bottom = 33.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="InitButton" type="Button" parent="SettingCanvas/SettingPanel/VBoxContainer"]
+layout_mode = 2
+text = "初期化"
+
+[node name="CloseButton" type="Button" parent="SettingCanvas/SettingPanel/VBoxContainer"]
+layout_mode = 2
+text = "閉じる"
+
+[node name="ConfirmationDialog" type="ConfirmationDialog" parent="."]
+
 [connection signal="pressed" from="MainMenu/StartButton" to="." method="_on_start_button_pressed"]
 [connection signal="pressed" from="MainMenu/LoadButton" to="." method="_on_load_menu_button_pressed"]
 [connection signal="pressed" from="MainMenu/Part2Button" to="." method="_on_part_2_button_pressed"]
 [connection signal="pressed" from="MainMenu/ChapterSelectButton" to="." method="_on_chapter_select_button_pressed"]
+[connection signal="pressed" from="MainMenu/SettingButton" to="." method="_on_setting_button_pressed"]
 [connection signal="pressed" from="MainMenu/QuitButton" to="." method="_on_quit_button_pressed"]
 [connection signal="pressed" from="LoadMenu/VBoxContainer/DeletModeButton" to="." method="_on_delet_mode_button_pressed"]
 [connection signal="pressed" from="LoadMenu/VBoxContainer/AutoSaveButton" to="." method="_on_auto_save_button_pressed"]
@@ -178,3 +241,5 @@ text = "戻る"
 [connection signal="pressed" from="LoadMenu/VBoxContainer/Slot3Button" to="." method="_on_slot_3_button_pressed"]
 [connection signal="pressed" from="LoadMenu/VBoxContainer/BackButton" to="." method="_on_back_button_pressed"]
 [connection signal="pressed" from="ChapterSelectMenu/VBoxContainer/BackButton" to="." method="_on_chapter_back_button_pressed"]
+[connection signal="pressed" from="SettingCanvas/SettingPanel/VBoxContainer/InitButton" to="." method="_on_init_button_pressed"]
+[connection signal="confirmed" from="ConfirmationDialog" to="." method="_on_confirmation_dialog_confirmed"]
