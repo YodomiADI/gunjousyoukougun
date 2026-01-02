@@ -1,23 +1,71 @@
-[gd_resource type="Resource" script_class="ScenarioData" load_steps=7 format=3 uid="uid://c1elyaglni1cs"]
+[gd_resource type="Resource" script_class="ScenarioData" load_steps=13 format=3 uid="uid://c1elyaglni1cs"]
 
-[ext_resource type="Texture2D" uid="uid://dqxoljf06ads2" path="res://images/裏面.png" id="1_mcd8e"]
 [ext_resource type="Script" uid="uid://nsjru0u7n42l" path="res://scenario_date.gd" id="1_t6d4o"]
-[ext_resource type="AudioStream" uid="uid://dpxbbwvug6m60" path="res://BGM/プロローグ.mp3" id="2_1jlhm"]
+[ext_resource type="Texture2D" uid="uid://sugcybn04qn2" path="res://images/路地裏3.jpg" id="2_1jlhm"]
 [ext_resource type="Script" uid="uid://cl3bhx8qa8d5x" path="res://dialogue_event.gd" id="3_6ganv"]
+[ext_resource type="Texture2D" uid="uid://daqxfipy2smyy" path="res://images/路地裏2.jpg" id="3_ya636"]
+[ext_resource type="Texture2D" uid="uid://83ya51blaavm" path="res://立ち絵/kokorone1.png" id="4_trxda"]
 
 [sub_resource type="Resource" id="Resource_ya636"]
 script = ExtResource("3_6ganv")
+character_name = "シキ"
+text = "7日目、それはココロネの命日。
+"
+background = ExtResource("2_1jlhm")
 metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
 
 [sub_resource type="Resource" id="Resource_trxda"]
 script = ExtResource("3_6ganv")
+character_name = "シキ"
+text = "誰かの誕生日であるはずの祝福の日は、
+誰かにとっての亡くなった日で、
+始まりがあれば終わりもある。
+それでも……"
+metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
+
+[sub_resource type="Resource" id="Resource_mcd8e"]
+script = ExtResource("3_6ganv")
+character_name = "シキ"
+text = "後悔しない選択を。"
+metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
+
+[sub_resource type="Resource" id="Resource_6ganv"]
+script = ExtResource("3_6ganv")
+character_name = "シキ"
+text = "どんな結果だろうが構わない。
+偽善と言われてもかまわない。
+道化になったって構わない。"
+metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
+
+[sub_resource type="Resource" id="Resource_jb1qh"]
+script = ExtResource("3_6ganv")
+character_name = "シキ"
+text = "この瞳を、死期が見えるようになった瞳が、
+僕に変われと伝えるのなら、
+僕はそれに応えなければならないんじゃないか？
+だから……"
+metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
+
+[sub_resource type="Resource" id="Resource_6mv1y"]
+script = ExtResource("3_6ganv")
+character_name = "シキ"
+text = "「ココロネ！」"
+metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
+
+[sub_resource type="Resource" id="Resource_r2q23"]
+script = ExtResource("3_6ganv")
+char_id = 1
+character_name = "シキ"
+text = "死は目の前にある。
+何か変えられる方法はあるだろうか？
+"
+character_sprite = ExtResource("4_trxda")
+background = ExtResource("3_ya636")
 metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
 
 [resource]
 script = ExtResource("1_t6d4o")
 chapter_id = "day_7"
-title = "DAY7"
-background = ExtResource("1_mcd8e")
-bgm = ExtResource("2_1jlhm")
-events = Array[ExtResource("3_6ganv")]([SubResource("Resource_ya636"), SubResource("Resource_trxda")])
+events = Array[ExtResource("3_6ganv")]([SubResource("Resource_ya636"), SubResource("Resource_trxda"), SubResource("Resource_mcd8e"), SubResource("Resource_6ganv"), SubResource("Resource_jb1qh"), SubResource("Resource_6mv1y"), SubResource("Resource_r2q23")])
+next_action = 2
 metadata/_custom_type_script = "uid://nsjru0u7n42l"

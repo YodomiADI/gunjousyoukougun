@@ -1,24 +1,33 @@
-[gd_resource type="Resource" script_class="ScenarioData" load_steps=7 format=3 uid="uid://d15igp3lvopi4"]
+[gd_resource type="Resource" script_class="ScenarioData" load_steps=8 format=3 uid="uid://d15igp3lvopi4"]
 
 [ext_resource type="Script" uid="uid://nsjru0u7n42l" path="res://scenario_date.gd" id="1_4qn67"]
-[ext_resource type="Texture2D" uid="uid://cet55aba4s5ik" path="res://images/炎.png" id="1_6gcop"]
-[ext_resource type="AudioStream" uid="uid://c3mhfmvky2vhi" path="res://BGM/回想.mp3" id="2_87cer"]
+[ext_resource type="Texture2D" uid="uid://sugcybn04qn2" path="res://images/路地裏3.jpg" id="2_ewoti"]
 [ext_resource type="Script" uid="uid://cl3bhx8qa8d5x" path="res://dialogue_event.gd" id="3_ay0kt"]
+[ext_resource type="AudioStream" uid="uid://dq3ainftkexdg" path="res://BGM/huwa.wav" id="3_nofuk"]
+[ext_resource type="Texture2D" uid="uid://c7uh0hhjfqx4" path="res://立ち絵/kokorone_run.png" id="4_xf4jd"]
 
 [sub_resource type="Resource" id="Resource_ewoti"]
 script = ExtResource("3_ay0kt")
+char_id = 1
+character_name = "ココロネ"
+text = "「もう知らない！」"
+character_sprite = ExtResource("4_xf4jd")
+background = ExtResource("2_ewoti")
+bgm = ExtResource("3_nofuk")
 metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
 
 [sub_resource type="Resource" id="Resource_nofuk"]
 script = ExtResource("3_ay0kt")
+character_name = "シキ"
+text = "どうすればよかったのだろう？
+数字が見えて、考えるのを避けられない。
+何かできることを模索するのは
+悪いことなのだろうか？"
 metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
 
 [resource]
 script = ExtResource("1_4qn67")
 chapter_id = "day_5"
-title = "DAY5"
-background = ExtResource("1_6gcop")
-bgm = ExtResource("2_87cer")
 events = Array[ExtResource("3_ay0kt")]([SubResource("Resource_ewoti"), SubResource("Resource_nofuk")])
 next_chapter_id = "day_6"
 metadata/_custom_type_script = "uid://nsjru0u7n42l"

@@ -1,3 +1,4 @@
+#title_screen.gd
 extends Control
 
 # --- UIノードへの参照 ---
@@ -162,8 +163,6 @@ func play_se(stream_data):
 		if se_player.is_inside_tree():
 			se_player.stream = stream_data
 			se_player.play()
-
-	pass
 	
 # ★追加：チャプター選択ボタンたちのセットアップ
 	setup_chapter_buttons()
@@ -177,7 +176,6 @@ func _on_start_button_pressed():
 
 # 「ロード（つづきから選択）」ボタンを押したとき
 func _on_load_menu_button_pressed():
-	update_load_slots_display()
 	switch_to_load_menu()
 
 # 「終了」 (統合された定義)
@@ -264,7 +262,6 @@ func _on_slot_button_pressed(slot_id):
 	else:
 		if Global.load_game(slot_id):
 			print("スロット", slot_id, "をロードしてゲームを開始します")
-			get_tree().change_scene_to_file("res://main_game.tscn")
 		else:
 			print("ロードに失敗しました")
 
@@ -299,6 +296,7 @@ func switch_to_main_menu():
 func switch_to_load_menu():
 	main_menu.visible = false
 	load_menu.visible = true
+	update_load_slots_display()
 
 # スロットボタンの表示（テキスト・有効無効）を更新する
 func update_load_slots_display():
@@ -389,3 +387,9 @@ func _on_confirmation_dialog_confirmed():
 	Global.initialize_all_data()
 	# 画面をリロードして反映
 	get_tree().reload_current_scene()
+
+# 設定画面の「戻る」ボタンが押されたとき
+func _on_setting_back_button_pressed():
+	if has_node("SettingCanvas"):
+		$SettingCanvas.visible = false
+		print("設定画面を閉じました")

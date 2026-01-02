@@ -1,19 +1,20 @@
-[gd_resource type="Resource" script_class="ScenarioData" load_steps=6 format=3 uid="uid://tdlbxhqmix1p"]
+[gd_resource type="Resource" script_class="ScenarioData" load_steps=5 format=3 uid="uid://tdlbxhqmix1p"]
 
-[ext_resource type="Texture2D" uid="uid://2bsifjo7yiq0" path="res://images/ステグラと星空.jpg" id="1_6f8ii"]
-[ext_resource type="Script" uid="uid://nsjru0u7n42l" path="res://scenario_date.gd" id="1_x1gve"]
-[ext_resource type="AudioStream" uid="uid://c3mhfmvky2vhi" path="res://BGM/回想.mp3" id="2_dulkt"]
-[ext_resource type="Script" uid="uid://cl3bhx8qa8d5x" path="res://dialogue_event.gd" id="3_dulkt"]
+[ext_resource type="Script" uid="uid://cl3bhx8qa8d5x" path="res://dialogue_event.gd" id="1_7baai"]
+[ext_resource type="Script" uid="uid://nsjru0u7n42l" path="res://scenario_date.gd" id="2_6f8ii"]
 
 [sub_resource type="Resource" id="Resource_qol0u"]
-script = ExtResource("3_dulkt")
+script = ExtResource("1_7baai")
+text = "happy"
+metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
+
+[sub_resource type="Resource" id="Resource_e5ma1"]
+script = ExtResource("1_7baai")
 metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
 
 [resource]
-script = ExtResource("1_x1gve")
-chapter_id = "happy_end"
-background = ExtResource("1_6f8ii")
-bgm = ExtResource("2_dulkt")
-events = Array[ExtResource("3_dulkt")]([SubResource("Resource_qol0u")])
-is_end_of_part1 = true
+script = ExtResource("2_6f8ii")
+chapter_id = "happy_end1"
+events = Array[ExtResource("1_7baai")]([SubResource("Resource_qol0u"), SubResource("Resource_e5ma1")])
+next_action = 3
 metadata/_custom_type_script = "uid://nsjru0u7n42l"
