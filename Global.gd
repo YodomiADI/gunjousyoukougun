@@ -1,23 +1,49 @@
+# Global.gd
 extends Node
 
-# セーブファイルの保存場所（user://はPCやスマホのユーザー専用フォルダを指します）
-# ベースとなるセーブパス。%dの部分にスロット番号が入ります
-const SAVE_PATH_TEMPLATE = "user://savegame_slot_%d.save"
-const AUTO_SAVE_SLOT = 0 # オートセーブ用スロット番号（0番とする
-
-# 現在の章を管理する変数
-var current_chapter_id = "prologue"
-# ゲームの状態を保持する変数（例：現在のテキスト行数）
-var current_line_index = 0
-# 総プレイ時間（秒）
+# --- 1. 基本的な進行状況 ---
+var current_chapter_id: String = "prologue"
+var current_line_index: int = 0
+var flags: Dictionary = {}
 var total_play_time: float = 0.0
-# クリアフラグ（第2部解放用）
-var is_part1_cleared: bool = false
 
+# --- 2. 第2部用ステータス ---
+var is_part2: bool = false
+var current_day: int = 1
+var current_period: int = 0  # 0:午前, 1:午後
 
-# ★変更：シナリオIDと、リソースファイルのパスを紐付ける辞書
-# ここで登録しておけば、ファイル名を変えてもIDで呼び出せます
-var chapter_registry = {
+# 第2部用ポイント（個数管理）
+var heart_count: int = 0 # 心
+var flame_count: int = 0 # 焔
+var soul_count: int = 0  # 魂
+
+# --- 3. 死期システム関連 ---
+var is_timer_active: bool = false
+# 現在の章での「死期の底（これ以上減らない値）」
+var current_death_floor: float = 0.0
+
+# 秒単位での残り寿命
+var player_death_seconds: float = 2587670064.0
+var kokorone_death_seconds: float = 582252.0  # 約6日18時間
+var homura_death_seconds: float = 600000.0
+var rei_death_seconds: float = 600000.0
+
+# 生存フラグ
+var is_kokorone_dead: bool = false
+var is_homura_dead: bool = false
+var is_rei_dead: bool = false
+
+# --- 4. システム設定・定数 ---
+var system_data = {
+	"is_part1_cleared": false
+}
+
+const SAVE_PATH = "user://save_%d.dat"
+const SYSTEM_SAVE_PATH = "user://system.dat"
+# 1日の秒数 (24時間 * 60分 * 60秒)
+const SECONDS_PER_DAY = 86400.0
+# シナリオのリソース登録
+var scenario_registry = {
 	"prologue": "res://scenarios/prologue.tres",
 	"day_1": "res://scenarios/day_1.tres",
 	"day_2": "res://scenarios/day_2.tres",
@@ -26,188 +52,262 @@ var chapter_registry = {
 	"day_5": "res://scenarios/day_5.tres",
 	"day_6": "res://scenarios/day_6.tres",
 	"day_7": "res://scenarios/day_7.tres",
-	"happy_end": "res://scenarios/happy_end.tres",
-	"bad_end": "res://scenarios/bad_end.tres"
+	"happy_end1": "res://scenarios/happy_end.tres",
+	"bad_end1": "res://scenarios/bad_end.tres",
+	"day1_am_clocktower": "res://scenarios/part2/day1_am_clocktower.tres",
+	"day1_am_church": "res://scenarios/part2/day1_am_church.tres",
 }
 
-# 章IDを日本語の表示名に変換する辞書（表示用）
+# 章の日本語名辞書（セーブ画面などで使用）
 var chapter_names = {
 	"prologue": "プロローグ",
-	"day_1": "Day 1",
-	"day_2": "Day 2",
-	"day_3": "Day 3",
-	"day_4": "Day 4",
-	"day_5": "Day 5",
-	"day_6": "Day 6",
-	"day_7": "Day 7 (分岐点)",
-	"happy_end": "ハッピーエンド",
-	"bad_end": "バッドエンド"
+	"day_1": "第一日",
+	"day_7": "第七日（審判）",
+	"day1_am_church": "第2部 1日目・教会"
 }
+
+# 
+var death_timers = {
+	"Player": 2587670064.0, # プレイヤーも辞書に入れると管理が楽です
+	"Kokorone": 582252.0,
+	"Homura": 600000.0,
+	"Rei": 600000.0
+}
+
+
+# --- 処理部 ---
 
 func _ready():
-	# GlobalはAutoloadされているので、ゲーム中ずっと動いています。
-	# ポーズ中に時間を止める設定はGodotのデフォルト挙動で機能します。
-	pass
+	load_system_data()
 
-# 毎フレーム経過時間を加算する
+var is_loading_process: bool = false
+
+	
+# --- 死期システム ---
 func _process(delta):
-	total_play_time += delta
+	if not get_tree().paused:
+		# プレイヤーの死期を減らすが、current_death_floor よりは減らさない
+		if player_death_seconds > current_death_floor:
+			player_death_seconds -= delta
+			if player_death_seconds < current_death_floor:
+				player_death_seconds = current_death_floor
+		
+		# ヒロインたちのタイマー（こちらは制限なし、または別途管理）
+		if is_timer_active:
+			update_heroine_timers(delta)
+	# ゲーム中（メイン画面が表示されている間）だけカウントを進める
+	# シーン名が "MainGame"（または実際のメインシーン名）であることを確認してください
+	if get_tree().current_scene and get_tree().current_scene.name == "MainGame":
+		total_play_time += delta
 
-# # ゲームの状態を初期値に戻す機能 
-# 「はじめから」を選ぶ際に、章IDも含めて完全にリセットするために使用します。
-func reset_game_progress():
-	# Global変数を初期値に戻す
-	current_chapter_id = "prologue"
-	current_line_index = 0
-	total_play_time = 0.0 # 時間もリセット
-	print("ゲーム進捗をリセットしました: ", current_chapter_id, " ", current_line_index)
-	# 注: saveファイル自体を削除することも可能ですが、今回はGlobal変数のリセットに留めます。
-	# main_game側からロード処理を削除するため、これで「最初から」の動作は実現できます。
+func update_heroine_timers(delta):
+	if not is_kokorone_dead: death_timers["Kokorone"] = max(0, death_timers["Kokorone"] - delta)
+	if not is_homura_dead: death_timers["Homura"] = max(0, death_timers["Homura"] - delta)
+	if not is_rei_dead: death_timers["Rei"] = max(0, death_timers["Rei"] - delta)
 
-# --- セーブ機能 ---
-	# slot_id: 0はオートセーブ、1以上は任意セーブスロット
-func save_game(slot_id: int = AUTO_SAVE_SLOT):
-	var path = SAVE_PATH_TEMPLATE % slot_id
-	var file = FileAccess.open(path, FileAccess.WRITE)
-	# 章の情報（chapter_id）も保存する
-	# 保存したいデータを辞書形式でまとめる
+func add_flag(flag_name: String):
+	if flag_name == "": return
+	flags[flag_name] = true
+	_check_special_conditions()
+
+func _check_special_conditions():
+	if flags.has("心その1") and flags.has("心その2") and flags.has("心その3"):
+		flags["ココロネ"] = true
+
+func get_scenario_resource(id: String) -> ScenarioData:
+	if scenario_registry.has(id):
+		return load(scenario_registry[id]) as ScenarioData
+	return null
+# --- 章開始時に死期を「1日分」確定させる関数 ---
+func prepare_death_timer_for_next_day():
+	# 現在の死期から、次の「24時間区切り」まで強制的に進める
+	# 例：プロローグ開始時 63日 3:33:18 
+	# -> 1章開始時には必ず 62日 3:33:18 からスタートさせる
+	
+	player_death_seconds -= SECONDS_PER_DAY
+	
+	# この章で減ってもいい限界（さらに1日分先）を設定
+	current_death_floor = player_death_seconds - SECONDS_PER_DAY
+# --- セーブ・ロード ---
+
+func save_game(slot_id: int, current_bg_path: String = "", current_bgm_path: String = ""):
 	var data = {
-		"chapter_id": current_chapter_id,
-		"line_index": current_line_index,
-		"play_time": total_play_time, # 時間も保存
-		"timestamp": Time.get_datetime_dict_from_system(), # 実際の現実時間（任意）	
-		"is_part1_cleared": is_part1_cleared # ★クリア状況も保存する
+		# 基本進行
+		"current_chapter_id": current_chapter_id,
+		"current_line_index": current_line_index,
+		"flags": flags,
+		
+		# 死期システム（最新の変数たち）
+		"player_death_seconds": player_death_seconds,
+		"current_death_floor": current_death_floor,
+		"death_timers": death_timers, # 辞書ごと保存
+		
+		# 第2部ステータス
+		"heart_count": heart_count,
+		"flame_count": flame_count,
+		"soul_count": soul_count,
+		"is_part2": is_part2,
+		"current_day": current_day,
+		"current_period": current_period,
+		"current_bg_path": current_bg_path,
+		"current_bgm_path": current_bgm_path,
+		
+		"total_play_time": total_play_time
+	
 	}
-	# JSON形式の文字列にして保存
-	file.store_string(JSON.stringify(data))
-	print("スロット ", slot_id, " にセーブしました: ", current_chapter_id)
+	var file = FileAccess.open(SAVE_PATH % slot_id, FileAccess.WRITE)
+	if file:
+		file.store_string(JSON.stringify(data))
+		print("Saved to slot: ", slot_id)
 
-# --- ロード機能 ---
-func load_game(slot_id: int = AUTO_SAVE_SLOT):
-	var path = SAVE_PATH_TEMPLATE % slot_id
-	if not FileAccess.file_exists(path):
-		return false # ファイルがなければ何もしない
-
+func load_game(slot_id: int) -> bool:
+	var path = SAVE_PATH % slot_id
+	if not FileAccess.file_exists(path): return false
+	
 	var file = FileAccess.open(path, FileAccess.READ)
-	var json_text = file.get_as_text()
+	var data = JSON.parse_string(file.get_as_text())
 	
-	# JSONを解析してデータに戻す
-	var json = JSON.new()
-	var error = json.parse(json_text)
+	# データの復元
+	total_play_time = data.get("total_play_time", 0.0)
 	
-	if error == OK:
-		var data = json.data
-		current_chapter_id = data.get("chapter_id", "prologue")
-		current_line_index = data.get("line_index", 0)
-		total_play_time = data.get("play_time", 0.0) # 時間を復元
-		is_part1_cleared = data.get("is_part1_cleared", false) # ★復元
-		print("ロード完了: ", current_chapter_id)
-		return true
-	return false
+	current_chapter_id = data.get("current_chapter_id", "prologue")
+	current_line_index = data.get("current_line_index", 0)
+	flags = data.get("flags", {})
 	
-# IDからリソースデータをロードして返す便利関数
-func get_scenario_data(id: String) -> ScenarioData:
-	if chapter_registry.has(id):
-		var path = chapter_registry[id]
-		# ResourceLoaderを使ってtresファイルを読み込む
-		return ResourceLoader.load(path) as ScenarioData
-	else:
-		push_error("未登録のチャプターID: " + id)
-		return null
-# 指定したスロットの「表示用情報」だけを取得する関数
-# セーブデータの存在確認や、ボタンのラベル表示に使います
-func get_slot_info(slot_id: int) -> Dictionary:
-	var path = SAVE_PATH_TEMPLATE % slot_id
-	if not FileAccess.file_exists(path):
-		return {} # データなし
+	player_death_seconds = data.get("player_death_seconds", player_death_seconds)
+	current_death_floor = data.get("current_death_floor", 0.0)
+	death_timers = data.get("death_timers", death_timers)
+	
+	heart_count = data.get("heart_count", 0)
+	flame_count = data.get("flame_count", 0)
+	soul_count = data.get("soul_count", 0)
+	
+	is_part2 = data.get("is_part2", false)
+	current_day = data.get("current_day", 1)
+	current_period = data.get("current_period", 0)
+	
+	is_loading_process = true # ロード中フラグを立てる
+	# ロードに成功したらメイン画面へ遷移する
+	get_tree().change_scene_to_file("res://main_game.tscn")
+	return true
 
-	var file = FileAccess.open(path, FileAccess.READ)
-	var json = JSON.new()
-	var error = json.parse(file.get_as_text())
-	
-	if error == OK:
-		return json.data # 辞書データをそのまま返す
-	return {}
-
-# 秒数を「時間:分:秒」の文字列に変換するヘルパー
-func format_time(seconds: float) -> String:
-	var total_sec = int(seconds)
-	var h = total_sec / 3600.0
-	var m = (total_sec % 3600) / 60.0
-	var s = total_sec % 60
-	return "%02d:%02d:%02d" % [h, m, s]
-
-# --- 削除機能 ---
-func delete_save(slot_id: int):
-	var path = SAVE_PATH_TEMPLATE % slot_id
-	
-	# ファイルが存在する場合のみ削除を実行
-	if FileAccess.file_exists(path):
-		# Godot 4系でのファイル削除方法
-		DirAccess.remove_absolute(path)
-		print("スロット", slot_id, "のデータを削除しました")
-		return true
-	return false
-	
-# --- 全データ初期化（初期化ボタン用） ---
-func initialize_all_data():
-	# 1. メモリ上の変数をすべて初期値に戻す
-	current_chapter_id = "prologue"
-	current_line_index = 0
-	total_play_time = 0.0
-	is_part1_cleared = false
-	
-	# システムデータ辞書も初期化
-	system_data = {
-		"is_part1_cleared": false,
-		"unlocked_gallery": []
-	}
-	
-	# 2. 物理ファイルの削除
-	# スロット0〜20を削除
-	for i in range(21):
-		var path = SAVE_PATH_TEMPLATE % i
-		if FileAccess.file_exists(path):
-			DirAccess.remove_absolute(path)
-			print("削除成功: ", path)
-	
-	# システムデータの削除
-	if FileAccess.file_exists(SYSTEM_SAVE_PATH):
-		DirAccess.remove_absolute(SYSTEM_SAVE_PATH)
-		print("システムデータを削除しました")
-
-
-#-----システムセーブ機能-----
-# システムデータ（クリア状況やCG回収率など、全体で共有するデータ）
-const SYSTEM_SAVE_PATH = "user://system_data.save"
-var system_data = {
-	"is_part1_cleared": false,  # 第1部クリアフラグ
-	"unlocked_gallery": []      # (将来用) CGギャラリーなど
-}
-
-# システムデータを保存する
 func save_system_data():
 	var file = FileAccess.open(SYSTEM_SAVE_PATH, FileAccess.WRITE)
 	file.store_string(JSON.stringify(system_data))
-	print("システムデータを保存しました")
 
-# システムデータを読み込む（起動時に呼ぶ）
 func load_system_data():
-	if not FileAccess.file_exists(SYSTEM_SAVE_PATH):
-		return # ファイルがない場合は初期値のまま
+	if FileAccess.file_exists(SYSTEM_SAVE_PATH):
+		var file = FileAccess.open(SYSTEM_SAVE_PATH, FileAccess.READ)
+		system_data = JSON.parse_string(file.get_as_text())
 
-	var file = FileAccess.open(SYSTEM_SAVE_PATH, FileAccess.READ)
-	var json = JSON.new()
-	var error = json.parse(file.get_as_text())
+# --- ユーティリティ ---
+
+func format_death_time(total_seconds: float) -> String:
+	var s = int(total_seconds)
+	var years = s / (365 * 24 * 3600.0)
+	s %= (365 * 24 * 3600)
+	var months = s / (30 * 24 * 3600.0)
+	s %= (30 * 24 * 3600)
+	var days = s / (24 * 3600.0)
+	s %= (24 * 3600)
+	var hours = s / 3600.0
+	s %= 3600
+	var minutes = s / 60.0
+	s %= 60
+	var seconds = s
+	return "%d：%d：%d：%d：%02d：%02d" % [years, months, days, hours, minutes, seconds]
+
+func evaluate_part2_ending() -> String:
+	if heart_count >= 3 and flame_count >= 3 and soul_count >= 3: return "true_end"
+	if heart_count >= 3: return "kokorone_end"
+	return "bad_end"
+
+# 初期化用（はじめから用）
+func reset_game_progress():
+	total_play_time = 0.0  # 時間を0に戻す
+	current_chapter_id = "prologue"
+	current_line_index = 0
+	flags = {}
+	is_part2 = false
+	current_day = 1
+	current_period = 0
+	is_timer_active = false
+	# 他の変数も初期値にリセット
 	
-	if error == OK:
-		var data = json.data
-		# 既存の辞書にマージする（キーが足りない場合のエラー防止）
-		if data.has("is_part1_cleared"):
-			system_data["is_part1_cleared"] = data["is_part1_cleared"]
-		# 必要に応じて他のデータも読み込む
+	
+# バックログを保存する配列（辞書の配列）
+var backlog: Array[Dictionary] = []
+# バックログの最大保存件数（溜まりすぎ防止）
+const MAX_BACKLOG = 100
 
-# 第1部クリア時に呼ぶ便利関数
-func complete_part1():
-	system_data["is_part1_cleared"] = true
-	save_system_data() # 即座にファイルに書き込む
+# バックログにセリフを追加する関数
+func add_to_backlog(char_name: String, text: String):
+	var entry = {
+		"name": char_name,
+		"text": text
+	}
+	backlog.append(entry)
+	
+	# 上限を超えたら古いものから削除
+	if backlog.size() > MAX_BACKLOG:
+		backlog.remove_at(0)
+
+# ゲームリセット時などにログを消去する関数
+func clear_backlog():
+	backlog.clear()
+
+func get_death_time_string(char_name: String) -> String:
+	if death_timers.has(char_name):
+		return format_death_time(death_timers[char_name])
+	return ""
+# スロットの情報を取得する関数（ポーズメニューやロード画面用）
+func get_slot_info(slot_id: int) -> Dictionary:
+	var path = SAVE_PATH % slot_id
+	if not FileAccess.file_exists(path):
+		return {} # ファイルがない場合は空の辞書を返す
+
+	var file = FileAccess.open(path, FileAccess.READ)
+	var json_text = file.get_as_text()
+	var data = JSON.parse_string(json_text)
+	
+	if data == null:
+		return {}
+
+	return {
+		"chapter_id": data.get("current_chapter_id", "不明"),
+		"play_time": data.get("total_play_time", 0)
+	}
+
+# セーブデータの削除関数（タイトル画面の削除モード用）
+func delete_save(slot_id: int):
+	var path = SAVE_PATH % slot_id
+	if FileAccess.file_exists(path):
+		var dir = DirAccess.open("user://")
+		if dir:
+			dir.remove(path.replace("user://", ""))
+			print("削除成功: ", path)
+
+# 通常のプレイ時間フォーマット (秒 -> 00:00:00)
+func format_time(total_seconds: float) -> String:
+	var s = int(total_seconds)
+	var hours = s / 3600.0
+	var minutes = (s % 3600) / 60.0
+	var seconds = s % 60
+	return "%02d:%02d:%02d" % [hours, minutes, seconds]
+# --- 全データの初期化（初期化ボタン用） ---
+func initialize_all_data():
+	# 1. すべてのセーブファイルを削除 (0:オート, 1~3:手動スロット)
+	for i in range(4):
+		delete_save(i)
+	
+	# 2. システムデータ（クリアフラグなど）をリセット
+	system_data = {
+		"is_part1_cleared": false,
+		"is_part2_unlocked": false
+	}
+	save_system_data() # リセットしたシステム状態を保存
+	
+	# 3. 現在進行中のデータ（プレイ時間など）をすべてリセット
+	reset_game_progress()
+	
+	print("すべてのデータを初期化しました。")

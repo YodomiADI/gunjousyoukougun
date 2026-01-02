@@ -1,406 +1,418 @@
+# main_game.gd
 extends Control
 
-@onready var name_label = $Panel/NameBox/NameLabel # パスは自分の構成に合わせてください
-@onready var char_sprite = $CharacterSprite
-# TextureRectを取得
-@onready var background_rect = $Background
-# BGMプレイヤーを取得
-@onready var bgm_player = $BGMPlayer
 @onready var text_label = $Panel/Label
-# 「FadeOverlay」を取得
-# もしPanelの中に作ってしまった場合は $Panel/FadeOverlay になりますが、
-# 基本的にはControl直下（$FadeOverlay）にある想定です。
-@onready var fade_overlay = $FadeOverLay
-# システムボタン（非表示にしたり文字色を変えたりするため）
-@onready var auto_btn = $SystemButtons/AutoButton
-@onready var skip_btn = $SystemButtons/SkipButton
+@onready var name_label = $Panel/NameBox/NameLabel
+@onready var char_sprite = $CharacterSprite
+@onready var background = $Background
+@onready var bgm_player = $BGMPlayer
+@onready var se_player = $SEPlayer
+@onready var kokorone_timer_label = $KokoroneTimerLabel
+@onready var choice_container = $ChoiceContainer
+@export var typing_speed: float = 0.05 # 1文字出すのにかかる秒数
+var typing_tween: Tween # 文字送り用のTween
+@onready var next_icon = $Panel/NextIcon # ▼アイコン
+@onready var animation_player = $AnimationPlayer # アニメーションプレイヤー
 
-# ログ関連の参照
-@onready var log_btn = $SystemButtons/LogButton
-@onready var log_panel = $LogPanel
-@onready var log_container = $LogPanel/ScrollContainer/LogContainer
-@onready var log_close_btn = $LogPanel/LogCloseButton
-@onready var log_scroll = $LogPanel/ScrollContainer
+@onready var backlog_canvas = $BacklogCanvas
+@onready var log_list = $BacklogCanvas/Panel/ScrollContainer/LogList
 
-# 現在読み込んでいるシナリオデータ
-var current_scenario_data: ScenarioData
-var dialogue_list: Array[DialogueEvent] = []
-var current_index = 0
-# アニメーションを管理するための変数
-var current_tween: Tween
-# アニメーション中に入力を受け付けないようにするためのフラグ
-var is_transitioning = false
-# モード管理フラグ
-var is_auto_mode = false
-var is_skip_mode = false
-# オートモードの待ち時間（秒）
-const AUTO_WAIT_TIME = 1.5
-# スキップモードの待ち時間（秒・ほぼ一瞬）
-const SKIP_WAIT_TIME = 0.1
+var is_auto: bool = false
+var is_skipping: bool = false
+@export var auto_wait_time: float = 1.5 # オート時の待機時間（秒）
 
+@onready var auto_button = $SystemButtons/AutoButton
+@onready var skip_button = $SystemButtons/SkipButton
+
+@onready var left_slot = $CharacterContainer/LeftSlot
+@onready var right_slot = $CharacterContainer/RightSlot
+@onready var center_slot = $CharacterContainer/CenterSlot
+
+var current_data: ScenarioData
+var current_index: int = 0
+var is_typing: bool = false
 
 func _ready():
-	# 初期化：フェード用の幕を透明にしておく
-	if fade_overlay:
-		fade_overlay.color.a = 0.0
+	# 初期状態では隠しておく
+	next_icon.hide()
+	# 1. まずデータをロードする
+	load_scenario(Global.current_chapter_id)
 	
-	setup_current_chapter()
-	# Globalの現在の状態（行番号）を適用
-	current_index = Global.current_line_index
-	# もしセーブデータの続きが、もう文章がない場所（クリア後など）だったら
-	if current_index >= dialogue_list.size():
-		current_index = 0 # 最初に戻すか、クリア画面へ飛ばす処理などを入れる
-	update_text()
-	
-
-
-# 章のデータをセットする関数
-func setup_current_chapter():
-	var chapter_id = Global.current_chapter_id
-# Globalからリソースを取得
-	current_scenario_data = Global.get_scenario_data(chapter_id)
-
-	if current_scenario_data:
-		# リソース内のデータを取り出す
-		dialogue_list = current_scenario_data.events
-		# ※初期背景・BGMは、最初のイベント(0番目)で設定するようにすればOK
-	else:
-		# エラー処理用
-		pass
-
-
-# --- 入力処理 ---
-# ユーザーがクリックしたら、オートやスキップを解除する
-func _unhandled_input(event):
-	# トランジション中やログが開いている時は入力を受け付けない
-	# (ログパネル自体のMouseFilterがStopなら、ログ表示中のクリックはそもそもここまで来ませんが、念のため残します)
-	if is_transitioning or log_panel.visible:
+	# 2. ロードに失敗した（current_dataが空）なら、ここで処理を中断する
+	if current_data == null:
 		return
-	
-	# 左クリック、または決定キー(Enter/Space)が押された場合
-	if event.is_action_pressed("ui_accept") or (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT):
-		# UIボタン（Auto/Skip/Log）をクリックしたときは本編を進めない
-		# ※ボタンの Mouse Filter が Stop になっていればここは通りません
-		
-		# ★重要：ここに来た時点で「ボタン等はクリックされていない」ことが確定しています
-			
-		# オート・スキップを強制解除
-		if is_auto_mode or is_skip_mode:
-			stop_auto_skip()
-			return 
 
-		# 文字が表示途中なら一気に表示（スキップ）
-		if text_label.visible_ratio < 1.0:
-			if current_tween:
-				current_tween.kill()
-			text_label.visible_ratio = 1.0
-			_on_text_fully_displayed()
-			
-		# 文字が全部表示されているなら、次の文章へ
-		else:
-			load_next_line()
-
-# 次の行へ進む処理を関数として独立させる
-func load_next_line():
-	current_index += 1
-	Global.current_line_index = current_index
-	
-	if current_index < dialogue_list.size():
-		Global.save_game()
-		update_text()
+	# プロローグの開始時制限
+	if Global.current_chapter_id != "prologue":
+		Global.prepare_death_timer_for_next_day()
 	else:
-		# 章の終わり
-		stop_auto_skip() # 章をまたぐ時は一旦止める
-		go_to_next_chapter()
-		
-		
-# 次の章へ進む処理
-func go_to_next_chapter():
-	# Day7の場合、ここで分岐処理を入れる
+		Global.current_death_floor = Global.player_death_seconds - Global.SECONDS_PER_DAY
+	
+	# DAY7のタイマー起動
 	if Global.current_chapter_id == "day_7":
-		show_route_selection() # 選択肢ボタンを表示する関数（後述）を作る
-		return
-
-	# 現在のデータの「次の章ID」を確認
-	if current_scenario_data and current_scenario_data.next_chapter_id != "":
-		play_chapter_transition(current_scenario_data.next_chapter_id)
-	
-	# 第1部終了フラグが立っている場合
-	elif current_scenario_data and current_scenario_data.is_end_of_part1:
-		finish_part1()
-
+		start_day7()
 	else:
-		# 次がない場合はとりあえずタイトルへ
+		kokorone_timer_label.visible = false
+		Global.is_timer_active = true
+	
+	current_index = Global.current_line_index
+	display_event()
+
+func _process(delta):
+	if Global.is_timer_active:
+		kokorone_timer_label.visible = true
+		# 辞書から取得して表示（メインタイマーも辞書にまとめると管理が楽です）
+		kokorone_timer_label.text = "ココロネの死期まで\n" + Global.format_death_time(Global.death_timers.get("Kokorone", 0.0))
+		
+		# 全キャラの時間を減らす
+		for key in Global.death_timers.keys():
+			Global.death_timers[key] -= delta
+			
+		# 各スロットの頭上タイマーを更新
+		if left_slot.visible:
+			left_slot.update_timer()
+		if right_slot.visible:
+			right_slot.update_timer()
+		if center_slot.visible: 
+			center_slot.update_timer() # 追加
+	else:
+		kokorone_timer_label.visible = false
+		
+func load_scenario(id: String):
+	current_data = Global.get_scenario_resource(id)
+	if not current_data:
+		print("Error: Scenario not found: ", id)
 		get_tree().change_scene_to_file("res://title_screen.tscn")
 
-# 第1部クリア処理
-func finish_part1():
-# ★ここを変更：システムデータに「クリアした」と書き込む
-	Global.complete_part1()
-	
-	# 第2部のメインゲームシーンへ移動
-	# 演出を入れるならここにフェード処理など
-	get_tree().change_scene_to_file("res://main_game2.tscn")
-
-# 分岐ボタンを表示する（簡易例）
-func show_route_selection():
-	# 本来は専用のUIパネルを用意して .show() するのが良いです
-	# ここではコードでボタンを生成する例を書きます
-	var vbox = VBoxContainer.new()
-	vbox.position = Vector2(400, 300) # 画面中央あたり
-	add_child(vbox)
-	
-	var btn_happy = Button.new()
-	btn_happy.text = "希望を見出す (Happy Route)"
-	btn_happy.pressed.connect(func(): 
-		vbox.queue_free()
-		play_chapter_transition("happy_end")
-	)
-	vbox.add_child(btn_happy)
-	
-	var btn_bad = Button.new()
-	btn_bad.text = "運命を受け入れる (Bad Route)"
-	btn_bad.pressed.connect(func(): 
-		vbox.queue_free()
-		play_chapter_transition("bad_end")
-	)
-	vbox.add_child(btn_bad)
 
 
-# フェードアウト → 章切り替え → フェードイン を行う関数
-func play_chapter_transition(next_chapter_id):
-	# 1. 操作ロック
-	is_transitioning = true
-	
-	# 2. フェードアウト（画面を徐々に黒くする）
-	var tween = create_tween()
-	# colorのアルファ値を0(透明)から1(不透明)へ、1.5秒かけて変化させる
-	tween.tween_property(fade_overlay, "color:a", 1.0, 1.5)
-	
-	# アニメーションが終わるのを待つ
-	await tween.finished
-	
-	# 3. 画面が真っ暗な裏で、章データを切り替える
-	change_chapter(next_chapter_id)
-	
-	# ちょっとだけ真っ暗な時間を維持する（余韻）
-	await get_tree().create_timer(0.5).timeout
-	
-	# 4. フェードイン（画面を徐々に明るくする）
-	var tween_in = create_tween()
-	# colorのアルファ値を1(不透明)から0(透明)へ、1.5秒かけて変化させる
-	tween_in.tween_property(fade_overlay, "color:a", 0.0, 1.5)
-	
-	await tween_in.finished
-	
-	# 5. 操作ロック解除
-	is_transitioning = false
-
-
-# 章を切り替えてリセットする共通関数
-func change_chapter(next_chapter_id):
-	# 1. Globalの変数を更新
-	Global.current_chapter_id = next_chapter_id
-	Global.current_line_index = 0 # 行数を0にリセット
-	
-	# 2. シナリオデータを再読み込み
-	setup_current_chapter()
-	current_index = 0
-	
-	# 3. オートセーブ（新しい章の頭でセーブしておく）
-	Global.save_game()
-	
-	# 4. 画面更新
-	update_text()
-
-func update_text():
-	# データの存在チェック
-	if dialogue_list.is_empty():
-		push_warning("シナリオデータが空です！")
-		text_label.text = "（シナリオデータが登録されていません）"
+func _unhandled_input(event):
+	# UI表示中は入力を無視
+	if (backlog_canvas and backlog_canvas.visible) or (choice_container and choice_container.visible):
 		return
 
-	# 現在のインデックスが配列の範囲内かチェック
-	if current_index < 0 or current_index >= dialogue_list.size():
-		return
-	
-	var current_event = dialogue_list[current_index]
-	if current_event == null: return # 安全策
-	#履歴に今のセリフを追加する
-	add_log_entry(current_event)
+	# キーボードショートカット
+	if event.is_action_pressed("ui_auto"):
+		toggle_auto()
+	if event.is_action_pressed("ui_skip"):
+		toggle_skip()
 
-	# --- 1. 立ち絵の更新 ---
-	if current_event.character_sprite:
-		char_sprite.texture = current_event.character_sprite
-		char_sprite.show() # 画像があるなら表示
+	# マウスクリックまたは決定キー
+	if event.is_action_pressed("ui_accept") or (event is InputEventMouseButton and event.pressed):
+		# オート/スキップ中にクリックされたら、まずモードを解除する
+		if is_auto or is_skipping:
+			stop_modes()
+			return # 解除だけして、テキストは進めない（誤操作防止）
+
+		if is_typing:
+			complete_typing() # タイピング中なら全表示
+		else:
+			advance_line() # 表示済みなら次の行へ
+
+# モード解除用
+func stop_modes():
+	is_auto = false
+	is_skipping = false
+	_update_button_visuals() # 見た目を更新
+	print("Auto/Skip stopped")
+
+func toggle_auto():
+	is_auto = !is_auto
+	is_skipping = false # スキップとは排他
+	_update_button_visuals() # 見た目を更新
+	
+	if is_auto and !is_typing:
+		advance_line()
+
+func toggle_skip():
+	is_skipping = !is_skipping
+	is_auto = false # オートとは排他
+	_update_button_visuals() # 見た目を更新	
+	
+	if is_skipping:
+		advance_line()
+
+
+
+func advance_line():
+	if current_data == null: return
+	
+	# ここでも念のためチェック（透明な壁対策）
+	if choice_container and choice_container.visible:
+		return
+	# ここからが本来の「行を進める」処理
+	current_index += 1
+	if current_index < current_data.events.size():
+		Global.current_line_index = current_index
+		display_event()
 	else:
-		# 画像が設定されていない場合、立ち絵を消すか前のままにするか選べます
-		# 完全に消したい場合は：
-		char_sprite.hide() 
-
-	# --- 2. 名前欄の更新 ---
-	if current_event.character_name != "":
-		name_label.text = current_event.character_name
-		name_label.show() # 名前があるなら表示
-	else:
-		name_label.hide() # 名前が空なら名前枠自体を隠す
-	
-	
-	# --- 3. 演出の実行（背景・BGM・SE：これまでの処理） ---
-	# 背景の変更
-	if current_event.change_background:
-		background_rect.texture = current_event.change_background
-	
-	# BGMの変更
-	if current_event.change_bgm:
-		if bgm_player.stream != current_event.change_bgm:
-			bgm_player.stream = current_event.change_bgm
-			bgm_player.play()
-			
-	# SEの再生
-	if current_event.play_se:
-		# ノードツリーに $SEPlayer があることを確認してください
-		if has_node("SEPlayer"):
-			$SEPlayer.stream = current_event.play_se
-			$SEPlayer.play()
-
-# --- 4. テキストの表示 ---
-	text_label.text = current_event.text
-	# アニメーション設定
-	text_label.visible_ratio = 0.0
-	# ★速度調整：スキップモードなら0秒（一瞬）、それ以外は文字数ベース
-	var duration = 0.0
-	if is_skip_mode:
-		duration = 0.0
-	else:
-		duration = text_label.get_total_character_count() * 0.05
-	
-	if current_tween:
-		current_tween.kill()
-	current_tween = create_tween()
-	current_tween.tween_property(text_label, "visible_ratio", 1.0, duration)
-	
-	# ★重要：Tweenが終わった（文字が表示しきった）時の合図を受け取る
-	current_tween.finished.connect(_on_text_fully_displayed)
-	# 文字が全部表示された後に呼ばれる関数
-func _on_text_fully_displayed():
-	# オートやスキップでないなら何もしない（クリック待ち）
-	if not (is_auto_mode or is_skip_mode):
-		return
-	# ログパネルが開いている間は、自動進行をストップする
-	if log_panel.visible:
-		return
-
-	# 待ち時間を決定
-	var wait_time = AUTO_WAIT_TIME
-	if is_skip_mode:
-		wait_time = SKIP_WAIT_TIME
+		# シナリオの末尾に到達
+		finish_chapter()
 		
-	if is_inside_tree():
-		await get_tree().create_timer(wait_time).timeout
-# --- ここが重要：待機が終わった瞬間の再チェック ---
-		# 1. 待っている間にオート/スキップを解除した
-		# 2. 待っている間にログを開いた
-		# 3. 待っている間にフェード（章移動）が始まった
-		# これらに当てはまるなら、load_next_line() を実行させない
-		if not (is_auto_mode or is_skip_mode): return
-		if log_panel.visible: return
-		if is_transitioning: return
+# --- ボタンの見た目（色）を変える処理 ---
+func _update_button_visuals():
+	# オートボタンの色
+	if is_auto:
+		auto_button.modulate = Color.CYAN # 起動中は水色に
+	else:
+		auto_button.modulate = Color.WHITE
 		
-		# すべてクリアしていれば次の行へ
-		load_next_line()
+	# スキップボタンの色
+	if is_skipping:
+		skip_button.modulate = Color.ORANGE # 起動中はオレンジに
+	else:
+		skip_button.modulate = Color.WHITE
 
+# --- シグナル接続用の関数 ---
 
-# --- ボタン制御用関数 ---
-
-# Autoボタンが押されたとき
 func _on_auto_button_pressed():
-	if is_auto_mode:
-		stop_auto_skip()
-	else:
-		start_auto_mode()
+	toggle_auto()
 
-# Skipボタンが押されたとき
 func _on_skip_button_pressed():
-	if is_skip_mode:
-		stop_auto_skip()
-	else:
-		start_skip_mode()
+	toggle_skip()
 
-func start_auto_mode():
-	is_auto_mode = true
-	is_skip_mode = false # Skipはオフにする
-	print("Auto Mode Start")
-
-# 文字がすでに表示し終わっているなら、オート進行を開始させる
-	if text_label.visible_ratio >= 1.0:
-		_on_text_fully_displayed()
-
-func start_skip_mode():
-	is_skip_mode = true
-	is_auto_mode = false # Autoはオフにする
-	print("Skip Mode Start")
-	
-	# 現在表示中のTweenを強制終了して即座に表示完了にする
-	if current_tween and current_tween.is_running():
-		current_tween.kill()
-		text_label.visible_ratio = 1.0
-		_on_text_fully_displayed() # 完了処理へ
-	elif text_label.visible_ratio >= 1.0:
-		# すでに文字が出ていたら即座に次へ
-		load_next_line()
-
-func stop_auto_skip():
-	is_auto_mode = false
-	is_skip_mode = false
-	print("Mode Stopped")
-	
-# --- ログ追加処理 ---
-# 履歴を追加する関数
-func add_log_entry(event: DialogueEvent):
-	if event == null:
+func display_event():
+	# ここでNilチェックを入れることでクラッシュを防止
+	if current_data == null or current_data.events.size() <= current_index:
 		return
-	
-	# ラベルを作成
-	var entry_label = RichTextLabel.new()
-	
-	# ログの中身を作る（名前 + 改行 + セリフ）
-	var log_text = ""
-	if event.character_name != "":
-		# 名前を黄色にして強調する例
-		log_text += "[color=yellow]" + event.character_name + "[/color]\n"
-	
-	log_text += "[color=white]" + event.text + "[/color]\n" # 下に少し余白用の改行
-	
-	# ラベル設定
-	entry_label.text = log_text
-	entry_label.bbcode_enabled = true
-	entry_label.fit_content = true # 内容に合わせて高さを自動調整
-	
-	# フォントサイズ（必要なら調整してください）
-	entry_label.add_theme_font_size_override("normal_font_size", 24)
-	
-	# コンテナに追加
-	log_container.add_child(entry_label)
-	
-	# ログが増えすぎたら古いのを消す（メモリ節約）
-	if log_container.get_child_count() > 50:
-		log_container.get_child(0).queue_free()
 
-# ログボタンが押されたとき
-func _on_log_button_pressed():
-	# ログを開くときはオート・スキップを止めるだけで、進ませない
-	stop_auto_skip()
-	log_panel.show()
-	# スクロールを一番下に下げる（最新の会話を見せる）
-	await get_tree().process_frame
-	if log_scroll:
-		log_scroll.scroll_vertical = log_scroll.get_v_scroll_bar().max_value
 
-# 閉じるボタンが押されたとき
-func _on_log_close_button_pressed():
-	log_panel.hide()
-	# もしオートモードのままログを閉じたなら、改めて進行をチェックさせる
-	if is_auto_mode or is_skip_mode:
-		_on_text_fully_displayed()
+	var ev = current_data.events[current_index]
+
+	if ev.background:
+		background.texture = ev.background
+		# Globalのバックログに保存
+	Global.add_to_backlog(ev.character_name, ev.text)
+	
+	name_label.text = ev.character_name
+	# 1. まず各スロットを更新 # 位置の指定に合わせてスロットを更新
+	match ev.position:
+		0: # NONE (全員消す)
+			left_slot.hide()
+			right_slot.hide()
+			center_slot.hide()
+		1: # LEFT
+			left_slot.display(ev.character_name, ev.character_sprite, ev.char_id, ev.timer_offset, ev.character_scale, ev.base_scale)
+			if ev.clear_other_slots: # ←ここがポイント！
+				right_slot.hide()
+				center_slot.hide()
+		2: # RIGHT
+			right_slot.display(ev.character_name, ev.character_sprite, ev.char_id, ev.timer_offset, ev.character_scale, ev.base_scale)
+			if ev.clear_other_slots:
+				left_slot.hide()
+				center_slot.hide()
+		3: # CENTER
+			center_slot.display(ev.character_name, ev.character_sprite, ev.char_id, ev.timer_offset, ev.character_scale, ev.base_scale)
+			if ev.clear_other_slots:
+				left_slot.hide()
+				right_slot.hide()
+			
+			
+		# --- ここから「暗くする」演出の追加 ---
+	
+	# 現在のイベントの位置（1, 2, 3）を取得
+	var current_pos = ev.position
+	
+	# 全スロットをリストにしてループで回す
+	for slot in [left_slot, right_slot, center_slot]:
+		if slot.visible:
+			# このスロットの場所が、今の発言位置と同じなら「アクティブ」
+			# 例: ev.position が 1 (LEFT) で、今処理してるのが left_slot なら true
+			var is_speaker = false
+			if slot == left_slot and current_pos == 1: is_speaker = true
+			if slot == right_slot and current_pos == 2: is_speaker = true
+			if slot == center_slot and current_pos == 3: is_speaker = true
+			
+			slot.set_focus(is_speaker)
+			
+# --- タイピング演出の開始 ---
+	next_icon.hide() # 新しい行が始まったらアイコンを隠す
+	animation_player.stop() # アニメーションも止める
+
+	text_label.text = ev.text
+# --- スキップモードの場合 ---
+	if is_skipping:
+		text_label.visible_characters = -1
+		is_typing = false
+		# 待機なしで即座に次へ行くための準備（少しだけ待たないと無限ループエラーになるため0.05秒程度待つ）
+		get_tree().create_timer(0.05).timeout.connect(advance_line)
+		return
+	# --------------------------
+
+	text_label.visible_characters = 0 # まず文字を隠す
+	is_typing = true
+	
+	# 前のTweenが動いていたら止める
+	if typing_tween:
+		typing_tween.kill()
+	
+	# Tweenを使って文字数を 0 から 全文字数まで増やす
+	typing_tween = create_tween()
+	var duration = ev.text.length() * typing_speed
+	typing_tween.tween_property(text_label, "visible_characters", ev.text.length(), duration)
+	
+	# 終わったら is_typing を false にする
+	typing_tween.finished.connect(_on_typing_finished)
+	# ---------------------------
+	
+	if ev.background:
+		background.texture = ev.background
 		
+	if ev.bgm and bgm_player.stream != ev.bgm:
+		bgm_player.stream = ev.bgm
+		bgm_player.play()
+		
+	if ev.se:
+		se_player.stream = ev.se
+		se_player.play()
+		
+	if ev.shake_screen:
+		apply_shake()
+
+# --- 選択肢を表示する関数 ---
+func show_choices(choices: Array):
+	# すでに表示されているなら二重に作らない
+	if choice_container.visible:
+		return
+	print("選択肢を表示します: ", choices)
+	# 以前のボタンを削除して掃除
+	for child in choice_container.get_children():
+		child.queue_free()
+	
+	# 選択肢ボタンを動的に作成
+	for i in range(choices.size()):
+		var btn = Button.new()
+		btn.text = choices[i]
+		btn.custom_minimum_size = Vector2(200, 50) # ボタンのサイズ調整
+		
+		# マウスフィルターを明示的に「Stop」にする（クリックを受け取るため）
+		btn.mouse_filter = Control.MOUSE_FILTER_STOP
+		
+		# 接続（重複接続を避けるために一回リセットするのが安全）
+		if btn.pressed.is_connected(_on_choice_selected):
+			btn.pressed.disconnect(_on_choice_selected)
+		btn.pressed.connect(_on_choice_selected.bind(i))
+		
+		choice_container.add_child(btn)
+		
+	choice_container.show() # コンテナを表示
+	# 他のUIよりも手前に表示する
+	choice_container.move_to_front()
+# --- 選択肢がクリックされた時の処理 ---
+func _on_choice_selected(index: int):
+	print("ボタンがクリックされました！ インデックス: ", index) # ← これが出るか確認
+	choice_container.hide()
+	
+	# DAY7の特殊分岐例
+	if Global.current_chapter_id == "day_7":
+		if index == 0: # 1番目のボタン（通常エンドへ）
+			Global.current_chapter_id = "happy_end1"
+		else: # 2番目のボタン（バッドエンドへ）
+			Global.current_chapter_id = "bad_end1"
+	
+	# 次の章へ移動
+	print("次の章へ移動します: ", Global.current_chapter_id)
+	Global.current_line_index = 0
+	get_tree().reload_current_scene()
+
+func finish_chapter():
+	Global.add_flag(current_data.reward_flag)
+	
+	# カウントの加算
+	match current_data.reward_type:
+		"Heart": Global.heart_count += 1
+		"Flame": Global.flame_count += 1
+		"Soul": Global.soul_count += 1
+	
+	# 次のアクションの判定
+	match current_data.next_action:
+		# --- [重要] プロローグや通常章の移動はこれ ---
+		ScenarioData.NextAction.AUTO_NEXT:
+			Global.current_chapter_id = current_data.next_chapter_id
+			Global.current_line_index = 0
+			get_tree().reload_current_scene()
+			
+		# --- エンディングや分岐の判定 ---
+		ScenarioData.NextAction.DETERMINE_END:
+			if Global.current_chapter_id == "day_7":
+				Global.is_timer_active = false # タイマー停止
+				# ここで「選択肢」を出す
+				if Global.kokorone_death_seconds > 0:
+					# 3分59秒以内に読み終えた場合
+					show_choices(["運命に抗う（通常エンドへ）", "諦める（バッドエンドへ）"])
+				else:
+					# タイムアップ（0秒以下）の場合
+					show_choices(["……（手遅れだった、バッドエンドへ）"])
+			else:
+				# DAY7以外でDETERMINE_ENDが設定されている場合（第2部など）
+				Global.current_chapter_id = Global.evaluate_part2_ending()
+				Global.current_line_index = 0
+				get_tree().reload_current_scene()
+			
+		# --- マップ画面へ ---
+		ScenarioData.NextAction.OPEN_MAP:
+			get_tree().change_scene_to_file("res://map_selection.tscn")
+			
+		# --- タイトルへ戻る / バッドエンドのリトライ ---
+		ScenarioData.NextAction.GO_TO_TITLE:
+			if Global.current_chapter_id == "bad_end1":
+				Global.current_chapter_id = "day_7"
+				Global.current_line_index = 0
+				Global.kokorone_death_seconds = 239.0
+				get_tree().reload_current_scene()
+			else:
+				get_tree().change_scene_to_file("res://title_screen.tscn")
+
+func start_day7():
+	Global.kokorone_death_seconds = 239.0
+	Global.is_timer_active = true
+
+func apply_shake():
+	var tween = create_tween()
+	var start_pos = position
+	tween.tween_property(self, "position", start_pos + Vector2(10, 0), 0.05)
+	tween.tween_property(self, "position", start_pos - Vector2(10, 0), 0.05)
+	tween.tween_property(self, "position", start_pos, 0.05)
+
+# 一気に表示させる関数
+func complete_typing():
+	if typing_tween:
+		typing_tween.kill()
+	text_label.visible_characters = -1
+	# 強制終了しても「文字表示完了」の処理を呼ぶ
+	_on_typing_finished()
+	
+	# 文字表示が完了した時の共通処理 ---
+func _on_typing_finished():
+	is_typing = false
+	next_icon.show() # アイコンを表示
+	animation_player.play("wait") # 「▼点滅」アニメーションを再生
+	
+	# --- オートモードの場合 ---
+	if is_auto:
+		# 指定した秒数待ってから advance_line を呼ぶ
+		get_tree().create_timer(auto_wait_time).timeout.connect(func():
+			if is_auto: # 待っている間に解除されていないか確認
+				advance_line()
+		)
+# --- バックログ画面を開く ---
+func _on_backlog_button_pressed():
+	# リストを一度掃除する
+	for child in log_list.get_children():
+		child.queue_free()
+	
+	# Globalのデータからラベルを生成して並べる
+	for entry in Global.backlog:
+		var log_item = Label.new()
+		# 「名前: セリフ」の形式で表示
+		var display_name = entry["name"] if entry["name"] != "" else "（名前なし）"
+		log_item.text = "%s\n%s\n" % [display_name, entry["text"]]
+		# 折り返し設定（ScrollContainer内で横にはみ出さないように）
+		log_item.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		log_list.add_child(log_item)
+	
+	backlog_canvas.show()
+
+# --- バックログ画面を閉じる ---
+func _on_backlog_close_button_pressed():
+	backlog_canvas.hide()

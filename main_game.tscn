@@ -1,8 +1,47 @@
-[gd_scene load_steps=4 format=3 uid="uid://cllpcuaeq424j"]
+[gd_scene load_steps=8 format=3 uid="uid://cllpcuaeq424j"]
 
 [ext_resource type="Script" uid="uid://b7scfg1k3ox20" path="res://main_game.gd" id="1_1oj5k"]
+[ext_resource type="PackedScene" uid="uid://bs4nyna76vxqf" path="res://character_display.tscn" id="2_6bm6p"]
 [ext_resource type="Texture2D" uid="uid://dqxoljf06ads2" path="res://images/裏面.png" id="2_ykeeq"]
 [ext_resource type="PackedScene" uid="uid://ogtf4xhup2vi" path="res://pause_menu.tscn" id="2_yx7mw"]
+
+[sub_resource type="Animation" id="Animation_6bm6p"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Panel/NextIcon:theme_override_colors/font_color")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Color(1, 1, 1, 1)]
+}
+
+[sub_resource type="Animation" id="Animation_ykeeq"]
+resource_name = "wait"
+loop_mode = 1
+step = 1.0
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Panel/NextIcon:theme_override_colors/font_color")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.5, 1),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Color(1, 1, 1, 1), Color(1, 1, 1, 0), Color(1, 1, 1, 1)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_dugkq"]
+_data = {
+&"RESET": SubResource("Animation_6bm6p"),
+&"wait": SubResource("Animation_ykeeq")
+}
 
 [node name="MainGame" type="Control"]
 layout_mode = 3
@@ -29,6 +68,18 @@ offset_bottom = 669.0
 mouse_filter = 2
 expand_mode = 2
 stretch_mode = 5
+
+[node name="CharacterContainer" type="Node2D" parent="."]
+position = Vector2(566, 368)
+
+[node name="RightSlot" parent="CharacterContainer" instance=ExtResource("2_6bm6p")]
+position = Vector2(255, 167)
+
+[node name="CenterSlot" parent="CharacterContainer" instance=ExtResource("2_6bm6p")]
+position = Vector2(1, 168)
+
+[node name="LeftSlot" parent="CharacterContainer" instance=ExtResource("2_6bm6p")]
+position = Vector2(-255, 163)
 
 [node name="Panel" type="Panel" parent="."]
 layout_mode = 0
@@ -73,7 +124,20 @@ theme_override_colors/default_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/normal_font_size = 34
 bbcode_enabled = true
 
+[node name="NextIcon" type="Label" parent="Panel"]
+layout_mode = 0
+offset_left = 21.0
+offset_top = 12.0
+offset_right = 1102.0
+offset_bottom = 162.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 40
+text = "▼"
+horizontal_alignment = 2
+vertical_alignment = 2
+
 [node name="FadeOverLay" type="ColorRect" parent="."]
+visible = false
 layout_mode = 0
 offset_right = 1168.0
 offset_bottom = 669.0
@@ -81,6 +145,7 @@ mouse_filter = 2
 color = Color(0, 0, 0, 1)
 
 [node name="PauseMenu" parent="." instance=ExtResource("2_yx7mw")]
+visible = false
 
 [node name="BGMPlayer" type="AudioStreamPlayer" parent="."]
 
@@ -92,6 +157,7 @@ offset_left = 1008.0
 offset_top = 2.0
 offset_right = 1184.0
 offset_bottom = 55.0
+mouse_filter = 0
 
 [node name="AutoButton" type="Button" parent="SystemButtons"]
 layout_mode = 2
@@ -101,31 +167,57 @@ text = "Auto"
 layout_mode = 2
 text = "Skip"
 
-[node name="LogButton" type="Button" parent="SystemButtons"]
+[node name="BacklogButton" type="Button" parent="SystemButtons"]
 layout_mode = 2
 text = "Log"
 
-[node name="LogPanel" type="Panel" parent="."]
-visible = false
-modulate = Color(1, 1, 1, 0.78431374)
+[node name="KokoroneTimerLabel" type="Label" parent="."]
 layout_mode = 0
-offset_right = 1151.0
-offset_bottom = 655.0
+offset_left = 275.0
+offset_top = 8.0
+offset_right = 983.0
+offset_bottom = 93.0
+theme_override_colors/font_color = Color(1, 0, 0, 1)
+theme_override_font_sizes/font_size = 40
+horizontal_alignment = 1
+vertical_alignment = 1
 
-[node name="ScrollContainer" type="ScrollContainer" parent="LogPanel"]
+[node name="ChoiceContainer" type="VBoxContainer" parent="."]
+visible = false
+layout_mode = 0
+offset_left = 507.0
+offset_top = 159.0
+offset_right = 721.0
+offset_bottom = 362.0
+mouse_filter = 2
+alignment = 1
+
+[node name="BacklogCanvas" type="CanvasLayer" parent="."]
+visible = false
+
+[node name="Panel" type="Panel" parent="BacklogCanvas"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ScrollContainer" type="ScrollContainer" parent="BacklogCanvas/Panel"]
 layout_mode = 0
 offset_left = 43.0
 offset_top = 65.0
 offset_right = 1111.0
 offset_bottom = 605.0
+mouse_filter = 0
 horizontal_scroll_mode = 0
 
-[node name="LogContainer" type="VBoxContainer" parent="LogPanel/ScrollContainer"]
+[node name="LogList" type="VBoxContainer" parent="BacklogCanvas/Panel/ScrollContainer"]
 clip_contents = true
 custom_minimum_size = Vector2(1050, 550)
 layout_mode = 2
+mouse_filter = 0
 
-[node name="LogCloseButton" type="Button" parent="LogPanel"]
+[node name="LogCloseButton" type="Button" parent="BacklogCanvas/Panel"]
 layout_mode = 0
 offset_left = 1007.0
 offset_top = 23.0
@@ -134,7 +226,12 @@ offset_bottom = 56.0
 text = "閉じる"
 icon_alignment = 1
 
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+&"": SubResource("AnimationLibrary_dugkq")
+}
+
 [connection signal="pressed" from="SystemButtons/AutoButton" to="." method="_on_auto_button_pressed"]
 [connection signal="pressed" from="SystemButtons/SkipButton" to="." method="_on_skip_button_pressed"]
-[connection signal="pressed" from="SystemButtons/LogButton" to="." method="_on_log_button_pressed"]
-[connection signal="pressed" from="LogPanel/LogCloseButton" to="." method="_on_log_close_button_pressed"]
+[connection signal="pressed" from="SystemButtons/BacklogButton" to="." method="_on_backlog_button_pressed"]
+[connection signal="pressed" from="BacklogCanvas/Panel/LogCloseButton" to="." method="_on_backlog_close_button_pressed"]

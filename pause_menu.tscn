@@ -74,6 +74,13 @@ layout_mode = 2
 layout_mode = 2
 text = "戻る"
 
+[node name="DeathTimerLabel" type="Label" parent="Control/Panel"]
+layout_mode = 0
+offset_left = 374.0
+offset_top = 204.0
+offset_right = 752.0
+offset_bottom = 258.0
+
 [node name="SEPlayer" type="AudioStreamPlayer" parent="."]
 
 [connection signal="pressed" from="Control/Panel/MainButtons/go_back_game_Button" to="." method="_on_go_back_game_button_pressed"]

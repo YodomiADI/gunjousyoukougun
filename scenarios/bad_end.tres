@@ -1,19 +1,15 @@
-[gd_resource type="Resource" script_class="ScenarioData" load_steps=6 format=3 uid="uid://bo682m04e0q0f"]
+[gd_resource type="Resource" script_class="ScenarioData" load_steps=4 format=3 uid="uid://bo682m04e0q0f"]
 
-[ext_resource type="Texture2D" uid="uid://2bsifjo7yiq0" path="res://images/ステグラと星空.jpg" id="1_cocli"]
 [ext_resource type="Script" uid="uid://nsjru0u7n42l" path="res://scenario_date.gd" id="1_tehjq"]
-[ext_resource type="AudioStream" uid="uid://dpxbbwvug6m60" path="res://BGM/プロローグ.mp3" id="2_ltm07"]
 [ext_resource type="Script" uid="uid://cl3bhx8qa8d5x" path="res://dialogue_event.gd" id="3_iq15l"]
 
 [sub_resource type="Resource" id="Resource_lpgtv"]
 script = ExtResource("3_iq15l")
-change_background = ExtResource("1_cocli")
+text = "BAD"
 metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
 
 [resource]
 script = ExtResource("1_tehjq")
-chapter_id = "bad_end"
-background = ExtResource("1_cocli")
-bgm = ExtResource("2_ltm07")
+chapter_id = "bad_end1"
 events = Array[ExtResource("3_iq15l")]([SubResource("Resource_lpgtv")])
 metadata/_custom_type_script = "uid://nsjru0u7n42l"

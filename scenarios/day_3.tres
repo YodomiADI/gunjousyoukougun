@@ -1,24 +1,42 @@
-[gd_resource type="Resource" script_class="ScenarioData" load_steps=7 format=3 uid="uid://bu14gysf8q3kh"]
+[gd_resource type="Resource" script_class="ScenarioData" load_steps=9 format=3 uid="uid://bu14gysf8q3kh"]
 
 [ext_resource type="Script" uid="uid://nsjru0u7n42l" path="res://scenario_date.gd" id="1_8p0i1"]
-[ext_resource type="Texture2D" uid="uid://cdgpogq0w2wis" path="res://images/心.png" id="1_xwohb"]
-[ext_resource type="AudioStream" uid="uid://c3mhfmvky2vhi" path="res://BGM/回想.mp3" id="2_ha1kd"]
+[ext_resource type="Texture2D" uid="uid://d35fymwgibky0" path="res://images/階段広場.jpg" id="2_y0tl7"]
 [ext_resource type="Script" uid="uid://cl3bhx8qa8d5x" path="res://dialogue_event.gd" id="3_16wp1"]
+[ext_resource type="AudioStream" uid="uid://dpxbbwvug6m60" path="res://BGM/プロローグ.mp3" id="3_b5onh"]
+[ext_resource type="Texture2D" uid="uid://c2ddhnhtdrt4t" path="res://立ち絵/kokorone_walk.png" id="4_rypxw"]
+[ext_resource type="Texture2D" uid="uid://cxvnpdbwgtwjp" path="res://立ち絵/homura.png" id="5_b5onh"]
 
 [sub_resource type="Resource" id="Resource_y0tl7"]
 script = ExtResource("3_16wp1")
+position = 1
+char_id = 1
+character_name = "ココロネ"
+text = "「ふ～ん。あと4日なんだね
+思ったよりもやりたいことって
+見つからないもんだね。」"
+character_sprite = ExtResource("4_rypxw")
+background = ExtResource("2_y0tl7")
+bgm = ExtResource("3_b5onh")
 metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
 
 [sub_resource type="Resource" id="Resource_b5onh"]
 script = ExtResource("3_16wp1")
+position = 2
+char_id = 2
+character_name = "シキ"
+text = "近づいてくる死神の鎌。
+理不尽に、不条理に、理を崩して。
+僕にできることは、これだけなんだ。"
+character_sprite = ExtResource("5_b5onh")
+timer_offset = Vector2(-200, -450)
+base_scale = 0.4
+clear_other_slots = false
 metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
 
 [resource]
 script = ExtResource("1_8p0i1")
 chapter_id = "day_3"
-title = "DAY3"
-background = ExtResource("1_xwohb")
-bgm = ExtResource("2_ha1kd")
 events = Array[ExtResource("3_16wp1")]([SubResource("Resource_y0tl7"), SubResource("Resource_b5onh")])
 next_chapter_id = "day_4"
 metadata/_custom_type_script = "uid://nsjru0u7n42l"

@@ -1,28 +1,31 @@
 [gd_resource type="Resource" script_class="ScenarioData" load_steps=8 format=3 uid="uid://d4iilvgohy2wt"]
 
-[ext_resource type="Texture2D" uid="uid://bfb7im23ao1cd" path="res://images/死.png" id="1_lo4qs"]
 [ext_resource type="Script" uid="uid://nsjru0u7n42l" path="res://scenario_date.gd" id="1_vn743"]
-[ext_resource type="AudioStream" uid="uid://dpxbbwvug6m60" path="res://BGM/プロローグ.mp3" id="2_3dx0b"]
+[ext_resource type="Texture2D" uid="uid://daqxfipy2smyy" path="res://images/路地裏2.jpg" id="2_tdr8f"]
+[ext_resource type="AudioStream" uid="uid://dpxbbwvug6m60" path="res://BGM/プロローグ.mp3" id="3_hc6k4"]
 [ext_resource type="Script" uid="uid://cl3bhx8qa8d5x" path="res://dialogue_event.gd" id="3_jciwm"]
-[ext_resource type="AudioStream" uid="uid://b4w3tnod0qgx2" path="res://SE/シ.mp3" id="4_tdr8f"]
+[ext_resource type="Texture2D" uid="uid://ceynh7ogeovvq" path="res://立ち絵/kokorone_egao.png" id="3_tdr8f"]
 
 [sub_resource type="Resource" id="Resource_tdr8f"]
 script = ExtResource("3_jciwm")
-text = "ああ"
-change_background = ExtResource("1_lo4qs")
-change_bgm = ExtResource("4_tdr8f")
+char_id = 1
+character_name = "ココロネ"
+text = "「明日はどこに行こうかな？」"
+character_sprite = ExtResource("3_tdr8f")
+background = ExtResource("2_tdr8f")
+bgm = ExtResource("3_hc6k4")
 metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
 
 [sub_resource type="Resource" id="Resource_hc6k4"]
 script = ExtResource("3_jciwm")
+character_name = "シキ"
+text = "僕は、彼女の死期を見つめる。
+彼女の死期を見つめて、僕は……。"
 metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
 
 [resource]
 script = ExtResource("1_vn743")
 chapter_id = "day_2"
-title = "DAY2"
-background = ExtResource("1_lo4qs")
-bgm = ExtResource("2_3dx0b")
 events = Array[ExtResource("3_jciwm")]([SubResource("Resource_tdr8f"), SubResource("Resource_hc6k4")])
 next_chapter_id = "day_3"
 metadata/_custom_type_script = "uid://nsjru0u7n42l"

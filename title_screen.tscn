@@ -2,8 +2,7 @@
 
 [ext_resource type="Script" uid="uid://b7pngiy78imfl" path="res://title_screen.gd" id="1_v6p8y"]
 [ext_resource type="Texture2D" uid="uid://dft5bkrvkpcie" path="res://images/立ち絵.png" id="2_ak2if"]
-
-[sub_resource type="CanvasTexture" id="CanvasTexture_ig5kc"]
+[ext_resource type="Texture2D" uid="uid://cihixwlenh170" path="res://images/礼拝堂.png" id="2_ig5kc"]
 
 [sub_resource type="FontVariation" id="FontVariation_v6p8y"]
 
@@ -22,9 +21,10 @@ script = ExtResource("1_v6p8y")
 [node name="Background" type="TextureRect" parent="."]
 modulate = Color(0.046292678, 0.28165057, 0.3929016, 1)
 layout_mode = 0
-offset_right = 1161.0
-offset_bottom = 656.0
-texture = SubResource("CanvasTexture_ig5kc")
+offset_right = 1160.0
+offset_bottom = 655.0
+texture = ExtResource("2_ig5kc")
+expand_mode = 1
 
 [node name="画像立ち絵" type="TextureRect" parent="."]
 layout_mode = 0
@@ -192,7 +192,7 @@ text = "戻る"
 visible = false
 
 [node name="SettingPanel" type="Panel" parent="SettingCanvas"]
-anchors_preset = -1
+anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
@@ -242,4 +242,5 @@ text = "閉じる"
 [connection signal="pressed" from="LoadMenu/VBoxContainer/BackButton" to="." method="_on_back_button_pressed"]
 [connection signal="pressed" from="ChapterSelectMenu/VBoxContainer/BackButton" to="." method="_on_chapter_back_button_pressed"]
 [connection signal="pressed" from="SettingCanvas/SettingPanel/VBoxContainer/InitButton" to="." method="_on_init_button_pressed"]
+[connection signal="pressed" from="SettingCanvas/SettingPanel/VBoxContainer/CloseButton" to="." method="_on_setting_back_button_pressed"]
 [connection signal="confirmed" from="ConfirmationDialog" to="." method="_on_confirmation_dialog_confirmed"]

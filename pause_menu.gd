@@ -1,3 +1,4 @@
+#pause_menu.gd
 extends CanvasLayer# ルートノードがCanvasLayerならここは extends CanvasLayer になります
 
 # タイトル画面のファイルパス（※自分のファイル名に合わせて書き換えてください！）
@@ -156,3 +157,13 @@ func switch_to_save_menu():
 	save_slots_menu.visible = true
 	# セーブ画面を開いたタイミングで表示内容を更新
 	update_save_slots_display()
+# pause_menu.gd の一部
+
+@onready var death_timer_label = $Control/Panel/DeathTimerLabel # ラベルを新設
+
+func _process(_delta):
+	if visible: # ポーズ画面が開いている間だけ更新
+		death_timer_label.text = "あなたの死期まで\n" + Global.format_death_time(Global.player_death_seconds)
+		# (おまけ) 死期が近づいたら文字を赤くする演出
+		if Global.player_death_seconds < Global.SECONDS_PER_DAY * 7: # 残り7日切ったら
+			death_timer_label.modulate = Color.RED
