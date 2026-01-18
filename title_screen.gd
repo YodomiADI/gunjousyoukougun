@@ -340,27 +340,6 @@ func update_load_slots_display():
 			else:
 				btn.modulate = Color(1, 1, 1, 1) # 通常色（白）
 
-
-func _on_auto_save_button_pressed() -> void:
-	pass # Replace with function body.
-
-
-func _on_slot_1_button_pressed() -> void:
-	pass # Replace with function body.
-
-
-func _on_slot_2_button_pressed() -> void:
-	pass # Replace with function body.
-
-
-func _on_slot_3_button_pressed() -> void:
-	pass # Replace with function body.
-
-
-func _on_delet_mode_button_pressed() -> void:
-	pass # Replace with function body.
-
-
 func _on_part_2_button_pressed() -> void:
 	pass # Replace with function body.
 
