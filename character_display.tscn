@@ -1,6 +1,8 @@
-[gd_scene load_steps=2 format=3 uid="uid://bs4nyna76vxqf"]
+[gd_scene load_steps=3 format=3 uid="uid://bs4nyna76vxqf"]
 
 [ext_resource type="Script" uid="uid://c4sw362kchbba" path="res://character_display.gd" id="1_udruc"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_udruc"]
 
 [node name="CharacterDisplay" type="Node2D"]
 script = ExtResource("1_udruc")
@@ -14,3 +16,8 @@ offset_right = 220.0
 offset_bottom = -14.0
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="Area2D" type="Area2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+shape = SubResource("RectangleShape2D_udruc")

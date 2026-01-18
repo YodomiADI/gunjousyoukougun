@@ -31,6 +31,8 @@ var is_skipping: bool = false
 var current_data: ScenarioData
 var current_index: int = 0
 var is_typing: bool = false
+var current_bg_res_path: String = ""
+var current_bgm_res_path: String = ""
 
 func _ready():
 	# 初期状態では隠しておく
@@ -58,32 +60,31 @@ func _ready():
 	current_index = Global.current_line_index
 	display_event()
 
-func _process(delta):
-	if Global.is_timer_active:
-		kokorone_timer_label.visible = true
-		# 辞書から取得して表示（メインタイマーも辞書にまとめると管理が楽です）
-		kokorone_timer_label.text = "ココロネの死期まで\n" + Global.format_death_time(Global.death_timers.get("Kokorone", 0.0))
-		
-		# 全キャラの時間を減らす
-		for key in Global.death_timers.keys():
-			Global.death_timers[key] -= delta
+	# ロード中だった場合、保存されていた背景とBGMを再現する
+	if Global.is_loading_process:
+		if Global.current_bg_path != "":
+			background.texture = load(Global.current_bg_path)
+			current_bg_res_path = Global.current_bg_path
+		if Global.current_bgm_path != "":
+			bgm_player.stream = load(Global.current_bgm_path)
+			bgm_player.play()
+			current_bgm_res_path = Global.current_bgm_path
 			
-		# 各スロットの頭上タイマーを更新
-		if left_slot.visible:
-			left_slot.update_timer()
-		if right_slot.visible:
-			right_slot.update_timer()
-		if center_slot.visible: 
-			center_slot.update_timer() # 追加
-	else:
-		kokorone_timer_label.visible = false
-		
+		Global.is_loading_process = false # 復元が終わったのでフラグを下ろす
+
+func _process(_delta):
+	pass
+
 func load_scenario(id: String):
 	current_data = Global.get_scenario_resource(id)
 	if not current_data:
 		print("Error: Scenario not found: ", id)
 		get_tree().change_scene_to_file("res://title_screen.tscn")
-
+	# プロローグ以外ならタイマーを動かす
+	if id != "prologue":
+		Global.is_death_timer_active = true
+	else:
+		Global.is_death_timer_active = false
 
 
 func _unhandled_input(event):
@@ -181,6 +182,7 @@ func display_event():
 
 	if ev.background:
 		background.texture = ev.background
+		Global.current_bg_path = ev.background.resource_path
 		# Globalのバックログに保存
 	Global.add_to_backlog(ev.character_name, ev.text)
 	
@@ -192,17 +194,17 @@ func display_event():
 			right_slot.hide()
 			center_slot.hide()
 		1: # LEFT
-			left_slot.display(ev.character_name, ev.character_sprite, ev.char_id, ev.timer_offset, ev.character_scale, ev.base_scale)
+			left_slot.display(ev.character_name, ev.character_sprite, ev.char_id, ev.timer_offset.y, ev.character_scale, ev.base_scale)
 			if ev.clear_other_slots: # ←ここがポイント！
 				right_slot.hide()
 				center_slot.hide()
 		2: # RIGHT
-			right_slot.display(ev.character_name, ev.character_sprite, ev.char_id, ev.timer_offset, ev.character_scale, ev.base_scale)
+			right_slot.display(ev.character_name, ev.character_sprite, ev.char_id, ev.timer_offset.y, ev.character_scale, ev.base_scale)
 			if ev.clear_other_slots:
 				left_slot.hide()
 				center_slot.hide()
 		3: # CENTER
-			center_slot.display(ev.character_name, ev.character_sprite, ev.char_id, ev.timer_offset, ev.character_scale, ev.base_scale)
+			center_slot.display(ev.character_name, ev.character_sprite, ev.char_id, ev.timer_offset.y, ev.character_scale, ev.base_scale)
 			if ev.clear_other_slots:
 				left_slot.hide()
 				right_slot.hide()
@@ -261,6 +263,7 @@ func display_event():
 	if ev.bgm and bgm_player.stream != ev.bgm:
 		bgm_player.stream = ev.bgm
 		bgm_player.play()
+		Global.current_bgm_path = ev.bgm.resource_path
 		
 	if ev.se:
 		se_player.stream = ev.se
@@ -316,6 +319,7 @@ func _on_choice_selected(index: int):
 	get_tree().reload_current_scene()
 
 func finish_chapter():
+	# その後、通常の遷移処理へ...
 	Global.add_flag(current_data.reward_flag)
 	
 	# カウントの加算
@@ -323,6 +327,12 @@ func finish_chapter():
 		"Heart": Global.heart_count += 1
 		"Flame": Global.flame_count += 1
 		"Soul": Global.soul_count += 1
+	
+	# ---プロローグ以外の場合だけ時間を減らす ---
+	# 第2部ではなく、かつ「現在の章がプロローグではない」場合のみ1日減らす
+	if not Global.is_part2 and current_data.chapter_id != "prologue":
+		Global.advance_all_timers(Global.SECONDS_PER_DAY)
+		print("1日経過しました")
 	
 	# 次のアクションの判定
 	match current_data.next_action:
@@ -366,6 +376,15 @@ func finish_chapter():
 func start_day7():
 	Global.kokorone_death_seconds = 239.0
 	Global.is_timer_active = true
+
+func _on_location_pressed(_location_id: String):
+	# 第2部は遷移ごとに12時間減らす
+	Global.advance_all_timers(Global.SECONDS_PER_PERIOD)
+	
+	# 誰か死んだかチェック
+	if Global.pending_death_event != "":
+		# 死亡イベントへ強制遷移
+		pass
 
 func apply_shake():
 	var tween = create_tween()

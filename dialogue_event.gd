@@ -16,7 +16,7 @@ enum CharID { NONE, KOKORONE, HOMURA, REI }
 @export var character_sprite: Texture2D       # 立ち絵
 @export var background: Texture2D             # 背景（変更時のみセット）
 @export var char_expression: String = ""      # (任意) 表情の識別子（"angry", "smile"など）
-@export var timer_offset: Vector2 = Vector2(0, -450) # デフォルトで少し上に設定
+@export var timer_offset: Vector2 = Vector2()
 @export var base_scale: float = 1.0      # 素材本来の大きさを調整する用
 @export var character_scale: float = 1.0 # 1.0 が標準。1.2なら20%拡大、0.8なら20%縮小。
 

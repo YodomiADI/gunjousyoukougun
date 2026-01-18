@@ -1,5 +1,12 @@
 # map_selection.gd
 func _on_location_pressed(location_id: String):
+	# 第2部は遷移ごとに12時間減らす
+	Global.advance_all_timers(Global.SECONDS_PER_PERIOD)
+	
+	# 誰か死んだかチェック
+	if Global.pending_death_event != "":
+		# 死亡イベントへ強制遷移
+		pass
 	# 選択前に「死」を判定
 	check_character_deaths()
 	

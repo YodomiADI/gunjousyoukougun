@@ -122,10 +122,8 @@ func _on_back_button_pressed():
 
 # セーブスロットが押されたときの処理
 func _on_save_slot_pressed(slot_id):
-	# セーブを実行
+	# 全て引数を渡してセーブ
 	Global.save_game(slot_id)
-	
-	# ボタンの表示を即座に更新（「データなし」→「現在のデータ」へ書き換わる）
 	update_save_slots_display()
 	
 	print("スロット %d にセーブしました" % slot_id)
