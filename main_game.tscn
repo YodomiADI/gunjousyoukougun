@@ -1,9 +1,22 @@
-[gd_scene load_steps=8 format=3 uid="uid://cllpcuaeq424j"]
+[gd_scene load_steps=11 format=3 uid="uid://cllpcuaeq424j"]
 
 [ext_resource type="Script" uid="uid://b7scfg1k3ox20" path="res://main_game.gd" id="1_1oj5k"]
 [ext_resource type="PackedScene" uid="uid://bs4nyna76vxqf" path="res://character_display.tscn" id="2_6bm6p"]
 [ext_resource type="Texture2D" uid="uid://dqxoljf06ads2" path="res://images/裏面.png" id="2_ykeeq"]
 [ext_resource type="PackedScene" uid="uid://ogtf4xhup2vi" path="res://pause_menu.tscn" id="2_yx7mw"]
+[ext_resource type="Shader" uid="uid://b1ebrc8ut2kq2" path="res://main_game.gdshader" id="5_2pltu"]
+[ext_resource type="Texture2D" uid="uid://b47cr6rft7vqt" path="res://water_noise.tres" id="6_f52ns"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_l5ukw"]
+shader = ExtResource("5_2pltu")
+shader_parameter/noise_tex = ExtResource("6_f52ns")
+shader_parameter/speed = 0.5
+shader_parameter/droplet_center = Vector2(0.5, 0.5)
+shader_parameter/droplet_size = 0.0
+shader_parameter/droplet_blur = 0.3
+shader_parameter/max_distortion = 0.08
+shader_parameter/water_color = Color(0, 0.82692844, 1.0962195, 1)
+shader_parameter/emission_strength = 2.0
 
 [sub_resource type="Animation" id="Animation_6bm6p"]
 length = 0.001
@@ -172,6 +185,8 @@ layout_mode = 2
 text = "Log"
 
 [node name="KokoroneTimerLabel" type="Label" parent="."]
+visible = false
+material = SubResource("ShaderMaterial_l5ukw")
 layout_mode = 0
 offset_left = 275.0
 offset_top = 8.0
