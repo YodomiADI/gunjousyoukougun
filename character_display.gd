@@ -72,6 +72,10 @@ func display(display_name: String, texture: Texture2D, char_id: int = 0, offset_
 	
 # ---表示した瞬間にタイマーの文字を更新し、表示・非表示を判定する ---
 	update_timer()
+	if texture:
+		# キャラクターが表示されるタイミングでループを開始！
+		start_dripping_loop()
+		show()
 # 毎フレーム main_game.gd から呼ばれるタイマー更新関数
 func update_timer():
 # IDに応じて Global のどの数値を参照するか決める
@@ -149,3 +153,31 @@ func set_focus(is_active: bool):
 func _process(_delta):
 	if timer_label.visible:
 		update_timer_display()
+
+func splash_water(pos: Vector2):
+	var mat = timer_label.material as ShaderMaterial
+	if not mat: return
+	
+	mat.set_shader_parameter("droplet_center", pos)
+	
+	var tween = create_tween()
+	# じわっと広がる
+	tween.tween_property(mat, "shader_parameter/droplet_size", 0.4, 0.6).set_trans(Tween.TRANS_SINE)
+	# ゆっくり乾いて消える
+	tween.tween_property(mat, "shader_parameter/droplet_size", 0.0, 1.2).set_trans(Tween.TRANS_QUAD).set_delay(0.2)
+
+func start_dripping_loop():
+	# 少しランダムな時間を待つ（0.8秒〜1.5秒の間）
+	var wait_time = randf_range(0.3, 0.6)
+	
+	# タイマーを作成して待機
+	await get_tree().create_timer(wait_time).timeout
+	
+	# このノードが表示されている時だけ実行（非表示の時は止める）
+	if is_visible_in_tree():
+		# ランダムな位置に水滴を落とす (0.1〜0.9の範囲にすると文字からはみ出しにくい)
+		var random_pos = Vector2(randf_range(-0.4, 0.6), randf_range(0.1, 0.9))
+		splash_water(random_pos)
+		
+		# 自分自身をもう一度呼んでループさせる（再帰呼び出し）
+		start_dripping_loop()
