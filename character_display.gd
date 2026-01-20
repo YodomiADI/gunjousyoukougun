@@ -85,8 +85,9 @@ func update_timer():
 		2: time_key = "Homura"
 		3: time_key = "Rei"
 	
-	if time_key != "" and Global.death_timers.has(time_key):
-		timer_label.text = Global.format_death_time(Global.death_timers[time_key])
+	if time_key != "" and Global.death_data.has(time_key):
+		# 重要：子ノードのスクリプトに「誰を表示するか」を教える
+		timer_label.target_char_id = time_key
 		timer_label.show()
 	else:
 		timer_label.hide()
@@ -117,10 +118,6 @@ func update_timer_display():
 		timer_label.hide()
 		return
 		
-	# 1. Globalから「現在の数値（赤優先）」を取得
-	var time_val = Global.get_current_death_time(key)
-	timer_label.text = Global.format_death_time(time_val)
-	
 	# 2. 赤文字データの有無を確認して色を変える
 	var data = Global.death_data.get(key)
 	if data and data["red"] > 0:
