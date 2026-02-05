@@ -1,9 +1,11 @@
-[gd_scene load_steps=11 format=3 uid="uid://cllpcuaeq424j"]
+[gd_scene load_steps=13 format=3 uid="uid://cllpcuaeq424j"]
 
 [ext_resource type="Script" uid="uid://b7scfg1k3ox20" path="res://main_game.gd" id="1_1oj5k"]
 [ext_resource type="PackedScene" uid="uid://bs4nyna76vxqf" path="res://character_display.tscn" id="2_6bm6p"]
+[ext_resource type="Script" uid="uid://bcxrq774hbbtd" path="res://character_manager.gd" id="2_l5ukw"]
 [ext_resource type="Texture2D" uid="uid://dqxoljf06ads2" path="res://images/裏面.png" id="2_ykeeq"]
 [ext_resource type="PackedScene" uid="uid://ogtf4xhup2vi" path="res://pause_menu.tscn" id="2_yx7mw"]
+[ext_resource type="Script" uid="uid://c3unil20v3i2h" path="res://MessageWindow.gd" id="4_4srsv"]
 [ext_resource type="Shader" uid="uid://b1ebrc8ut2kq2" path="res://main_game.gdshader" id="5_2pltu"]
 [ext_resource type="Texture2D" uid="uid://b47cr6rft7vqt" path="res://water_noise.tres" id="6_f52ns"]
 
@@ -84,6 +86,7 @@ stretch_mode = 5
 
 [node name="CharacterContainer" type="Node2D" parent="."]
 position = Vector2(566, 368)
+script = ExtResource("2_l5ukw")
 
 [node name="RightSlot" parent="CharacterContainer" instance=ExtResource("2_6bm6p")]
 position = Vector2(255, 167)
@@ -95,14 +98,17 @@ position = Vector2(1, 168)
 position = Vector2(-255, 163)
 
 [node name="Panel" type="Panel" parent="."]
+unique_name_in_owner = true
 layout_mode = 0
 offset_left = 21.0
 offset_top = 458.0
 offset_right = 1139.0
 offset_bottom = 629.0
 mouse_filter = 2
+script = ExtResource("4_4srsv")
 
 [node name="NameBox" type="NinePatchRect" parent="Panel"]
+unique_name_in_owner = true
 self_modulate = Color(1, 1, 1, 0.49803922)
 show_behind_parent = true
 layout_mode = 0
@@ -112,6 +118,7 @@ offset_bottom = 2.0
 texture = ExtResource("2_ykeeq")
 
 [node name="NameLabel" type="Label" parent="Panel/NameBox"]
+unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -129,6 +136,7 @@ theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_font_sizes/font_size = 24
 
 [node name="Label" type="RichTextLabel" parent="Panel"]
+unique_name_in_owner = true
 layout_mode = 0
 offset_right = 1112.0
 offset_bottom = 184.0
@@ -138,6 +146,7 @@ theme_override_font_sizes/normal_font_size = 34
 bbcode_enabled = true
 
 [node name="NextIcon" type="Label" parent="Panel"]
+unique_name_in_owner = true
 layout_mode = 0
 offset_left = 21.0
 offset_top = 12.0
