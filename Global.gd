@@ -49,7 +49,7 @@ const SECONDS_PER_PERIOD = 43200.0 # 12時間（第2部用）
 # white: 本来の死期, red: 変動する死期（-1.0は未設定）, discovered: マウスオーバーしたか
 var death_data = {
 	"Player":   {"white": 2587670064.0, "red": -1.0, "discovered": true, "is_dead": false},
-	"Kokorone": {"white": 582252.0,     "red": -1.0, "discovered": false, "is_dead": false},
+	"Kokorone": {"white": 1356048000.0, "red": 529200.0, "discovered": false, "is_dead": false},
 	"Homura":   {"white": 600000.0,     "red": -1.0, "discovered": false, "is_dead": false},
 	"Rei":      {"white": 600000.0,     "red": -1.0, "discovered": false, "is_dead": false}
 }

@@ -8,8 +8,13 @@ extends Node2D
 
 @onready var sprite = $Sprite2D # 名前に注意！Sprite2D か Sprite か
 @onready var timer_label = $TimerLabel
-@onready var click_area = $Area2D
-@onready var collision_shape = $Area2D/CollisionShape2D # ← 追加: シェイプにアクセスするため取得
+
+# 【キャラ用】マウスが乗ったことを検知してタイマーを出すための判定
+@onready var char_area = $CharacterArea
+@onready var char_collision = $CharacterArea/CharacterCollision
+
+# ※ TimerArea（タイマーが逃げる用）は、timer_label.gd側で処理するため
+#   このスクリプトからは触らないようにして、混線を防ぎます。
 
 var current_character_name: String = ""
 var current_char_id: int = 0
@@ -17,11 +22,7 @@ var current_char_id: int = 0
 func _ready():
 	timer_label.hide() # 最初は隠しておく
 	
-	# マウス信号の接続
-	# エディタで接続しても良いですが、コードで書くと確実です
-	click_area.mouse_entered.connect(_on_mouse_entered)
-	click_area.mouse_exited.connect(_on_mouse_exited)
-
+	
 # main_game.gd から呼ばれる関数名
 func display(display_name: String, texture: Texture2D, char_id: int = 0, offset_y: float = -40.0, char_scale: float = 1.0, b_scale: float = 1.0):
 	current_character_name = display_name
@@ -49,23 +50,23 @@ func display(display_name: String, texture: Texture2D, char_id: int = 0, offset_
 		var tex_size = texture.get_size()
 		
 		# 2. 当たり判定（CollisionShape2D）を画像サイズに合わせる
-		if collision_shape.shape == null:
-			collision_shape.shape = RectangleShape2D.new()
-		collision_shape.shape.size = tex_size
-		
+		# 【重要】キャラ用の当たり判定を立ち絵のサイズに合わせる
+		if char_collision.shape == null:
+			char_collision.shape = RectangleShape2D.new()
+		char_collision.shape.size = tex_size
 		# 3. 死期ラベルを「頭の少し上」に自動配置
 		# Spriteの中心が(0,0)の場合、上端は -(高さ / 2)。そこから offset_y 分ずらす
 		timer_label.position.y = -(tex_size.y / 2.0) + offset_y
 		# -------------------------------------------------------
 		show()
 		# ★重要：表示されている時だけ当たり判定を有効にする
-		click_area.monitoring = true
-		click_area.monitorable = true
+		char_area.monitoring = true
+		char_area.monitorable = true
 	else:
 		hide()
 		# 非表示なら当たり判定も消す（透明なスロットに反応しないように）
-		click_area.monitoring = false
-		click_area.monitorable = false
+		char_area.monitoring = false
+		char_area.monitorable = false
 		
 	# マウスがすでに乗っている状態で画像が変わった場合のために更新
 	update_timer_display()
@@ -77,40 +78,32 @@ func display(display_name: String, texture: Texture2D, char_id: int = 0, offset_
 		start_dripping_loop()
 		show()
 # 毎フレーム main_game.gd から呼ばれるタイマー更新関数
+# --- タイマー表示制御 ---
 func update_timer():
-# IDに応じて Global のどの数値を参照するか決める
-	var time_key = ""
-	match current_char_id:
-		1: time_key = "Kokorone"
-		2: time_key = "Homura"
-		3: time_key = "Rei"
-	
-	if time_key != "" and Global.death_data.has(time_key):
-		# 重要：子ノードのスクリプトに「誰を表示するか」を教える
-		timer_label.target_char_id = time_key
-		timer_label.show()
+	var key = get_current_key()
+	if key != "" and Global.death_data.has(key):
+		timer_label.target_char_id = key
+		# ここではまだ show() しない（マウスが乗った時に出すため）
 	else:
 		timer_label.hide()
 		
-# --- ★ここからが新機能：マウス制御 ---
+# --- マウス制御 ---
 
-# マウスが乗った時
+# CharacterArea (キャラ用) の mouse_entered シグナルに接続
 func _on_mouse_entered():
-	if not is_visible_in_tree(): return # 見えてなければ無視
-	
-	update_timer_display()
-	
-	# キャラIDが有効なら表示する
+	if not is_visible_in_tree(): return
 	if get_current_key() != "":
 		timer_label.show()
-		
-		# 【手記連携】発見済みフラグを立てる
 		Global.discover_death_time(get_current_key())
-
-# マウスが離れた時
+		
+# CharacterArea (キャラ用) の mouse_exited シグナルに接続
 func _on_mouse_exited():
-	timer_label.hide()
-
+	# タイマーが「キャプチャ（吸着）状態」でない時だけ隠す
+	# ※ もしマウスで捕まえている最中にキャラからマウスが外れても、
+	#    タイマーが消えないように timer_label 側に確認させるのがスマートです。
+	if not timer_label.get("is_changing"): # 運命書き換え中も消さない
+		timer_label.hide()
+		
 # タイマーの数値と色を更新する関数
 func update_timer_display():
 	var key = get_current_key()
@@ -118,13 +111,6 @@ func update_timer_display():
 		timer_label.hide()
 		return
 		
-	# 2. 赤文字データの有無を確認して色を変える
-	var data = Global.death_data.get(key)
-	if data and data["red"] > 0:
-		timer_label.modulate = Color(1, 0.2, 0.2) # 赤色
-	else:
-		timer_label.modulate = Color.WHITE      # 白色
-
 # ID番号(int)をGlobalの辞書キー(String)に変換するヘルパー関数
 func get_current_key() -> String:
 	match current_char_id:
@@ -135,6 +121,7 @@ func get_current_key() -> String:
 		# 4: return "Mob" 
 	return ""
 
+# --- 演出用（既存のまま） ---
 # 明るさを変える関数
 func set_focus(is_active: bool):
 	var target_color = Color.WHITE # アクティブなら元の色
