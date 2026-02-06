@@ -1,6 +1,7 @@
-[gd_scene load_steps=13 format=3 uid="uid://cllpcuaeq424j"]
+[gd_scene load_steps=14 format=3 uid="uid://cllpcuaeq424j"]
 
 [ext_resource type="Script" uid="uid://b7scfg1k3ox20" path="res://main_game.gd" id="1_1oj5k"]
+[ext_resource type="Script" uid="uid://cspbt4kiho02r" path="res://GameDirector.gd" id="2_4srsv"]
 [ext_resource type="PackedScene" uid="uid://bs4nyna76vxqf" path="res://character_display.tscn" id="2_6bm6p"]
 [ext_resource type="Script" uid="uid://bcxrq774hbbtd" path="res://character_manager.gd" id="2_l5ukw"]
 [ext_resource type="Texture2D" uid="uid://dqxoljf06ads2" path="res://images/裏面.png" id="2_ykeeq"]
@@ -65,6 +66,9 @@ offset_right = 1150.0
 offset_bottom = 651.0
 mouse_filter = 2
 script = ExtResource("1_1oj5k")
+
+[node name="GameDirector" type="Node2D" parent="."]
+script = ExtResource("2_4srsv")
 
 [node name="Background" type="TextureRect" parent="."]
 layout_mode = 0

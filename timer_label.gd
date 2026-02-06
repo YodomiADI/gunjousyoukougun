@@ -27,16 +27,56 @@ var base_positions = {}
 
 # HBoxContainerだと自動整列が動いてしまうため、
 # 自由な移動をさせるなら Node2D または Control（整列なし）を推奨します
-@onready var container = $Control
+@onready var container = $CanvasGroup
 @onready var digits = [
-	$Control/Year10, $Control/Year1,
-	$Control/Month10, $Control/Month1,
-	$Control/Day10, $Control/Day1,
-	$Control/Hour10, $Control/Hour1,
-	$Control/Min10, $Control/Min1,
-	$Control/Sec10, $Control/Sec1
+	$CanvasGroup/Year10, $CanvasGroup/Year1,
+	$CanvasGroup/Month10, $CanvasGroup/Month1,
+	$CanvasGroup/Day10, $CanvasGroup/Day1,
+	$CanvasGroup/Hour10, $CanvasGroup/Hour1,
+	$CanvasGroup/Min10, $CanvasGroup/Min1,
+	$CanvasGroup/Sec10, $CanvasGroup/Sec1
 ]
 
+# 当たり判定を自動生成する関数
+func setup_collision_shape():
+	# 1. 計算に必要なノードを取得
+	# ※数字は digits 配列に入っている前提です（左端がYear10、右端がSec1）
+	if digits.is_empty(): return
+	
+	var left_node = digits[0]   # 一番左（Year10）
+	var right_node = digits[-1] # 一番右（Sec1）
+	
+	# まだテクスチャがロードされていない場合のエラー回避
+	if left_node.texture == null: return
+	
+	# 2. 幅と高さを計算
+	var char_size = left_node.texture.get_size()
+	
+	# 全体の幅 = (右端のX - 左端のX) + 文字1個分の幅
+	var total_width = abs(right_node.position.x - left_node.position.x) + char_size.x
+	var total_height = char_size.y
+	
+	# 少し余裕（マージン）を持たせる
+	var margin = Vector2(40.0, 20.0) 
+	
+	# 3. 新しい矩形を作成
+	var new_shape = RectangleShape2D.new()
+	new_shape.size = Vector2(total_width, total_height) + margin
+	
+	# 4. CollisionShape2Dに適用
+	# ノードパスは現在の構成に合わせて調整してください
+	var collision_node = $CanvasGroup/TimerArea/TimerCollision
+	if collision_node:
+		collision_node.shape = new_shape
+		# もしCanvasGroupの中心とArea2Dの中心がズレている場合は、ここでpositionも調整可能です
+		# collision_node.position = Vector2.ZERO
+		# 文字列全体の「中心座標」を計算する
+		# (左端の座標 + 右端の座標 + 文字幅) / 2
+		var center_x = (left_node.position.x + right_node.position.x + char_size.x) / 2.0
+		var center_y = (left_node.position.y + right_node.position.y + char_size.y) / 2.0
+		
+		# 当たり判定の位置を、計算した中心に合わせる
+		collision_node.position = Vector2(center_x, center_y)
 func _ready():
 	# 初期化：不透明度固定、サイズを少し小さく設定（コードでやる場合）
 	modulate.a = 1.0 
@@ -161,13 +201,16 @@ func update_timer_images(total_sec_val: int, use_red: bool):
 			digits[i].texture = current_set[n]
 	
 	# コロン更新
-	for c in [$Control/Colon1, $Control/Colon2, $Control/Colon3, $Control/Colon4, $Control/Colon5]:
+	for c in [$CanvasGroup/Colon1, $CanvasGroup/Colon2, $CanvasGroup/Colon3, $CanvasGroup/Colon4, $CanvasGroup/Colon5]:
 		if c: c.texture = current_colon
 		
 # --- 外部からのシグナル受信 ---
 func _on_area_2d_mouse_entered():
 	is_hovering = true
 	is_captured = true 
+
+	# マウスが入った瞬間の座標を渡して波紋を呼ぶ
+	play_ripple_effect(get_local_mouse_position())
 
 func _on_area_2d_mouse_exited():
 	is_hovering = false
@@ -184,3 +227,30 @@ func _input(event):
 
 			if not is_revealed and not is_changing:
 				trigger_fate_change()
+
+# --- 追加：波紋演出の関数 ---
+func play_ripple_effect(mouse_pos: Vector2):
+	# シェーダーが適用されているMaterialを取得
+	var mat = container.material as ShaderMaterial # Controlノードか自身に付いている場合
+	if not mat: 
+		# もし自身の material に設定しているならこちら
+		mat = self.material as ShaderMaterial
+	
+	if not mat: return
+
+	# 1. マウス位置をUV座標（0.0 ～ 1.0）に変換する
+	# ※ containerのサイズで割ることで、シェーダーが理解できる位置にする
+	var size = container.get_rect().size
+	if size.x > 0 and size.y > 0:
+		var uv_pos = mouse_pos / size
+		mat.set_shader_parameter("droplet_center", uv_pos)
+
+	# 2. Tweenで波紋を広げる
+	var tween = create_tween()
+	
+	# droplet_size を 0.0（なし）から 1.0（全体）へ一気に広げる
+	mat.set_shader_parameter("droplet_size", 0.0)
+	tween.tween_property(mat, "shader_parameter/droplet_size", 1.0, 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	
+	# 3. 広がった後にじわっと消す（サイズを戻すか、あるいは透明度を上げてもOK）
+	tween.tween_property(mat, "shader_parameter/droplet_size", 0.0, 1.0).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN).set_delay(0.2)
