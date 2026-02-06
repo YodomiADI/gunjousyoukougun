@@ -31,6 +31,7 @@ shape = SubResource("RectangleShape2D_0h12l")
 [node name="Sprite2D" type="Sprite2D" parent="."]
 
 [node name="TimerLabel" type="Node2D" parent="."]
+position = Vector2(-288, 7.9999995)
 scale = Vector2(0.4, 0.4)
 script = ExtResource("4_7k6yl")
 tex_digits_white = Array[Texture2D]([ExtResource("5_m1k5x"), ExtResource("6_7k6yl"), ExtResource("7_m1k5x"), ExtResource("8_7k6yl"), ExtResource("9_wgm57"), ExtResource("10_3ammd"), ExtResource("11_w06k5"), ExtResource("12_c10ax"), ExtResource("13_7g4lx"), ExtResource("14_iseq2")])
@@ -38,96 +39,89 @@ tex_digits_red = Array[Texture2D]([ExtResource("5_m1k5x"), ExtResource("6_7k6yl"
 tex_colon_white = ExtResource("15_xttx8")
 tex_colon_red = ExtResource("15_xttx8")
 
-[node name="Control" type="Control" parent="TimerLabel"]
-layout_mode = 3
-anchors_preset = 0
-offset_left = -234.0
-offset_top = 5.0
-offset_right = 239.0
-offset_bottom = 46.0
-mouse_filter = 2
+[node name="CanvasGroup" type="CanvasGroup" parent="TimerLabel"]
 
-[node name="Year10" type="Sprite2D" parent="TimerLabel/Control"]
-position = Vector2(-918, -5)
-scale = Vector2(0.25, 0.25)
+[node name="Year10" type="Sprite2D" parent="TimerLabel/CanvasGroup"]
+position = Vector2(380, 24.500002)
+scale = Vector2(0.24999996, 0.24999996)
 
-[node name="Year1" type="Sprite2D" parent="TimerLabel/Control"]
-position = Vector2(-758, -5)
-scale = Vector2(0.25, 0.25)
+[node name="Year1" type="Sprite2D" parent="TimerLabel/CanvasGroup"]
+position = Vector2(540, 24.500002)
+scale = Vector2(0.24999996, 0.24999996)
 
-[node name="Colon1" type="Sprite2D" parent="TimerLabel/Control"]
-position = Vector2(-598, -5)
-scale = Vector2(0.25, 0.25)
+[node name="Colon1" type="Sprite2D" parent="TimerLabel/CanvasGroup"]
+position = Vector2(700, 24.500002)
+scale = Vector2(0.24999996, 0.24999996)
 
-[node name="Month10" type="Sprite2D" parent="TimerLabel/Control"]
-position = Vector2(-438, -5)
-scale = Vector2(0.25, 0.25)
+[node name="Month10" type="Sprite2D" parent="TimerLabel/CanvasGroup"]
+position = Vector2(859.99994, 24.500002)
+scale = Vector2(0.24999996, 0.24999996)
 
-[node name="Month1" type="Sprite2D" parent="TimerLabel/Control"]
-position = Vector2(-278, -5)
-scale = Vector2(0.25, 0.25)
+[node name="Month1" type="Sprite2D" parent="TimerLabel/CanvasGroup"]
+position = Vector2(1019.99994, 24.500002)
+scale = Vector2(0.24999996, 0.24999996)
 
-[node name="Colon2" type="Sprite2D" parent="TimerLabel/Control"]
-position = Vector2(-118, -5)
-scale = Vector2(0.25, 0.25)
+[node name="Colon2" type="Sprite2D" parent="TimerLabel/CanvasGroup"]
+position = Vector2(1180, 24.500002)
+scale = Vector2(0.24999996, 0.24999996)
 
-[node name="Day10" type="Sprite2D" parent="TimerLabel/Control"]
-position = Vector2(42, -5)
-scale = Vector2(0.25, 0.25)
+[node name="Day10" type="Sprite2D" parent="TimerLabel/CanvasGroup"]
+position = Vector2(1339.9999, 24.500002)
+scale = Vector2(0.24999996, 0.24999996)
 
-[node name="Day1" type="Sprite2D" parent="TimerLabel/Control"]
-position = Vector2(202, -5)
-scale = Vector2(0.25, 0.25)
+[node name="Day1" type="Sprite2D" parent="TimerLabel/CanvasGroup"]
+position = Vector2(1499.9999, 24.500002)
+scale = Vector2(0.24999996, 0.24999996)
 
-[node name="Colon3" type="Sprite2D" parent="TimerLabel/Control"]
-position = Vector2(362, -4)
-scale = Vector2(0.25, 0.25)
+[node name="Colon3" type="Sprite2D" parent="TimerLabel/CanvasGroup"]
+position = Vector2(1659.9998, 25.5)
+scale = Vector2(0.24999996, 0.24999996)
 
-[node name="Hour10" type="Sprite2D" parent="TimerLabel/Control"]
-position = Vector2(522, -5)
-scale = Vector2(0.25, 0.25)
+[node name="Hour10" type="Sprite2D" parent="TimerLabel/CanvasGroup"]
+position = Vector2(1819.9998, 24.500002)
+scale = Vector2(0.24999996, 0.24999996)
 
-[node name="Hour1" type="Sprite2D" parent="TimerLabel/Control"]
-position = Vector2(682, -5)
-scale = Vector2(0.25, 0.25)
+[node name="Hour1" type="Sprite2D" parent="TimerLabel/CanvasGroup"]
+position = Vector2(1979.9998, 24.500002)
+scale = Vector2(0.24999996, 0.24999996)
 
-[node name="Colon4" type="Sprite2D" parent="TimerLabel/Control"]
-position = Vector2(842, -7)
-scale = Vector2(0.25, 0.25)
+[node name="Colon4" type="Sprite2D" parent="TimerLabel/CanvasGroup"]
+position = Vector2(2139.9998, 22.500002)
+scale = Vector2(0.24999996, 0.24999996)
 
-[node name="Min10" type="Sprite2D" parent="TimerLabel/Control"]
-position = Vector2(1002, -8)
-scale = Vector2(0.25, 0.25)
+[node name="Min10" type="Sprite2D" parent="TimerLabel/CanvasGroup"]
+position = Vector2(2299.9995, 21.500002)
+scale = Vector2(0.24999996, 0.24999996)
 
-[node name="Min1" type="Sprite2D" parent="TimerLabel/Control"]
-position = Vector2(1162, -7)
-scale = Vector2(0.25, 0.25)
+[node name="Min1" type="Sprite2D" parent="TimerLabel/CanvasGroup"]
+position = Vector2(2459.9998, 22.500002)
+scale = Vector2(0.24999996, 0.24999996)
 
-[node name="Colon5" type="Sprite2D" parent="TimerLabel/Control"]
-position = Vector2(1322, -9)
-scale = Vector2(0.25, 0.25)
+[node name="Colon5" type="Sprite2D" parent="TimerLabel/CanvasGroup"]
+position = Vector2(2619.9995, 20.5)
+scale = Vector2(0.24999996, 0.24999996)
 
-[node name="Sec10" type="Sprite2D" parent="TimerLabel/Control"]
-position = Vector2(1482, -5)
-scale = Vector2(0.25, 0.25)
+[node name="Sec10" type="Sprite2D" parent="TimerLabel/CanvasGroup"]
+position = Vector2(2779.9995, 24.500002)
+scale = Vector2(0.24999996, 0.24999996)
 
-[node name="Sec1" type="Sprite2D" parent="TimerLabel/Control"]
-position = Vector2(1642, -5)
-scale = Vector2(0.25, 0.25)
+[node name="Sec1" type="Sprite2D" parent="TimerLabel/CanvasGroup"]
+position = Vector2(2939.9995, 24.500002)
+scale = Vector2(0.24999996, 0.24999996)
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="TimerLabel/Control"]
+[node name="WorldEnvironment" type="WorldEnvironment" parent="TimerLabel/CanvasGroup"]
 
-[node name="TimerArea" type="Area2D" parent="TimerLabel/Control"]
-position = Vector2(373.99994, -4.9999804)
-rotation = 3.1415927
-scale = Vector2(1.4846992, -0.09702823)
+[node name="TimerArea" type="Area2D" parent="TimerLabel/CanvasGroup"]
+position = Vector2(1639.9999, 20.499996)
+rotation = -3.1415925
+scale = Vector2(1.484699, -0.097028226)
 
-[node name="TimerCollision" type="CollisionShape2D" parent="TimerLabel/Control/TimerArea"]
+[node name="TimerCollision" type="CollisionShape2D" parent="TimerLabel/CanvasGroup/TimerArea"]
 position = Vector2(-13.470741, -0.00048828125)
 scale = Vector2(43.2256, 1.9999999)
 shape = SubResource("RectangleShape2D_udruc")
 
 [connection signal="mouse_entered" from="CharacterArea" to="." method="_on_mouse_entered"]
 [connection signal="mouse_exited" from="CharacterArea" to="." method="_on_mouse_exited"]
-[connection signal="mouse_entered" from="TimerLabel/Control/TimerArea" to="TimerLabel" method="_on_area_2d_mouse_entered"]
-[connection signal="mouse_exited" from="TimerLabel/Control/TimerArea" to="TimerLabel" method="_on_area_2d_mouse_exited"]
+[connection signal="mouse_entered" from="TimerLabel/CanvasGroup/TimerArea" to="TimerLabel" method="_on_area_2d_mouse_entered"]
+[connection signal="mouse_exited" from="TimerLabel/CanvasGroup/TimerArea" to="TimerLabel" method="_on_area_2d_mouse_exited"]

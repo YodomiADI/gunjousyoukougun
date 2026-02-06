@@ -53,7 +53,16 @@ func display(display_name: String, texture: Texture2D, char_id: int = 0, offset_
 		# 【重要】キャラ用の当たり判定を立ち絵のサイズに合わせる
 		if char_collision.shape == null:
 			char_collision.shape = RectangleShape2D.new()
-		char_collision.shape.size = tex_size
+		# --- 判定を上に伸ばし、中心を調整する ---
+		 # タイマーをカバーするために上に伸ばすピクセル数
+		var extra_height = 100.0 
+		var new_size = Vector2(tex_size.x, tex_size.y + extra_height)
+		char_collision.shape.size = new_size
+		
+		# そのままだと上下均等に伸びて足元も埋まってしまうので、
+		# 中心位置を「半分だけ上」にずらすことで、上側だけを伸ばす
+		char_collision.position.y = -extra_height / 2.0
+		# ------
 		# 3. 死期ラベルを「頭の少し上」に自動配置
 		# Spriteの中心が(0,0)の場合、上端は -(高さ / 2)。そこから offset_y 分ずらす
 		timer_label.position.y = -(tex_size.y / 2.0) + offset_y
@@ -98,13 +107,15 @@ func _on_mouse_entered():
 		
 # CharacterArea (キャラ用) の mouse_exited シグナルに接続
 func _on_mouse_exited():
-	# タイマーが「キャプチャ（吸着）状態」でない時だけ隠す
-	# ※ もしマウスで捕まえている最中にキャラからマウスが外れても、
-	#    タイマーが消えないように timer_label 側に確認させるのがスマートです。
-	if not timer_label.get("is_changing"): # 運命書き換え中も消さない
-		timer_label.hide()
-		
+	# 以下の状態の時は、マウスがキャラから外れてもタイマーを消さない
+	if timer_label.is_changing: return    # 運命書き換え（グリッチ）演出中
+	if timer_label.is_captured: return    # マウスで捕まえている最中
+	
+	# それ以外（ただマウスを離しただけ）なら隠す
+	timer_label.hide()
 # タイマーの数値と色を更新する関数
+
+
 func update_timer_display():
 	var key = get_current_key()
 	if key == "":

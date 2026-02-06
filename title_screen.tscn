@@ -1,7 +1,6 @@
-[gd_scene load_steps=6 format=3 uid="uid://dhtpye5urrv38"]
+[gd_scene load_steps=5 format=3 uid="uid://dhtpye5urrv38"]
 
 [ext_resource type="Script" uid="uid://b7pngiy78imfl" path="res://title_screen.gd" id="1_v6p8y"]
-[ext_resource type="Texture2D" uid="uid://dft5bkrvkpcie" path="res://images/立ち絵.png" id="2_ak2if"]
 [ext_resource type="Texture2D" uid="uid://cihixwlenh170" path="res://images/礼拝堂.png" id="2_ig5kc"]
 
 [sub_resource type="FontVariation" id="FontVariation_v6p8y"]
@@ -32,13 +31,12 @@ offset_left = 244.0
 offset_top = 12.0
 offset_right = 996.0
 offset_bottom = 645.0
-texture = ExtResource("2_ak2if")
 expand_mode = 1
 stretch_mode = 5
 
 [node name="TitleLabel" type="Label" parent="."]
 layout_mode = 0
-offset_left = 14.0
+offset_left = -4.0
 offset_top = 59.0
 offset_right = 1162.0
 offset_bottom = 473.0
