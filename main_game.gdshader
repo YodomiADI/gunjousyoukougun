@@ -1,3 +1,4 @@
+//main_game.gdshader
 shader_type canvas_item;
 
 uniform sampler2D noise_tex : repeat_enable;

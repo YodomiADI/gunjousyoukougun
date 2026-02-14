@@ -13,79 +13,135 @@ extends Node2D
 @onready var char_area = $CharacterArea
 @onready var char_collision = $CharacterArea/CharacterCollision
 
+# 外側の判定ノード（影武者）をインスペクターで指定できるようにする
+@export var char_proxy: Area2D
+@export var timer_proxy: Area2D
+
 # ※ TimerArea（タイマーが逃げる用）は、timer_label.gd側で処理するため
 #   このスクリプトからは触らないようにして、混線を防ぎます。
 
 var current_character_name: String = ""
 var current_char_id: int = 0
 
+
+# ループが重複しないためのガード
+var is_dripping = false
+var current_timer_offset_y: float = 0.0  
+
 func _ready():
 	timer_label.hide() # 最初は隠しておく
-	
+	if timer_proxy:
+		# プロキシの入力イベント（クリックなど）を監視する
+		timer_proxy.input_event.connect(_on_timer_proxy_input_event)
+		# マウスが入った/出たの同期もここで行うと確実
+		timer_proxy.mouse_entered.connect(timer_label._on_area_2d_mouse_entered)
+		timer_proxy.mouse_exited.connect(timer_label._on_area_2d_mouse_exited)
 	
 # main_game.gd から呼ばれる関数名
 func display(display_name: String, texture: Texture2D, char_id: int = 0, offset_y: float = -40.0, char_scale: float = 1.0, b_scale: float = 1.0):
 	current_character_name = display_name
 	current_char_id = char_id
+	current_timer_offset_y = offset_y
 	
 	# 素材本来の大きさ(b_scale) と 演出用の大きさ(char_scale) を掛け合わせる
 	var final_scale = b_scale * char_scale
 	
 	if is_visible_in_tree():
-		# すでに画面に表示されている場合：
-		# 表情差分やズーム演出なので、Tweenでじわっと変える
 		var scale_tween = create_tween()
 		scale_tween.tween_property(self, "scale", Vector2(final_scale, final_scale), 0.2).set_trans(Tween.TRANS_SINE)
 	else:
-		# 今から初めて表示される場合：
-		# Tweenを使わず、即座にサイズを決定する（これで「ぐっと縮む」のを防ぐ）
 		self.scale = Vector2(final_scale, final_scale)
 	
-
+	# --- 修正箇所開始：先に内部の当たり判定を確定させる ---
+	
 	if texture:
 		sprite.texture = texture
-		
-		# --- 位置とサイズの自動調整 ---
-	# 1. 画像のサイズを取得 (var宣言はここ1回だけにする)
 		var tex_size = texture.get_size()
 		
 		# 2. 当たり判定（CollisionShape2D）を画像サイズに合わせる
-		# 【重要】キャラ用の当たり判定を立ち絵のサイズに合わせる
 		if char_collision.shape == null:
 			char_collision.shape = RectangleShape2D.new()
+			
 		# --- 判定を上に伸ばし、中心を調整する ---
-		 # タイマーをカバーするために上に伸ばすピクセル数
 		var extra_height = 100.0 
 		var new_size = Vector2(tex_size.x, tex_size.y + extra_height)
 		char_collision.shape.size = new_size
 		
-		# そのままだと上下均等に伸びて足元も埋まってしまうので、
-		# 中心位置を「半分だけ上」にずらすことで、上側だけを伸ばす
+		# 中心位置を「半分だけ上」にずらす
 		char_collision.position.y = -extra_height / 2.0
-		# ------
-		# 3. 死期ラベルを「頭の少し上」に自動配置
-		# Spriteの中心が(0,0)の場合、上端は -(高さ / 2)。そこから offset_y 分ずらす
+		
+		# 死期ラベルの位置調整
 		timer_label.position.y = -(tex_size.y / 2.0) + offset_y
-		# -------------------------------------------------------
+
+		# ==========================================================
+		# ★修正：ここから「影武者（Proxy）」に内部判定をコピーする処理
+		# ==========================================================
+		if char_proxy:
+			var p_col = char_proxy.get_node("CollisionShape2D")
+			if p_col:
+				# 重要：リソース共有を切るため、Shapeが共有されていたら複製してユニークにする
+				if p_col.shape == null:
+					p_col.shape = RectangleShape2D.new()
+				else:
+					# すでに割り当たっている場合、他のスロットと共有している可能性が高いため複製する
+					# (これをしないとLeftを変えた時にRightも変わってしまう)
+					p_col.shape = p_col.shape.duplicate()
+
+				# 内部で作った「new_size」にスケールを適用してプロキシに渡す
+				# ※char_proxy自体はscale=1.0のままなので、ここで倍率を掛ける必要があります
+				p_col.shape.size = char_collision.shape.size * final_scale
+				
+				# 重要：位置（ズレ）もコピーする
+				# char_collisionは上にズレているので、プロキシも同じ比率でズラす
+				p_col.position = char_collision.position * final_scale
+		# ==========================================================
+		# ==========================================================
+		if timer_proxy:
+			# 1. 位置の同期
+			# TimerLabel はキャラの頭上に移動しているので、その位置をスケール倍して適用
+			timer_proxy.position = timer_label.position * final_scale
+			
+			# 2. サイズの同期（当たり判定のリソース重複回避も含む）
+			# TimerLabelの中にある本来の判定を取得
+			var t_col_node = timer_label.get_node_or_null("CanvasGroup/TimerArea/TimerCollision")
+			var p_col_node = timer_proxy.get_node_or_null("CollisionShape2D")
+			
+			if t_col_node and p_col_node:
+				if p_col_node.shape == null:
+					p_col_node.shape = RectangleShape2D.new()
+				else:
+					# Left/Rightで共有しないように複製
+					p_col_node.shape = p_col_node.shape.duplicate()
+				
+				# 内部の判定サイズに、キャラ全体の表示倍率(final_scale)を掛ける
+				p_col_node.shape.size = t_col_node.shape.size * final_scale
+		# ==========================================================
+		if timer_label.has_method("setup_collision_shape"):
+			timer_label.setup_collision_shape()
+		
 		show()
-		# ★重要：表示されている時だけ当たり判定を有効にする
 		char_area.monitoring = true
 		char_area.monitorable = true
 	else:
 		hide()
-		# 非表示なら当たり判定も消す（透明なスロットに反応しないように）
 		char_area.monitoring = false
 		char_area.monitorable = false
-		
-	# マウスがすでに乗っている状態で画像が変わった場合のために更新
+		# テクスチャがない場合（非表示）、プロキシの判定も無効化しておくと安全です
+		if char_proxy:
+			var p_col = char_proxy.get_node("CollisionShape2D")
+			if p_col: p_col.disabled = true
+
 	update_timer_display()
-	
-# ---表示した瞬間にタイマーの文字を更新し、表示・非表示を判定する ---
 	update_timer()
 	if texture:
-		# キャラクターが表示されるタイミングでループを開始！
+		# プロキシが生きていれば有効化
+		if char_proxy:
+			var p_col = char_proxy.get_node("CollisionShape2D")
+			if p_col: p_col.disabled = false
+			
 		start_dripping_loop()
 		show()
+		
 # 毎フレーム main_game.gd から呼ばれるタイマー更新関数
 # --- タイマー表示制御 ---
 func update_timer():
@@ -146,33 +202,74 @@ func set_focus(is_active: bool):
 
 # マウスが乗っていて（ラベルが見えていて）、かつデータがあるなら時間を更新し続ける
 func _process(_delta):
-	if timer_label.visible:
-		update_timer_display()
+	if not char_proxy : return
 
+	# --- A. 立ち絵プロキシの同期 ---
+	# 位置だけを同期（サイズは display 関数で設定済みなので触らない）
+	char_proxy.global_position = self.global_position
+
+	# --- B. タイマープロキシの同期 ---
+	# タイマー（TimerLabel）が表示されている時だけ、その位置とサイズを同期する
+	if timer_label.visible and timer_proxy:
+		# 掴んでいる間は、本体(timer_label)をマウスに追従させる
+		# ==========================================================
+		if timer_label.get("is_captured"):
+			# ラベル本体をマウス位置へ（これで本体がマウスに付いてくる）
+			timer_label.global_position = get_global_mouse_position()
+		# 計算をやり直すのではなく、すでに頭上に移動している timer_label の 
+		# global_position をそのままコピーするのが一番正確です。
+		timer_proxy.global_position = timer_label.global_position
+
+		# 当たり判定のノード取得
+		var t_col = timer_label.get_node_or_null("CanvasGroup/TimerArea/TimerCollision")
+		var p_col = timer_proxy.get_node_or_null("CollisionShape2D")
+		
+		if t_col and p_col:
+			# プロキシの形状をユニークにする（他と混ざらないように）
+			if p_col.shape == null:
+				p_col.shape = RectangleShape2D.new()
+			elif not p_col.shape.is_class("RectangleShape2D"): # 万が一のリセット
+				p_col.shape = RectangleShape2D.new()
+			
+			# サイズの同期
+			# 内部タイマーのサイズ * CanvasGroupのスケール * 全体のスケール
+			var internal_scale = timer_label.get_node("CanvasGroup").scale
+			p_col.shape.size = t_col.shape.size * internal_scale * self.scale
+			
 func splash_water(pos: Vector2):
-	var mat = timer_label.material as ShaderMaterial
+	# CanvasGroupの方にあるマテリアルを取得するように修正
+	var mat = timer_label.get_node("CanvasGroup").material as ShaderMaterial
 	if not mat: return
 	
 	mat.set_shader_parameter("droplet_center", pos)
 	
 	var tween = create_tween()
-	# じわっと広がる
-	tween.tween_property(mat, "shader_parameter/droplet_size", 0.4, 0.6).set_trans(Tween.TRANS_SINE)
-	# ゆっくり乾いて消える
-	tween.tween_property(mat, "shader_parameter/droplet_size", 0.0, 1.2).set_trans(Tween.TRANS_QUAD).set_delay(0.2)
+	# シェーダーのパラメータに合わせてアニメーション
+	tween.tween_property(mat, "shader_parameter/droplet_size", 1.0, 0.8).from(0.0).set_trans(Tween.TRANS_SINE)
 
 func start_dripping_loop():
-	# 少しランダムな時間を待つ（0.8秒〜1.5秒の間）
-	var wait_time = randf_range(0.3, 0.6)
+	if is_dripping: return 
+	is_dripping = true
 	
-	# タイマーを作成して待機
-	await get_tree().create_timer(wait_time).timeout
-	
-	# このノードが表示されている時だけ実行（非表示の時は止める）
-	if is_visible_in_tree():
-		# ランダムな位置に水滴を落とす (0.1〜0.9の範囲にすると文字からはみ出しにくい)
-		var random_pos = Vector2(randf_range(-0.4, 0.6), randf_range(0.1, 0.9))
-		splash_water(random_pos)
+	while is_visible_in_tree():
+		var wait_time = randf_range(0.8, 1.5)
+		await get_tree().create_timer(wait_time).timeout
 		
-		# 自分自身をもう一度呼んでループさせる（再帰呼び出し）
-		start_dripping_loop()
+		# タイマーが表示されている時だけ波紋を出す
+		if timer_label.visible:
+			var random_pos = Vector2(randf_range(0.2, 0.8), randf_range(0.2, 0.8))
+			splash_water(random_pos)
+	
+	is_dripping = false
+
+# プロキシがクリックされた時の処理
+func _on_timer_proxy_input_event(_viewport, event, _shape_idx):
+	if event is InputEventMouseButton and event.pressed:
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			# ★重要：ここでイベントを「消費」する
+			# これにより、main_game.gd の _unhandled_input が反応しなくなる
+			get_viewport().set_input_as_handled()
+			
+			if timer_label.visible:
+				# タイマー側の「運命書き換え」を実行
+				timer_label.handle_proxy_click()

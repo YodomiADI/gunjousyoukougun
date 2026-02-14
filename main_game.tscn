@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3 uid="uid://cllpcuaeq424j"]
+[gd_scene load_steps=19 format=3 uid="uid://cllpcuaeq424j"]
 
 [ext_resource type="Script" uid="uid://b7scfg1k3ox20" path="res://main_game.gd" id="1_1oj5k"]
 [ext_resource type="Script" uid="uid://cspbt4kiho02r" path="res://GameDirector.gd" id="2_4srsv"]
@@ -6,9 +6,32 @@
 [ext_resource type="Script" uid="uid://bcxrq774hbbtd" path="res://character_manager.gd" id="2_l5ukw"]
 [ext_resource type="Texture2D" uid="uid://dqxoljf06ads2" path="res://images/裏面.png" id="2_ykeeq"]
 [ext_resource type="PackedScene" uid="uid://ogtf4xhup2vi" path="res://pause_menu.tscn" id="2_yx7mw"]
+[ext_resource type="Texture2D" uid="uid://ctgqsq0758jvb" path="res://images/宇宙.png" id="3_02kkc"]
 [ext_resource type="Script" uid="uid://c3unil20v3i2h" path="res://MessageWindow.gd" id="4_4srsv"]
+[ext_resource type="Shader" uid="uid://cwvtoip152lqj" path="res://canvas_item.gdshader" id="4_aomqu"]
 [ext_resource type="Shader" uid="uid://b1ebrc8ut2kq2" path="res://main_game.gdshader" id="5_2pltu"]
+[ext_resource type="Texture2D" uid="uid://devwgvlu5hciy" path="res://images/紙.png" id="5_krmtw"]
 [ext_resource type="Texture2D" uid="uid://b47cr6rft7vqt" path="res://water_noise.tres" id="6_f52ns"]
+[ext_resource type="Texture2D" uid="uid://0aosbm30laop" path="res://images/道路.png" id="6_jgkyn"]
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_krmtw"]
+frequency = 0.02
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_jgkyn"]
+noise = SubResource("FastNoiseLite_krmtw")
+seamless = true
+normalize = false
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_krmtw"]
+shader = ExtResource("4_aomqu")
+shader_parameter/paper_mask_texture = ExtResource("5_krmtw")
+shader_parameter/noise_texture = SubResource("NoiseTexture2D_jgkyn")
+shader_parameter/bleed_strength = 1.250000059375
+shader_parameter/multiply_paper_texture = true
+shader_parameter/shimmer_speed = 0.05
+shader_parameter/shimmer_amount = 0.005
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_krmtw"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_l5ukw"]
 shader = ExtResource("5_2pltu")
@@ -21,44 +44,6 @@ shader_parameter/max_distortion = 0.08
 shader_parameter/water_color = Color(0, 0.82692844, 1.0962195, 1)
 shader_parameter/emission_strength = 2.0
 
-[sub_resource type="Animation" id="Animation_6bm6p"]
-length = 0.001
-tracks/0/type = "value"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath("Panel/NextIcon:theme_override_colors/font_color")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/keys = {
-"times": PackedFloat32Array(0),
-"transitions": PackedFloat32Array(1),
-"update": 0,
-"values": [Color(1, 1, 1, 1)]
-}
-
-[sub_resource type="Animation" id="Animation_ykeeq"]
-resource_name = "wait"
-loop_mode = 1
-step = 1.0
-tracks/0/type = "value"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath("Panel/NextIcon:theme_override_colors/font_color")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/keys = {
-"times": PackedFloat32Array(0, 0.5, 1),
-"transitions": PackedFloat32Array(1, 1, 1),
-"update": 0,
-"values": [Color(1, 1, 1, 1), Color(1, 1, 1, 0), Color(1, 1, 1, 1)]
-}
-
-[sub_resource type="AnimationLibrary" id="AnimationLibrary_dugkq"]
-_data = {
-&"RESET": SubResource("Animation_6bm6p"),
-&"wait": SubResource("Animation_ykeeq")
-}
-
 [node name="MainGame" type="Control"]
 layout_mode = 3
 anchors_preset = 0
@@ -70,36 +55,112 @@ script = ExtResource("1_1oj5k")
 [node name="GameDirector" type="Node2D" parent="."]
 script = ExtResource("2_4srsv")
 
-[node name="Background" type="TextureRect" parent="."]
-layout_mode = 0
-offset_left = -17.0
-offset_top = -13.0
-offset_right = 1175.0
-offset_bottom = 686.0
+[node name="BackgroundControl" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 mouse_filter = 2
+
+[node name="Background" type="TextureRect" parent="BackgroundControl"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("3_02kkc")
 expand_mode = 1
 stretch_mode = 6
 
-[node name="CharacterSprite" type="TextureRect" parent="."]
-layout_mode = 0
-offset_right = 1171.0
-offset_bottom = 669.0
+[node name="SubViewportContainer" type="SubViewportContainer" parent="BackgroundControl"]
+material = SubResource("ShaderMaterial_krmtw")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 3.0
+offset_top = 3.0
+offset_right = -8.0
+offset_bottom = -7.0
+grow_horizontal = 2
+grow_vertical = 2
 mouse_filter = 2
-expand_mode = 2
-stretch_mode = 5
+stretch = true
 
-[node name="CharacterContainer" type="Node2D" parent="."]
+[node name="SubViewport" type="SubViewport" parent="BackgroundControl/SubViewportContainer"]
+handle_input_locally = false
+physics_object_picking = true
+size = Vector2i(1139, 641)
+render_target_update_mode = 4
+
+[node name="Foreground" type="TextureRect" parent="BackgroundControl/SubViewportContainer/SubViewport"]
+unique_name_in_owner = true
+clip_contents = true
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("6_jgkyn")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="CharacterContainer" type="Node2D" parent="BackgroundControl/SubViewportContainer/SubViewport"]
+unique_name_in_owner = true
 position = Vector2(566, 368)
 script = ExtResource("2_l5ukw")
 
-[node name="RightSlot" parent="CharacterContainer" instance=ExtResource("2_6bm6p")]
+[node name="RightSlot" parent="BackgroundControl/SubViewportContainer/SubViewport/CharacterContainer" node_paths=PackedStringArray("char_proxy", "timer_proxy") instance=ExtResource("2_6bm6p")]
 position = Vector2(255, 167)
+char_proxy = NodePath("../../../../../CollisionLayer/RightCharProxy")
+timer_proxy = NodePath("../../../../../CollisionLayer/RightTimerProxy")
 
-[node name="CenterSlot" parent="CharacterContainer" instance=ExtResource("2_6bm6p")]
+[node name="CenterSlot" parent="BackgroundControl/SubViewportContainer/SubViewport/CharacterContainer" node_paths=PackedStringArray("char_proxy", "timer_proxy") instance=ExtResource("2_6bm6p")]
 position = Vector2(1, 168)
+char_proxy = NodePath("../../../../../CollisionLayer/CenterCharProxy")
+timer_proxy = NodePath("../../../../../CollisionLayer/CenterTimerProxy")
 
-[node name="LeftSlot" parent="CharacterContainer" instance=ExtResource("2_6bm6p")]
+[node name="LeftSlot" parent="BackgroundControl/SubViewportContainer/SubViewport/CharacterContainer" node_paths=PackedStringArray("char_proxy", "timer_proxy") instance=ExtResource("2_6bm6p")]
 position = Vector2(-255, 163)
+char_proxy = NodePath("../../../../../CollisionLayer/LeftCharProxy")
+timer_proxy = NodePath("../../../../../CollisionLayer/LeftTimerProxy")
+
+[node name="CollisionLayer" type="Node2D" parent="."]
+
+[node name="LeftCharProxy" type="Area2D" parent="CollisionLayer"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CollisionLayer/LeftCharProxy"]
+shape = SubResource("RectangleShape2D_krmtw")
+
+[node name="LeftTimerProxy" type="Area2D" parent="CollisionLayer"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CollisionLayer/LeftTimerProxy"]
+shape = SubResource("RectangleShape2D_krmtw")
+
+[node name="RightCharProxy" type="Area2D" parent="CollisionLayer"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CollisionLayer/RightCharProxy"]
+shape = SubResource("RectangleShape2D_krmtw")
+
+[node name="RightTimerProxy" type="Area2D" parent="CollisionLayer"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CollisionLayer/RightTimerProxy"]
+shape = SubResource("RectangleShape2D_krmtw")
+
+[node name="CenterCharProxy" type="Area2D" parent="CollisionLayer"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CollisionLayer/CenterCharProxy"]
+shape = SubResource("RectangleShape2D_krmtw")
+
+[node name="CenterTimerProxy" type="Area2D" parent="CollisionLayer"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CollisionLayer/CenterTimerProxy"]
+shape = SubResource("RectangleShape2D_krmtw")
 
 [node name="Panel" type="Panel" parent="."]
 unique_name_in_owner = true
@@ -254,11 +315,18 @@ offset_bottom = 56.0
 text = "閉じる"
 icon_alignment = 1
 
-[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
-libraries = {
-&"": SubResource("AnimationLibrary_dugkq")
-}
-
+[connection signal="mouse_entered" from="CollisionLayer/LeftCharProxy" to="BackgroundControl/SubViewportContainer/SubViewport/CharacterContainer" method="_on_left_char_proxy_mouse_entered"]
+[connection signal="mouse_exited" from="CollisionLayer/LeftCharProxy" to="BackgroundControl/SubViewportContainer/SubViewport/CharacterContainer" method="_on_left_char_proxy_mouse_exited"]
+[connection signal="mouse_entered" from="CollisionLayer/LeftTimerProxy" to="BackgroundControl/SubViewportContainer/SubViewport/CharacterContainer" method="_on_left_timer_proxy_mouse_entered"]
+[connection signal="mouse_exited" from="CollisionLayer/LeftTimerProxy" to="BackgroundControl/SubViewportContainer/SubViewport/CharacterContainer" method="_on_left_timer_proxy_mouse_exited"]
+[connection signal="mouse_entered" from="CollisionLayer/RightCharProxy" to="BackgroundControl/SubViewportContainer/SubViewport/CharacterContainer" method="_on_right_char_proxy_mouse_entered"]
+[connection signal="mouse_exited" from="CollisionLayer/RightCharProxy" to="BackgroundControl/SubViewportContainer/SubViewport/CharacterContainer" method="_on_right_char_proxy_mouse_exited"]
+[connection signal="mouse_entered" from="CollisionLayer/RightTimerProxy" to="BackgroundControl/SubViewportContainer/SubViewport/CharacterContainer" method="_on_right_timer_proxy_mouse_entered"]
+[connection signal="mouse_exited" from="CollisionLayer/RightTimerProxy" to="BackgroundControl/SubViewportContainer/SubViewport/CharacterContainer" method="_on_right_timer_proxy_mouse_exited"]
+[connection signal="mouse_entered" from="CollisionLayer/CenterCharProxy" to="BackgroundControl/SubViewportContainer/SubViewport/CharacterContainer" method="_on_center_char_proxy_mouse_entered"]
+[connection signal="mouse_exited" from="CollisionLayer/CenterCharProxy" to="BackgroundControl/SubViewportContainer/SubViewport/CharacterContainer" method="_on_center_char_proxy_mouse_exited"]
+[connection signal="mouse_entered" from="CollisionLayer/CenterTimerProxy" to="BackgroundControl/SubViewportContainer/SubViewport/CharacterContainer" method="_on_center_timer_proxy_mouse_entered"]
+[connection signal="mouse_exited" from="CollisionLayer/CenterTimerProxy" to="BackgroundControl/SubViewportContainer/SubViewport/CharacterContainer" method="_on_center_timer_proxy_mouse_exited"]
 [connection signal="pressed" from="SystemButtons/AutoButton" to="." method="_on_auto_button_pressed"]
 [connection signal="pressed" from="SystemButtons/SkipButton" to="." method="_on_skip_button_pressed"]
 [connection signal="pressed" from="SystemButtons/BacklogButton" to="." method="_on_backlog_button_pressed"]

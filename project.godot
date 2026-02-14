@@ -19,6 +19,10 @@ config/icon="res://icon.svg"
 
 Global="*res://Global.gd"
 
+[editor]
+
+movie_writer/movie_file="D:/godotdebuc/aa2.avi"
+
 [filesystem]
 
 import/fbx2gltf/enabled=false
