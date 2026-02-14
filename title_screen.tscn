@@ -1,7 +1,8 @@
-[gd_scene load_steps=5 format=3 uid="uid://dhtpye5urrv38"]
+[gd_scene load_steps=6 format=3 uid="uid://dhtpye5urrv38"]
 
 [ext_resource type="Script" uid="uid://b7pngiy78imfl" path="res://title_screen.gd" id="1_v6p8y"]
 [ext_resource type="Texture2D" uid="uid://cihixwlenh170" path="res://images/礼拝堂.png" id="2_ig5kc"]
+[ext_resource type="AudioStream" uid="uid://c15hfsioibqla" path="res://BGM/タイトル.wav" id="3_ig5kc"]
 
 [sub_resource type="FontVariation" id="FontVariation_v6p8y"]
 
@@ -225,6 +226,10 @@ layout_mode = 2
 text = "閉じる"
 
 [node name="ConfirmationDialog" type="ConfirmationDialog" parent="."]
+
+[node name="BGMPlayer" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("3_ig5kc")
+autoplay = true
 
 [connection signal="pressed" from="MainMenu/StartButton" to="." method="_on_start_button_pressed"]
 [connection signal="pressed" from="MainMenu/LoadButton" to="." method="_on_load_menu_button_pressed"]

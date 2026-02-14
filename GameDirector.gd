@@ -7,6 +7,7 @@ extends Node
 var current_data: ScenarioData
 var current_index: int = 0
 
+var is_changing_scene: bool = false # 二重処理防止フラグ
 # --- 1. シナリオ開始 ---
 func start_scenario(id: String):
 	current_data = Global.get_scenario_resource(id)
@@ -36,6 +37,9 @@ func _setup_chapter_logic(id: String):
 
 # --- 2. 進行管理 ---
 func play_current_event():
+	# すでにシーン切り替え中なら何もしない
+	if is_changing_scene: return
+	
 	if current_index < current_data.events.size():
 		Global.current_line_index = current_index
 		var ev = current_data.events[current_index]
@@ -68,6 +72,7 @@ func handle_location_selected(_location_id: String):
 
 # --- 4. 章終了のロジック（ここが一番重要！） ---
 func _finish_chapter():
+	if is_changing_scene: return
 	# 報酬とフラグの処理（元のコードから完全移植）
 	Global.add_flag(current_data.reward_flag)
 	
@@ -84,7 +89,8 @@ func _finish_chapter():
 		ScenarioData.NextAction.AUTO_NEXT:
 			Global.current_chapter_id = current_data.next_chapter_id
 			Global.current_line_index = 0
-			get_tree().reload_current_scene()
+			# 安全のため call_deferred で実行
+			get_tree().call_deferred("reload_current_scene")
 			
 		ScenarioData.NextAction.DETERMINE_END:
 			if Global.current_chapter_id == "day_7":

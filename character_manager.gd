@@ -38,3 +38,54 @@ func update_portraits(ev: DialogueEvent):
 		var slot = slots[pos_key]
 		if slot.visible:
 			slot.set_focus(pos_key == ev.position)
+
+
+# character_manager.gd 内
+
+# キャラ（立ち絵）にマウスが乗った
+func _on_left_char_proxy_mouse_entered():
+	# $LeftSlot は CharacterDisplay クラスなので、その中の関数を呼ぶ
+	$LeftSlot._on_mouse_entered()
+
+func _on_left_char_proxy_mouse_exited():
+	$LeftSlot._on_mouse_exited()
+
+# タイマー（数字）にマウスが乗った
+func _on_left_timer_proxy_mouse_entered():
+	# LeftSlotの中にある timer_label ノードの関数を直接呼ぶ
+	$LeftSlot.timer_label._on_area_2d_mouse_entered()
+
+func _on_left_timer_proxy_mouse_exited():
+	$LeftSlot.timer_label._on_area_2d_mouse_exited()
+
+# キャラ（立ち絵）にマウスが乗った
+func _on_right_char_proxy_mouse_entered():
+	# $RightSlot は CharacterDisplay クラスなので、その中の関数を呼ぶ
+	$RightSlot._on_mouse_entered()
+
+func _on_right_char_proxy_mouse_exited():
+	$RightSlot._on_mouse_exited()
+
+# タイマー（数字）にマウスが乗った
+func _on_right_timer_proxy_mouse_entered():
+	# RightSlotの中にある timer_label ノードの関数を直接呼ぶ
+	$RightSlot.timer_label._on_area_2d_mouse_entered()
+
+func _on_right_timer_proxy_mouse_exited():
+	$RightSlot.timer_label._on_area_2d_mouse_exited()
+
+# キャラ（立ち絵）にマウスが乗った
+func _on_center_char_proxy_mouse_entered():
+	# $CenterSlot は CharacterDisplay クラスなので、その中の関数を呼ぶ
+	$CenterSlot._on_mouse_entered()
+
+func _on_center_char_proxy_mouse_exited():
+	$CenterSlot._on_mouse_exited()
+
+# タイマー（数字）にマウスが乗った
+func _on_center_timer_proxy_mouse_entered():
+	# CenterSlotの中にある timer_label ノードの関数を直接呼ぶ
+	$CenterSlot.timer_label._on_area_2d_mouse_entered()
+
+func _on_center_timer_proxy_mouse_exited():
+	$CenterSlot.timer_label._on_area_2d_mouse_exited()

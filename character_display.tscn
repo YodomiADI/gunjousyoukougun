@@ -1,4 +1,4 @@
-[gd_scene load_steps=16 format=3 uid="uid://bs4nyna76vxqf"]
+[gd_scene load_steps=30 format=3 uid="uid://bs4nyna76vxqf"]
 
 [ext_resource type="Script" uid="uid://c4sw362kchbba" path="res://character_display.gd" id="1_udruc"]
 [ext_resource type="Script" uid="uid://cjbfskvo6ecoh" path="res://timer_label.gd" id="4_7k6yl"]
@@ -11,13 +11,33 @@
 [ext_resource type="Texture2D" uid="uid://c5p8tun6f3ruo" path="res://timer_font/6.png" id="11_w06k5"]
 [ext_resource type="Texture2D" uid="uid://dklrsfbkplfni" path="res://timer_font/7.png" id="12_c10ax"]
 [ext_resource type="Texture2D" uid="uid://chrlf6yg8ogv4" path="res://timer_font/8.png" id="13_7g4lx"]
+[ext_resource type="Texture2D" uid="uid://cpagoywa08yvb" path="res://timer_font/red-0.png" id="13_wq4cx"]
+[ext_resource type="Texture2D" uid="uid://cf1hs21q6f06m" path="res://timer_font/red-1.png" id="14_bhnsq"]
 [ext_resource type="Texture2D" uid="uid://ck7e35nyd4oal" path="res://timer_font/9.png" id="14_iseq2"]
+[ext_resource type="Texture2D" uid="uid://ct42orqr4jfct" path="res://timer_font/red-2.png" id="15_3626b"]
 [ext_resource type="Texture2D" uid="uid://6agqtqs8s27c" path="res://timer_font/colon.png" id="15_xttx8"]
+[ext_resource type="Texture2D" uid="uid://cr3c7m7j2via5" path="res://timer_font/red-3.png" id="16_2tj4e"]
+[ext_resource type="Texture2D" uid="uid://b8qkgrggq2drk" path="res://timer_font/red-4.png" id="17_1tcbo"]
+[ext_resource type="Texture2D" uid="uid://kp6p7ebtqgnm" path="res://timer_font/red-5.png" id="18_13oc8"]
+[ext_resource type="Texture2D" uid="uid://bbv7nn4knwbrp" path="res://timer_font/red-6.png" id="19_im70p"]
+[ext_resource type="Texture2D" uid="uid://b0mhvikn6ty2g" path="res://timer_font/red-7.png" id="20_f5nxw"]
+[ext_resource type="Texture2D" uid="uid://bd6c0hf74d7un" path="res://timer_font/red-8.png" id="21_enrly"]
+[ext_resource type="Texture2D" uid="uid://b7jnijd5w2j3o" path="res://timer_font/red-9.png" id="22_3qseu"]
+[ext_resource type="Texture2D" uid="uid://dgs7wxyq1vur0" path="res://timer_font/red-colon.png" id="24_ybvfy"]
+[ext_resource type="Shader" uid="uid://cm6rxaelcbkk1" path="res://timer_glow.gdshader" id="25_yy0oo"]
+[ext_resource type="Texture2D" uid="uid://dd6ud22tvgls3" path="res://images/泡2.png" id="26_yy0oo"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_0h12l"]
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_yy0oo"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_xttx8"]
+shader = ExtResource("25_yy0oo")
+shader_parameter/noise_texture = ExtResource("26_yy0oo")
+shader_parameter/effect_strength = 1.0
+shader_parameter/speed = 0.8
+shader_parameter/glow_color = Color(0, 0.16414079, 0.25652173, 1)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_udruc"]
-size = Vector2(42.984833, 128)
+size = Vector2(1805.0797, 412.24896)
 
 [node name="CharacterDisplay" type="Node2D"]
 script = ExtResource("1_udruc")
@@ -26,99 +46,110 @@ script = ExtResource("1_udruc")
 
 [node name="CharacterCollision" type="CollisionShape2D" parent="CharacterArea"]
 position = Vector2(1, 1)
-shape = SubResource("RectangleShape2D_0h12l")
+shape = SubResource("RectangleShape2D_yy0oo")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 
 [node name="TimerLabel" type="Node2D" parent="."]
-position = Vector2(-288, 7.9999995)
-scale = Vector2(0.4, 0.4)
 script = ExtResource("4_7k6yl")
 tex_digits_white = Array[Texture2D]([ExtResource("5_m1k5x"), ExtResource("6_7k6yl"), ExtResource("7_m1k5x"), ExtResource("8_7k6yl"), ExtResource("9_wgm57"), ExtResource("10_3ammd"), ExtResource("11_w06k5"), ExtResource("12_c10ax"), ExtResource("13_7g4lx"), ExtResource("14_iseq2")])
-tex_digits_red = Array[Texture2D]([ExtResource("5_m1k5x"), ExtResource("6_7k6yl"), ExtResource("7_m1k5x"), ExtResource("8_7k6yl"), ExtResource("9_wgm57"), ExtResource("10_3ammd"), ExtResource("11_w06k5"), ExtResource("12_c10ax"), ExtResource("13_7g4lx"), ExtResource("14_iseq2")])
+tex_digits_red = Array[Texture2D]([ExtResource("13_wq4cx"), ExtResource("14_bhnsq"), ExtResource("15_3626b"), ExtResource("16_2tj4e"), ExtResource("17_1tcbo"), ExtResource("18_13oc8"), ExtResource("19_im70p"), ExtResource("20_f5nxw"), ExtResource("21_enrly"), ExtResource("22_3qseu")])
 tex_colon_white = ExtResource("15_xttx8")
-tex_colon_red = ExtResource("15_xttx8")
+tex_colon_red = ExtResource("24_ybvfy")
 
-[node name="CanvasGroup" type="CanvasGroup" parent="TimerLabel"]
+[node name="CanvasGroup" type="Node2D" parent="TimerLabel"]
+texture_filter = 2
 
 [node name="Year10" type="Sprite2D" parent="TimerLabel/CanvasGroup"]
-position = Vector2(380, 24.500002)
+material = SubResource("ShaderMaterial_xttx8")
+position = Vector2(-1280, 4.000002)
 scale = Vector2(0.24999996, 0.24999996)
 
 [node name="Year1" type="Sprite2D" parent="TimerLabel/CanvasGroup"]
-position = Vector2(540, 24.500002)
+material = SubResource("ShaderMaterial_xttx8")
+position = Vector2(-1120, 4.000002)
 scale = Vector2(0.24999996, 0.24999996)
 
 [node name="Colon1" type="Sprite2D" parent="TimerLabel/CanvasGroup"]
-position = Vector2(700, 24.500002)
+material = SubResource("ShaderMaterial_xttx8")
+position = Vector2(-960, 4.000002)
 scale = Vector2(0.24999996, 0.24999996)
 
 [node name="Month10" type="Sprite2D" parent="TimerLabel/CanvasGroup"]
-position = Vector2(859.99994, 24.500002)
+material = SubResource("ShaderMaterial_xttx8")
+position = Vector2(-800.00006, 4.000002)
 scale = Vector2(0.24999996, 0.24999996)
 
 [node name="Month1" type="Sprite2D" parent="TimerLabel/CanvasGroup"]
-position = Vector2(1019.99994, 24.500002)
+material = SubResource("ShaderMaterial_xttx8")
+position = Vector2(-640.00006, 4.000002)
 scale = Vector2(0.24999996, 0.24999996)
 
 [node name="Colon2" type="Sprite2D" parent="TimerLabel/CanvasGroup"]
-position = Vector2(1180, 24.500002)
+material = SubResource("ShaderMaterial_xttx8")
+position = Vector2(-480, 4.000002)
 scale = Vector2(0.24999996, 0.24999996)
 
 [node name="Day10" type="Sprite2D" parent="TimerLabel/CanvasGroup"]
-position = Vector2(1339.9999, 24.500002)
+material = SubResource("ShaderMaterial_xttx8")
+position = Vector2(-320.00012, 4.000002)
 scale = Vector2(0.24999996, 0.24999996)
 
 [node name="Day1" type="Sprite2D" parent="TimerLabel/CanvasGroup"]
-position = Vector2(1499.9999, 24.500002)
+material = SubResource("ShaderMaterial_xttx8")
+position = Vector2(-160.00012, 4.000002)
 scale = Vector2(0.24999996, 0.24999996)
 
 [node name="Colon3" type="Sprite2D" parent="TimerLabel/CanvasGroup"]
-position = Vector2(1659.9998, 25.5)
+material = SubResource("ShaderMaterial_xttx8")
+position = Vector2(-0.00024414063, 5)
 scale = Vector2(0.24999996, 0.24999996)
 
 [node name="Hour10" type="Sprite2D" parent="TimerLabel/CanvasGroup"]
-position = Vector2(1819.9998, 24.500002)
+material = SubResource("ShaderMaterial_xttx8")
+position = Vector2(159.99976, 4.000002)
 scale = Vector2(0.24999996, 0.24999996)
 
 [node name="Hour1" type="Sprite2D" parent="TimerLabel/CanvasGroup"]
-position = Vector2(1979.9998, 24.500002)
+material = SubResource("ShaderMaterial_xttx8")
+position = Vector2(319.99976, 4.000002)
 scale = Vector2(0.24999996, 0.24999996)
 
 [node name="Colon4" type="Sprite2D" parent="TimerLabel/CanvasGroup"]
-position = Vector2(2139.9998, 22.500002)
+material = SubResource("ShaderMaterial_xttx8")
+position = Vector2(479.99976, 2.000002)
 scale = Vector2(0.24999996, 0.24999996)
 
 [node name="Min10" type="Sprite2D" parent="TimerLabel/CanvasGroup"]
-position = Vector2(2299.9995, 21.500002)
+material = SubResource("ShaderMaterial_xttx8")
+position = Vector2(639.9995, 1.0000019)
 scale = Vector2(0.24999996, 0.24999996)
 
 [node name="Min1" type="Sprite2D" parent="TimerLabel/CanvasGroup"]
-position = Vector2(2459.9998, 22.500002)
+material = SubResource("ShaderMaterial_xttx8")
+position = Vector2(799.99976, 2.000002)
 scale = Vector2(0.24999996, 0.24999996)
 
 [node name="Colon5" type="Sprite2D" parent="TimerLabel/CanvasGroup"]
-position = Vector2(2619.9995, 20.5)
+material = SubResource("ShaderMaterial_xttx8")
+position = Vector2(959.9995, 0)
 scale = Vector2(0.24999996, 0.24999996)
 
 [node name="Sec10" type="Sprite2D" parent="TimerLabel/CanvasGroup"]
-position = Vector2(2779.9995, 24.500002)
+material = SubResource("ShaderMaterial_xttx8")
+position = Vector2(1119.9995, 4.000002)
 scale = Vector2(0.24999996, 0.24999996)
 
 [node name="Sec1" type="Sprite2D" parent="TimerLabel/CanvasGroup"]
-position = Vector2(2939.9995, 24.500002)
+material = SubResource("ShaderMaterial_xttx8")
+position = Vector2(1279.9995, 4.000002)
 scale = Vector2(0.24999996, 0.24999996)
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="TimerLabel/CanvasGroup"]
-
 [node name="TimerArea" type="Area2D" parent="TimerLabel/CanvasGroup"]
-position = Vector2(1639.9999, 20.499996)
 rotation = -3.1415925
-scale = Vector2(1.484699, -0.097028226)
 
 [node name="TimerCollision" type="CollisionShape2D" parent="TimerLabel/CanvasGroup/TimerArea"]
-position = Vector2(-13.470741, -0.00048828125)
-scale = Vector2(43.2256, 1.9999999)
+scale = Vector2(0.9999997, 0.99999994)
 shape = SubResource("RectangleShape2D_udruc")
 
 [connection signal="mouse_entered" from="CharacterArea" to="." method="_on_mouse_entered"]

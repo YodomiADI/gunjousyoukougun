@@ -51,6 +51,7 @@ var sound_click = preload("res://SE/時計の針マウスオーバー.mp3")
 var pending_delete_slot_id: int = -1
 
 func _ready():
+	get_tree().paused = false
 	# 1. まずシステムデータを読み込む（最新の状態にする）
 	Global.load_system_data()
 	

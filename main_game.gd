@@ -2,7 +2,7 @@
 extends Control
 
 # --- 1. ノード参照 ---
-@onready var background = $Background
+@onready var background = %Foreground
 @onready var bgm_player = $BGMPlayer
 @onready var se_player = $SEPlayer
 @onready var kokorone_timer_label = $KokoroneTimerLabel
@@ -52,7 +52,7 @@ func render_event(ev: DialogueEvent):
 		se_player.play()
 
 	Global.add_to_backlog(ev.character_name, ev.text)
-	$CharacterContainer.update_portraits(ev)
+	%CharacterContainer.update_portraits(ev)
 	if ev.shake_screen: apply_shake()
 
 	if is_skipping:
@@ -68,17 +68,35 @@ func advance_line():
 	director.next_line()
 
 func _unhandled_input(event):
+	# UI（バックログや選択肢）が出ている時は入力を受け付けない
 	if (backlog_canvas and backlog_canvas.visible) or choice_container.visible:
 		return
-	if event.is_action_pressed("ui_auto"): toggle_auto()
-	if event.is_action_pressed("ui_skip"): toggle_skip()
 
-	if event.is_action_pressed("ui_accept") or (event is InputEventMouseButton and event.pressed):
+	# A. ショートカットキーの処理
+	if event.is_action_pressed("ui_auto"): 
+		toggle_auto()
+		return
+	if event.is_action_pressed("ui_skip"): 
+		toggle_skip()
+		return
+	
+	# B. クリックまたは決定キーの処理（★ここを整理しました）
+	var is_left_click = (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT)
+	var is_accept_key = event.is_action_pressed("ui_accept")
+
+	if is_left_click or is_accept_key:
+		# オートやスキップ中なら停止するだけ
 		if is_auto or is_skipping:
 			stop_modes()
 			return 
+		
+		# MessageWindowの文字表示状態によって挙動を変える
+		# skip_typing() が true を返した＝「文字をパッと出した」ので、ここでは終了
+		# skip_typing() が false を返した＝「すでに文字は出ていた」ので、次へ進む
 		if not message_window.skip_typing():
 			advance_line()
+			
+			
 
 # --- 6. システムボタンの接続用関数（復活！） ---
 
