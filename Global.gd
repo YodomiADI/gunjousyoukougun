@@ -41,6 +41,9 @@ var system_data = {
 const SAVE_PATH = "user://save_%d.dat"
 const SYSTEM_SAVE_PATH = "user://system.dat"
 
+# 追加
+var is_hovering_proxy: bool = false
+
 # --- 死期システムの定数 ---
 # 1日の秒数 (24時間 * 60分 * 60秒)
 const SECONDS_PER_DAY = 86400.0

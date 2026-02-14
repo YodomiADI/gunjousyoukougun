@@ -327,14 +327,6 @@ func handle_proxy_click():
 	if not is_revealed and not is_changing:
 		trigger_fate_change()
 
-# 元の _input は、念のため残すか、プロキシ専用にするなら消してもOK
-func _input(event):
-	# SubViewport内の直接クリックも有効にしたい場合のみ残す
-	if is_hovering and event is InputEventMouseButton:
-		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-			get_viewport().set_input_as_handled()
-			handle_proxy_click() # 共通の処理を呼ぶ
-			
 # --- 追加：波紋演出の関数 ---
 # 吸い付き開始時の処理（_on_area_2d_mouse_entered内などから呼ぶ）
 # マウスが触れた時の演出開始

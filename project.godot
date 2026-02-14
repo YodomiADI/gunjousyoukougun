@@ -21,7 +21,7 @@ Global="*res://Global.gd"
 
 [editor]
 
-movie_writer/movie_file="D:/godotdebuc/aa2.avi"
+movie_writer/movie_file="D:/godotdebuc/a3.avi"
 
 [filesystem]
 

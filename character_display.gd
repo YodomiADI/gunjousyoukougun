@@ -33,10 +33,11 @@ func _ready():
 	if timer_proxy:
 		# プロキシの入力イベント（クリックなど）を監視する
 		timer_proxy.input_event.connect(_on_timer_proxy_input_event)
-		# マウスが入った/出たの同期もここで行うと確実
-		timer_proxy.mouse_entered.connect(timer_label._on_area_2d_mouse_entered)
-		timer_proxy.mouse_exited.connect(timer_label._on_area_2d_mouse_exited)
-	
+		# timer_labelを直接呼ぶのではなく、このスクリプトの下の方にある
+		# 「フラグ管理付きの関数」を呼ぶように変更します。
+		timer_proxy.mouse_entered.connect(_on_timer_proxy_mouse_entered)
+		timer_proxy.mouse_exited.connect(_on_timer_proxy_mouse_exited)
+		
 # main_game.gd から呼ばれる関数名
 func display(display_name: String, texture: Texture2D, char_id: int = 0, offset_y: float = -40.0, char_scale: float = 1.0, b_scale: float = 1.0):
 	current_character_name = display_name
@@ -263,13 +264,22 @@ func start_dripping_loop():
 	is_dripping = false
 
 # プロキシがクリックされた時の処理
-func _on_timer_proxy_input_event(_viewport, event, _shape_idx):
+func _on_timer_proxy_input_event(viewport, event, _shape_idx):
 	if event is InputEventMouseButton and event.pressed:
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			# ★重要：ここでイベントを「消費」する
-			# これにより、main_game.gd の _unhandled_input が反応しなくなる
-			get_viewport().set_input_as_handled()
+			# ■ 修正後（イベントが発生した「親のViewport」に対して命令する）
+			viewport.set_input_as_handled()
 			
 			if timer_label.visible:
 				# タイマー側の「運命書き換え」を実行
 				timer_label.handle_proxy_click()
+# マウスが入った時
+func _on_timer_proxy_mouse_entered():
+	Global.is_hovering_proxy = true # ★追加
+	timer_label._on_area_2d_mouse_entered()
+
+# マウスが出た時
+func _on_timer_proxy_mouse_exited():
+	Global.is_hovering_proxy = false # ★追加
+	timer_label._on_area_2d_mouse_exited()
