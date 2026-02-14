@@ -48,6 +48,7 @@ func render_event(ev: DialogueEvent):
 		bgm_player.play()
 		Global.current_bgm_path = ev.bgm.resource_path
 	if ev.se:
+		print("SE再生を試みます: ", ev.se.resource_path) # これが出力されるか？
 		se_player.stream = ev.se
 		se_player.play()
 
@@ -68,6 +69,10 @@ func advance_line():
 	director.next_line()
 
 func _unhandled_input(event):
+	# カウンター（プロキシ）を触っている間は、一切の入力を無視する
+	if Global.is_hovering_proxy:
+		return
+		
 	# UI（バックログや選択肢）が出ている時は入力を受け付けない
 	if (backlog_canvas and backlog_canvas.visible) or choice_container.visible:
 		return
