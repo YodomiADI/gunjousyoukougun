@@ -160,12 +160,15 @@ func _process(delta):
 	update_collision_runtime()
 
 	# --- 3. 見た目（テクスチャ更新）の処理 ---
-	var current_sec_int = int(Global.get_current_death_time(target_char_id))
+	var data = Global.death_data[target_char_id]
+	# is_revealed(白)なら白の秒数を、違うなら赤の秒数をチェックする
+	var current_sec_int = int(data["white"]) if is_revealed else int(data["red"])
+	
 	if current_sec_int != last_displayed_seconds:
 		update_display_by_state()
 		last_displayed_seconds = current_sec_int
 		
-# --- ★新設: 毎フレーム当たり判定を計算し直す関数 ---
+# ---  毎フレーム当たり判定を計算し直す関数 ---
 func update_collision_runtime():
 	if digits.is_empty(): return
 	
@@ -206,7 +209,7 @@ func update_collision_runtime():
 	# CharacterDisplayが欲しいのは「TimerLabelノードの(0,0)から、今の見た目はどこにあるか」
 	# = CanvasGroupのズレ + CanvasGroup内の数字のズレ
 	
-# --- ★新設: 外部から呼ぶための座標取得関数 ---
+# ---  外部から呼ぶための座標取得関数 ---
 func get_current_visual_offset() -> Vector2:
 	# CanvasGroupの位置(container.position) + 散らばった数字の中心(current_visual_center)
 	return container.position + current_visual_center
@@ -262,7 +265,8 @@ func trigger_fate_change():
 		
 	# 演出終了
 	is_changing = false
-	is_revealed = true
+	# 状態を「反転」させる（白なら赤に、赤なら白に）
+	is_revealed = !is_revealed
 	
 	# 状態が変わったので、次の1秒を待たずに今すぐ見た目を更新する
 	update_display_by_state()
@@ -324,7 +328,8 @@ func _on_area_2d_mouse_exited():
 # --- 入力イベント ---
 # 外部からクリックを通知するための関数
 func handle_proxy_click():
-	if not is_revealed and not is_changing:
+	# アニメーション中(is_changing)でなければ、いつでもクリック可能にする
+	if not is_changing:
 		trigger_fate_change()
 
 # --- 追加：波紋演出の関数 ---
