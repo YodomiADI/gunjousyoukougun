@@ -77,10 +77,12 @@ func advance_death_time(char_id: String, seconds: float):
 	if not death_data.has(char_id) or death_data[char_id]["is_dead"]: return
 	
 	var data = death_data[char_id]
+	
+	# 赤の状態に関わらず、白(本来の死期)は常に時間を進める
+	data["white"] = max(0, data["white"] - seconds)
+	
 	if data["red"] > 0:
 		data["red"] = max(0, data["red"] - seconds)
-	else:
-		data["white"] = max(0, data["white"] - seconds)
 	
 	# 0になったら死亡フラグを立てる
 	if get_current_death_time(char_id) <= 0:
