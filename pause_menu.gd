@@ -15,12 +15,14 @@ const TITLE_SCENE_PATH =  "res://title_screen.tscn"
 	$Control/Panel/SaveSlotsMenu/Slot2_Button,
 	$Control/Panel/SaveSlotsMenu/Slot3_Button
 ]
-# ★追加: SEPlayerを取得
+# SEPlayerを取得
 @onready var se_player = $SEPlayer # エディタでAudioStreamPlayerを追加しておくこと
 
-# ★追加: 音源のロード
+# 音源のロード
 var sound_hover = preload("res://SE/時計の針マウスオーバー.mp3") # ※ホバー用の音
 var sound_click = preload("res://SE/シ.mp3")      # ※クリック用の音
+
+@onready var config_menu = $Control/Panel/ConfigMenu # ドラッグ＆ドロップしたコンフィグ画面へのパス
 
 func _ready():
 	# ゲーム開始時は見えないように隠しておく
@@ -28,6 +30,10 @@ func _ready():
 	# 初期状態：メインを表示、セーブ画面を隠す
 	main_buttons_container.visible = true
 	save_slots_menu.visible = false
+	config_menu.hide() # コンフィグ画面も隠しておく
+	# コンフィグ画面が閉じたという合図を受け取る設定
+	config_menu.menu_closed.connect(_on_config_menu_closed)
+	
 	# ボタンのシグナルをコードで接続する場合（エディタで接続してもOKです）
 	# 引数を持たせるために bind を使っています
 	for i in range(slot_buttons.size()):
@@ -165,3 +171,18 @@ func _process(_delta):
 		# (おまけ) 死期が近づいたら文字を赤くする演出
 		if Global.player_death_seconds < Global.SECONDS_PER_DAY * 7: # 残り7日切ったら
 			death_timer_label.modulate = Color.RED
+# 「設定（コンフィグ）」ボタンが押されたとき
+# ※エディタで ConfigButton の pressed シグナルをこの関数に接続してください
+func _on_config_button_pressed():
+	# 必要なら効果音を鳴らす
+	se_player.stream = sound_click
+	se_player.play()
+	
+	config_menu.show() # コンフィグ画面を表示
+	
+	# ※もしコンフィグを開いている間、後ろのメインボタンを押せないように隠したい場合は以下を追加
+	main_buttons_container.visible = false
+# コンフィグ画面が閉じたときに実行される関数
+func _on_config_menu_closed():
+	# 既存のメインメニューを表示する関数を使い回す
+	switch_to_main_menu()
