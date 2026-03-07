@@ -1,0 +1,60 @@
+[gd_scene load_steps=2 format=3 uid="uid://bpk1wpk0t1md5"]
+
+[ext_resource type="Script" uid="uid://cvjisrsepsq0y" path="res://config_menu.gd" id="1_j2d3n"]
+
+[node name="ConfigMenu" type="CanvasLayer"]
+layer = 2
+script = ExtResource("1_j2d3n")
+
+[node name="BackgroundPanel" type="Panel" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="BGMnamePanel" type="Button" parent="BackgroundPanel"]
+layout_mode = 0
+offset_left = 358.0
+offset_top = 266.0
+offset_right = 398.0
+offset_bottom = 306.0
+text = "BGM"
+
+[node name="BGMSlider" type="HSlider" parent="BackgroundPanel"]
+layout_mode = 0
+offset_left = 429.0
+offset_top = 264.0
+offset_right = 846.0
+offset_bottom = 306.0
+max_value = 150.0
+value = 100.0
+
+[node name="SEnamePanel" type="Button" parent="BackgroundPanel"]
+layout_mode = 0
+offset_left = 358.0
+offset_top = 324.0
+offset_right = 398.0
+offset_bottom = 364.0
+text = "SE"
+
+[node name="SESlider" type="HSlider" parent="BackgroundPanel"]
+layout_mode = 0
+offset_left = 433.0
+offset_top = 328.0
+offset_right = 844.0
+offset_bottom = 344.0
+max_value = 150.0
+value = 100.0
+
+[node name="CloseButton" type="Button" parent="BackgroundPanel"]
+layout_mode = 0
+offset_left = 362.0
+offset_top = 381.0
+offset_right = 399.0
+offset_bottom = 412.0
+text = "戻る"
+
+[connection signal="value_changed" from="BackgroundPanel/BGMSlider" to="." method="_on_bgm_slider_value_changed"]
+[connection signal="value_changed" from="BackgroundPanel/SESlider" to="." method="_on_se_slider_value_changed"]
+[connection signal="pressed" from="BackgroundPanel/CloseButton" to="." method="_on_close_button_pressed"]

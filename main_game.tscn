@@ -235,8 +235,10 @@ color = Color(0, 0, 0, 1)
 visible = false
 
 [node name="BGMPlayer" type="AudioStreamPlayer" parent="."]
+bus = &"BGM"
 
 [node name="SEPlayer" type="AudioStreamPlayer" parent="."]
+bus = &"SE"
 
 [node name="SystemButtons" type="HBoxContainer" parent="."]
 layout_mode = 0

@@ -130,6 +130,7 @@ layout_mode = 2
 text = "戻る"
 
 [node name="SEPlayer" type="AudioStreamPlayer" parent="."]
+bus = &"SE"
 
 [node name="ChapterSelectMenu" type="Panel" parent="."]
 visible = false
@@ -230,6 +231,7 @@ text = "閉じる"
 [node name="BGMPlayer" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("3_ig5kc")
 autoplay = true
+bus = &"BGM"
 
 [connection signal="pressed" from="MainMenu/StartButton" to="." method="_on_start_button_pressed"]
 [connection signal="pressed" from="MainMenu/LoadButton" to="." method="_on_load_menu_button_pressed"]

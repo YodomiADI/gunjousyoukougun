@@ -135,7 +135,7 @@ var death_timers = {
 
 func _ready():
 	load_system_data()
-
+	apply_volumes() # ゲーム起動時に初期音量を反映させる
 var is_loading_process: bool = false
 
 	
@@ -382,3 +382,24 @@ func initialize_all_data():
 	reset_game_progress()
 	
 	print("すべてのデータを初期化しました。")
+
+# --- Global.gd に追加 ---
+
+# 音量のパーセント（0 〜 150）
+var bgm_volume: float = 100.0
+var se_volume: float = 100.0
+
+# 起動時などに音量を反映させる関数
+func apply_volumes():
+	# BGMバスの音量を設定
+	var bgm_idx = AudioServer.get_bus_index("BGM")
+	if bgm_idx >= 0:
+		# 100% なら 1.0 にして、デシベル(dB)に変換
+		var linear_bgm = bgm_volume / 100.0
+		AudioServer.set_bus_volume_db(bgm_idx, linear_to_db(linear_bgm))
+		
+	# SEバスの音量を設定
+	var se_idx = AudioServer.get_bus_index("SE")
+	if se_idx >= 0:
+		var linear_se = se_volume / 100.0
+		AudioServer.set_bus_volume_db(se_idx, linear_to_db(linear_se))
