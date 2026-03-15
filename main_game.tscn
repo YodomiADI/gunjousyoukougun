@@ -242,10 +242,10 @@ bus = &"SE"
 
 [node name="SystemButtons" type="HBoxContainer" parent="."]
 layout_mode = 0
-offset_left = 1008.0
-offset_top = 2.0
-offset_right = 1184.0
-offset_bottom = 55.0
+offset_left = 960.0
+offset_top = 5.0
+offset_right = 1147.0
+offset_bottom = 58.0
 mouse_filter = 0
 
 [node name="AutoButton" type="Button" parent="SystemButtons"]
@@ -259,6 +259,10 @@ text = "Skip"
 [node name="BacklogButton" type="Button" parent="SystemButtons"]
 layout_mode = 2
 text = "Log"
+
+[node name="MenuButton" type="Button" parent="SystemButtons"]
+layout_mode = 2
+text = "Menu"
 
 [node name="KokoroneTimerLabel" type="Label" parent="."]
 visible = false
@@ -332,4 +336,5 @@ icon_alignment = 1
 [connection signal="pressed" from="SystemButtons/AutoButton" to="." method="_on_auto_button_pressed"]
 [connection signal="pressed" from="SystemButtons/SkipButton" to="." method="_on_skip_button_pressed"]
 [connection signal="pressed" from="SystemButtons/BacklogButton" to="." method="_on_backlog_button_pressed"]
+[connection signal="pressed" from="SystemButtons/MenuButton" to="." method="_on_menu_button_pressed"]
 [connection signal="pressed" from="BacklogCanvas/Panel/LogCloseButton" to="." method="_on_backlog_close_button_pressed"]

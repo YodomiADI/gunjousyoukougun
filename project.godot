@@ -21,7 +21,7 @@ Global="*res://Global.gd"
 
 [editor]
 
-movie_writer/movie_file="D:/godotdebuc/AudioConfig.avi"
+movie_writer/movie_file="D:/godotdebuc/AddMenuButton.avi"
 
 [filesystem]
 

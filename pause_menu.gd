@@ -76,6 +76,7 @@ func play_se(stream_data):
 		se_player.play()
 
 func _input(event):
+	#Escボタンでメニュー開くやつ
 	if event.is_action_pressed("ui_cancel"):
 		toggle_pause()
 # ポーズ状態を切り替える関数

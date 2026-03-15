@@ -386,11 +386,18 @@ func initialize_all_data():
 # --- Global.gd に追加 ---
 
 # 音量のパーセント（0 〜 150）
+var master_volume: float = 100.0
 var bgm_volume: float = 100.0
 var se_volume: float = 100.0
 
 # 起動時などに音量を反映させる関数
 func apply_volumes():
+	# Masterバスの音量を設定
+	var master_idx = AudioServer.get_bus_index("Master")
+	if master_idx >= 0:
+		var linear_master = master_volume / 100.0
+		AudioServer.set_bus_volume_db(master_idx, linear_to_db(linear_master))
+		
 	# BGMバスの音量を設定
 	var bgm_idx = AudioServer.get_bus_index("BGM")
 	if bgm_idx >= 0:
