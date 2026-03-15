@@ -21,6 +21,9 @@ var is_skipping: bool = false
 @onready var auto_button = $SystemButtons/AutoButton
 @onready var skip_button = $SystemButtons/SkipButton
 
+@onready var pause_menu = $PauseMenu 
+@onready var menu_button = $SystemButtons/MenuButton # 追加したボタン
+
 # --- 3. 初期化処理 ---
 func _ready():
 	message_window.message_finished.connect(_on_message_window_finished)
@@ -178,3 +181,12 @@ func apply_shake():
 
 func _on_location_pressed(location_id: String):
 	director.handle_location_selected(location_id)
+
+
+func _on_menu_button_pressed() -> void:
+	# Escキーを押したときと同じ関数を呼び出すだけ！
+	# メニューを開く前に、オートやスキップが動いていたら止めてあげるのが親切！
+	stop_modes() 
+	
+	# ポーズメニュー内の toggle_pause を実行
+	pause_menu.toggle_pause()

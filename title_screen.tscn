@@ -1,8 +1,9 @@
-[gd_scene load_steps=6 format=3 uid="uid://dhtpye5urrv38"]
+[gd_scene load_steps=7 format=3 uid="uid://dhtpye5urrv38"]
 
 [ext_resource type="Script" uid="uid://b7pngiy78imfl" path="res://title_screen.gd" id="1_v6p8y"]
 [ext_resource type="Texture2D" uid="uid://cihixwlenh170" path="res://images/礼拝堂.png" id="2_ig5kc"]
 [ext_resource type="AudioStream" uid="uid://c15hfsioibqla" path="res://BGM/タイトル.wav" id="3_ig5kc"]
+[ext_resource type="PackedScene" uid="uid://bpk1wpk0t1md5" path="res://ConfigMenu.tscn" id="4_05l2w"]
 
 [sub_resource type="FontVariation" id="FontVariation_v6p8y"]
 
@@ -222,6 +223,10 @@ grow_vertical = 2
 layout_mode = 2
 text = "初期化"
 
+[node name="ConfigOpenButton" type="Button" parent="SettingCanvas/SettingPanel/VBoxContainer"]
+layout_mode = 2
+text = "音量調節"
+
 [node name="CloseButton" type="Button" parent="SettingCanvas/SettingPanel/VBoxContainer"]
 layout_mode = 2
 text = "閉じる"
@@ -233,19 +238,19 @@ stream = ExtResource("3_ig5kc")
 autoplay = true
 bus = &"BGM"
 
+[node name="ConfigMenu" parent="." instance=ExtResource("4_05l2w")]
+
 [connection signal="pressed" from="MainMenu/StartButton" to="." method="_on_start_button_pressed"]
 [connection signal="pressed" from="MainMenu/LoadButton" to="." method="_on_load_menu_button_pressed"]
 [connection signal="pressed" from="MainMenu/Part2Button" to="." method="_on_part_2_button_pressed"]
 [connection signal="pressed" from="MainMenu/ChapterSelectButton" to="." method="_on_chapter_select_button_pressed"]
 [connection signal="pressed" from="MainMenu/SettingButton" to="." method="_on_setting_button_pressed"]
 [connection signal="pressed" from="MainMenu/QuitButton" to="." method="_on_quit_button_pressed"]
-[connection signal="pressed" from="LoadMenu/VBoxContainer/DeletModeButton" to="." method="_on_delet_mode_button_pressed"]
-[connection signal="pressed" from="LoadMenu/VBoxContainer/AutoSaveButton" to="." method="_on_auto_save_button_pressed"]
-[connection signal="pressed" from="LoadMenu/VBoxContainer/Slot1Button" to="." method="_on_slot_1_button_pressed"]
-[connection signal="pressed" from="LoadMenu/VBoxContainer/Slot2Button" to="." method="_on_slot_2_button_pressed"]
-[connection signal="pressed" from="LoadMenu/VBoxContainer/Slot3Button" to="." method="_on_slot_3_button_pressed"]
+[connection signal="toggled" from="LoadMenu/VBoxContainer/DeletModeButton" to="." method="_on_delete_mode_toggled"]
 [connection signal="pressed" from="LoadMenu/VBoxContainer/BackButton" to="." method="_on_back_button_pressed"]
 [connection signal="pressed" from="ChapterSelectMenu/VBoxContainer/BackButton" to="." method="_on_chapter_back_button_pressed"]
 [connection signal="pressed" from="SettingCanvas/SettingPanel/VBoxContainer/InitButton" to="." method="_on_init_button_pressed"]
+[connection signal="pressed" from="SettingCanvas/SettingPanel/VBoxContainer/ConfigOpenButton" to="." method="_on_config_open_button_pressed"]
 [connection signal="pressed" from="SettingCanvas/SettingPanel/VBoxContainer/CloseButton" to="." method="_on_setting_back_button_pressed"]
 [connection signal="confirmed" from="ConfirmationDialog" to="." method="_on_confirmation_dialog_confirmed"]
+[connection signal="menu_closed" from="ConfigMenu" to="." method="_on_config_menu_closed"]

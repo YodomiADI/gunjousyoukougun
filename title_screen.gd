@@ -23,6 +23,8 @@ extends Control
 # 効果音用のプレイヤーを取得
 @onready var se_player = $SEPlayer
 
+@onready var config_menu = $ConfigMenu # ルート直下にあるConfigMenuを指定
+
 # 効果音のファイルをロード（※ファイルパスは実際の場所に合わせて書き換えてください！）
 var sound_si = preload("res://SE/シ.mp3") # 「シ」
 var scale_sounds = [
@@ -113,6 +115,8 @@ func _ready():
 				confirmation_dialog.confirmed.connect(_on_confirmation_dialog_confirmed)
 	# 効果音（SE）のセットアップ
 	setup_sound_effects()
+	
+	
 	
 	# すべてのボタンに音を割り当てる関数
 func setup_sound_effects():
@@ -345,16 +349,34 @@ func _on_part_2_button_pressed() -> void:
 	pass # Replace with function body.
 
 # 設定画面を開く
+# 1. メインメニューの「設定」ボタンが押されたとき
 func _on_setting_button_pressed():
-	# SettingsCanvasも「シーン固有の名前」に設定して %SettingsCanvas にするのがおすすめ
+	play_se(sound_click)
+	
 	if has_node("SettingCanvas"):
-		$SettingCanvas.visible = true
-		print("設定画面を表示しました")
+		$SettingCanvas.visible = true # 設定メニュー（分岐画面）を表示
+		main_menu.visible = false     # メインメニューを隠す
 	else:
-		print("エラー: SettingsCanvasが見つかりません")
-
+		print("エラー: SettingCanvasが見つかりません")
+		
+# 2. 設定メニューの「音量設定」ボタンが押されたとき
+# ※エディタから ConfigOpenButton の pressed シグナルをここに接続してください！
+func _on_config_open_button_pressed():
+	play_se(sound_click)
+	
+	$SettingCanvas.visible = false # 設定メニューを一旦隠す
+	if config_menu:
+		config_menu.show()         # 音量調節画面(ConfigMenu)を開く
+		
+# 3. 音量調節画面(ConfigMenu)の「戻る」ボタンが押されたとき
+func _on_config_menu_closed():
+	# 音量調節画面が閉じたので、分岐画面（SettingCanvas）に戻る
+	$SettingCanvas.visible = true
+	
+# 4. 設定メニューの「初期化」ボタンが押されたとき
 # 設定画面内の「初期化ボタン」
 func _on_init_button_pressed():
+	play_se(sound_click)
 	if confirmation_dialog:
 		confirmation_dialog.dialog_text = "すべてのセーブデータと進行状況を消去します。\nよろしいですか？"
 		confirmation_dialog.popup_centered()
@@ -368,8 +390,11 @@ func _on_confirmation_dialog_confirmed():
 	# 画面をリロードして反映
 	get_tree().reload_current_scene()
 
+# 5. 設定メニューの「閉じる」ボタンが押されたとき
 # 設定画面の「戻る」ボタンが押されたとき
 func _on_setting_back_button_pressed():
+	play_se(sound_click)
 	if has_node("SettingCanvas"):
-		$SettingCanvas.visible = false
+		$SettingCanvas.visible = false # 設定メニューを閉じる
+		main_menu.visible = true
 		print("設定画面を閉じました")
