@@ -51,10 +51,10 @@ const SECONDS_PER_PERIOD = 43200.0 # 12時間（第2部用）
 # --- 死期データの新構造 ---
 # white: 本来の死期, red: 変動する死期（-1.0は未設定）, discovered: マウスオーバーしたか
 var death_data = {
-	"Player":   {"white": 2587670064.0, "red": -1.0, "discovered": true, "is_dead": false},
-	"Kokorone": {"white": 1356048000.0, "red": 529200.0, "discovered": false, "is_dead": false},
-	"Homura":   {"white": 600000.0,     "red": -1.0, "discovered": false, "is_dead": false},
-	"Rei":      {"white": 600000.0,     "red": -1.0, "discovered": false, "is_dead": false}
+	"Player":   {"white": 2587670064.0, "red": -1.0, "discovered": true, "is_dead": false, "last_seen_white": 2587670064.0, "last_seen_red": -1.0},
+	"Kokorone": {"white": 1356048000.0, "red": 529200.0, "discovered": false, "is_dead": false, "last_seen_white": -1.0, "last_seen_red": -1.0},
+	"Homura":   {"white": 600000.0,     "red": -1.0, "discovered": false, "is_dead": false, "last_seen_white": -1.0, "last_seen_red": -1.0},
+	"Rei":      {"white": 600000.0,     "red": -1.0, "discovered": false, "is_dead": false, "last_seen_white": -1.0, "last_seen_red": -1.0}
 }
 # 次の遷移時に実行すべき死亡イベント（キャラIDを入れる）
 var pending_death_event: String = ""
@@ -71,6 +71,14 @@ func get_current_death_time(char_id: String) -> float:
 func discover_death_time(char_id: String):
 	if death_data.has(char_id):
 		death_data[char_id]["discovered"] = true
+		record_observed_time(char_id) # 見つけた瞬間も一応記録
+		
+# 見た瞬間の時間を記録する関数
+func record_observed_time(char_id: String):
+	if death_data.has(char_id):
+		# 現在リアルタイムで減っている white と red の値を、last_seen にコピー（固定）する
+		death_data[char_id]["last_seen_white"] = death_data[char_id]["white"]
+		death_data[char_id]["last_seen_red"] = death_data[char_id]["red"]
 		
 # 死期を減らす（時間経過）
 func advance_death_time(char_id: String, seconds: float):
@@ -129,7 +137,6 @@ var death_timers = {
 	"Homura": 600000.0,
 	"Rei": 600000.0
 }
-
 
 # --- 処理部 ---
 

@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3 uid="uid://ogtf4xhup2vi"]
+[gd_scene load_steps=4 format=3 uid="uid://ogtf4xhup2vi"]
 
 [ext_resource type="Script" uid="uid://470x4heo6qy4" path="res://pause_menu.gd" id="1_hdmo1"]
 [ext_resource type="PackedScene" uid="uid://bpk1wpk0t1md5" path="res://ConfigMenu.tscn" id="2_nwcfo"]
+[ext_resource type="PackedScene" uid="uid://ckgi68x4rm0cg" path="res://DeathMemoUI.tscn" id="3_05uyy"]
 
 [node name="PauseMenu" type="CanvasLayer"]
 process_mode = 3
@@ -48,6 +49,10 @@ text = "ゲームに戻る"
 layout_mode = 2
 text = "セーブする"
 
+[node name="DeathMemoButton" type="Button" parent="Control/Panel/MainButtons"]
+layout_mode = 2
+text = "DeathMemo"
+
 [node name="ConfigButton" type="Button" parent="Control/Panel/MainButtons"]
 layout_mode = 2
 text = "Config(音量調節)"
@@ -88,11 +93,15 @@ offset_top = 204.0
 offset_right = 752.0
 offset_bottom = 258.0
 
+[node name="DeathMemoUi" parent="Control/Panel" instance=ExtResource("3_05uyy")]
+layout_mode = 1
+
 [node name="SEPlayer" type="AudioStreamPlayer" parent="."]
 bus = &"SE"
 
 [connection signal="pressed" from="Control/Panel/MainButtons/go_back_game_Button" to="." method="_on_go_back_game_button_pressed"]
 [connection signal="pressed" from="Control/Panel/MainButtons/ToSaveMenuButton" to="." method="_on_to_save_menu_button_pressed"]
+[connection signal="pressed" from="Control/Panel/MainButtons/DeathMemoButton" to="." method="_on_death_memo_button_pressed"]
 [connection signal="pressed" from="Control/Panel/MainButtons/ConfigButton" to="." method="_on_config_button_pressed"]
 [connection signal="pressed" from="Control/Panel/MainButtons/go_to_title_Button" to="." method="_on_go_to_title_button_pressed"]
 [connection signal="pressed" from="Control/Panel/SaveSlotsMenu/BackButton" to="." method="_on_back_button_pressed"]

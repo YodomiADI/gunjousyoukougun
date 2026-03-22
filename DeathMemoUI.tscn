@@ -1,0 +1,113 @@
+[gd_scene load_steps=2 format=3 uid="uid://ckgi68x4rm0cg"]
+
+[ext_resource type="Script" uid="uid://d4iu6sf3d1imt" path="res://death_memo.gd" id="1_j1dhb"]
+
+[node name="DeathMemoUi" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_j1dhb")
+
+[node name="ColorRect" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.4392157)
+
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="Panel"]
+layout_mode = 0
+offset_left = 40.0
+offset_top = 34.0
+offset_right = 1107.0
+offset_bottom = 614.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel/MarginContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "死期手記"
+
+[node name="HSeparator" type="HSeparator" parent="Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="ScrollContainer" type="ScrollContainer" parent="Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+vertical_scroll_mode = 0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel/MarginContainer/VBoxContainer/ScrollContainer"]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="ココロネ" type="Label" parent="Panel/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/VBoxContainer"]
+layout_mode = 2
+text = "ココロネ"
+
+[node name="KokoroneWhiteLabel" type="Label" parent="Panel/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "White"
+
+[node name="KokoroneRedLabel" type="Label" parent="Panel/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0, 0, 1)
+text = "Red"
+
+[node name="VBoxContainer2" type="VBoxContainer" parent="Panel/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="ホムラ" type="Label" parent="Panel/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/VBoxContainer2"]
+layout_mode = 2
+text = "ホムラ"
+
+[node name="HomuraWhiteLabel" type="Label" parent="Panel/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/VBoxContainer2"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "White"
+
+[node name="HomuraRedLabel" type="Label" parent="Panel/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/VBoxContainer2"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0, 0, 1)
+text = "Red"
+
+[node name="VBoxContainer3" type="VBoxContainer" parent="Panel/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="レイ" type="Label" parent="Panel/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/VBoxContainer3"]
+layout_mode = 2
+text = "レイ"
+
+[node name="ReiWhiteLabel" type="Label" parent="Panel/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/VBoxContainer3"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "White"
+
+[node name="ReiRedLabel" type="Label" parent="Panel/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/VBoxContainer3"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0, 0, 1)
+text = "Red"
+
+[node name="BackButton" type="Button" parent="Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "戻る"
+
+[connection signal="pressed" from="Panel/MarginContainer/VBoxContainer/BackButton" to="." method="_on_back_button_pressed"]

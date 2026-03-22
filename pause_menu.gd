@@ -24,6 +24,8 @@ var sound_click = preload("res://SE/シ.mp3")      # ※クリック用の音
 
 @onready var config_menu = $Control/Panel/ConfigMenu # ドラッグ＆ドロップしたコンフィグ画面へのパス
 
+@onready var death_memo = $Control/Panel/DeathMemoUi # 追加した手記シーンへのパス
+
 func _ready():
 	# ゲーム開始時は見えないように隠しておく
 	visible = false
@@ -43,6 +45,10 @@ func _ready():
 			btn.pressed.connect(_on_save_slot_pressed.bind(i + 1))
 	#SEのセットアップを実行
 	setup_pause_sound_effects()
+	
+	# 手記が閉じられたらメインメニューを表示するようにつなぐ
+	death_memo.closed.connect(_on_death_memo_closed)
+	
 # ポーズ画面の全ボタンにSEを設定する関数
 func setup_pause_sound_effects():
 	# ポーズ画面にあるボタンをすべてリストアップする
@@ -51,6 +57,7 @@ func setup_pause_sound_effects():
 		$Control/Panel/MainButtons/go_back_game_Button,
 		$Control/Panel/MainButtons/ToSaveMenuButton,
 		$Control/Panel/MainButtons/go_to_title_Button,
+		$Control/Panel/MainButtons/DeathMemoButton,
 		$Control/Panel/SaveSlotsMenu/BackButton
 	] + slot_buttons # スロットボタン配列も結合
 	
@@ -187,3 +194,17 @@ func _on_config_button_pressed():
 func _on_config_menu_closed():
 	# 既存のメインメニューを表示する関数を使い回す
 	switch_to_main_menu()
+
+# 手記ボタンが押された時の処理
+func _on_death_memo_button_pressed():
+	# 必要ならSE再生
+	se_player.stream = sound_click
+	se_player.play()
+	
+	# メインボタンを隠して手記を開く
+	main_buttons_container.visible = false
+	death_memo.open_memo()
+
+# 手記が閉じられた時に呼ばれる関数
+func _on_death_memo_closed():
+	switch_to_main_menu() # メインボタン類を再表示する

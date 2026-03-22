@@ -168,6 +168,11 @@ func _on_mouse_exited():
 	if timer_label.is_changing: return    # 運命書き換え（グリッチ）演出中
 	if timer_label.is_captured: return    # マウスで捕まえている最中
 	
+	# マウスが外れてタイマーが消える瞬間に、その時の数値を手記に記録する
+	var key = get_current_key()
+	if key != "":
+		Global.record_observed_time(key)
+	
 	# それ以外（ただマウスを離しただけ）なら隠す
 	timer_label.hide()
 # タイマーの数値と色を更新する関数
