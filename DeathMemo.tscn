@@ -1,0 +1,17 @@
+[gd_scene load_steps=2 format=3 uid="uid://q5ia8ycdhebc"]
+
+[ext_resource type="Script" uid="uid://d4iu6sf3d1imt" path="res://death_memo.gd" id="1_ogqmo"]
+
+[node name="DeathMemo" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="RichTextLabel" type="RichTextLabel" parent="."]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("1_ogqmo")
