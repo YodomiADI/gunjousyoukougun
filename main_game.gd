@@ -24,6 +24,8 @@ var is_skipping: bool = false
 @onready var pause_menu = $PauseMenu 
 @onready var menu_button = $SystemButtons/MenuButton # 追加したボタン
 
+var day7_resist_button: Button = null
+
 # --- 3. 初期化処理 ---
 func _ready():
 	message_window.message_finished.connect(_on_message_window_finished)
@@ -158,14 +160,27 @@ func _update_button_visuals():
 	skip_button.modulate = Color.ORANGE if is_skipping else Color.WHITE
 
 # --- 8. 選択肢・特殊演出 ---
-func show_choices(choices: Array):
+func show_choices(choices: Array, disabled_indices: Array = []):
+	day7_resist_button = null # 初期化
 	for child in choice_container.get_children(): child.queue_free()
+	
 	for i in range(choices.size()):
 		var btn = Button.new()
 		btn.text = choices[i]
 		btn.custom_minimum_size = Vector2(200, 50)
+		
+		# ---「運命に抗う」ボタンを後で監視するために変数に入れておく---
+		if choices[i].contains("運命に抗う"):
+			day7_resist_button = btn
+		
+		# --- 無効化の判定 ---
+		if i in disabled_indices:
+			btn.disabled = true # ボタンをグレーアウトして押せなくする
+			btn.focus_mode = Control.FOCUS_NONE # 選択もできないようにする
+		
 		btn.pressed.connect(_on_choice_selected.bind(i))
 		choice_container.add_child(btn)
+	
 	choice_container.show()
 
 func _on_choice_selected(index: int):
@@ -190,3 +205,15 @@ func _on_menu_button_pressed() -> void:
 	
 	# ポーズメニュー内の toggle_pause を実行
 	pause_menu.toggle_pause()
+	
+# --- _process 関数を追加（または既存のものに追記） ---
+func _process(_delta):
+	# 監視中のボタンがあり、かつまだ無効化されていない場合
+	if day7_resist_button and not day7_resist_button.disabled:
+		# リアルタイムで死期をチェック
+		if Global.get_current_death_time("Kokorone") <= 0:
+			day7_resist_button.disabled = true
+			day7_resist_button.focus_mode = Control.FOCUS_NONE
+			# ついでにタイマーをここで止めてもいいかもしれません
+			Global.is_timer_active = false
+			print("時間切れにより選択肢が封鎖されました")

@@ -222,12 +222,16 @@ func perform_glitch_effect():
 	
 # --- 状態に応じた数字の更新（歪み vs 真実） ---
 func update_display_by_state():
+	# 安全策: target_char_id が設定されていない、またはデータが存在しない場合は処理を中断
+	if target_char_id == "" or not Global.death_data.has(target_char_id):
+		return
+
 	var data = Global.death_data[target_char_id]
 	if is_revealed:
 		update_timer_images(int(data["white"]), false) # 琥珀色
 	else:
 		update_timer_images(int(data["red"]), true)   # 赤色
-
+		
 # --- マウスから逃げる（座標計算の修正） ---
 func handle_repulsion():
 	var mouse_pos = get_local_mouse_position() - container.position

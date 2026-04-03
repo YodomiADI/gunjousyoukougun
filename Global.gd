@@ -60,13 +60,14 @@ var death_data = {
 var pending_death_event: String = ""
 # --- 便利関数（計算・判定用） ---
 
-# 現在表示すべき「死期」の数値を返す（赤優先）
+# 現在表示すべき「死期」の数値を返す
 func get_current_death_time(char_id: String) -> float:
 	if not death_data.has(char_id): return 0.0
 	var data = death_data[char_id]
-	# 赤(red)が設定されていればそれを、なければ白(white)を返す
-	return data["red"] if data["red"] > 0 else data["white"]
-
+	
+	# 赤(red)が未設定(-1.0)でなければ赤を、未設定なら白(white)を返す
+	return data["red"] if data["red"] != -1.0 else data["white"]
+	
 # キャラクターを発見（マウスオーバー）した時に呼ぶ
 func discover_death_time(char_id: String):
 	if death_data.has(char_id):
@@ -306,10 +307,37 @@ func reset_game_progress():
 	current_chapter_id = "prologue"
 	current_line_index = 0
 	flags = {}
+	
+	# --- 死期変数を初期値にリセット ---
+	player_death_seconds = 2587670064.0
+	kokorone_death_seconds = 582252.0  # 約6日18時間
+	homura_death_seconds = 600000.0
+	rei_death_seconds = 600000.0
+	
+	# --- 判定に使っている死期データ(death_data)を空にする ---
+	# --- 判定に使っている死期データ(death_data)を初期状態にリセットする ---
+	death_data = {
+		"Player":   {"white": 2587670064.0, "red": -1.0, "discovered": true, "is_dead": false, "last_seen_white": 2587670064.0, "last_seen_red": -1.0},
+		"Kokorone": {"white": 1356048000.0, "red": 529200.0, "discovered": false, "is_dead": false, "last_seen_white": -1.0, "last_seen_red": -1.0},
+		"Homura":   {"white": 600000.0,     "red": -1.0, "discovered": false, "is_dead": false, "last_seen_white": -1.0, "last_seen_red": -1.0},
+		"Rei":      {"white": 600000.0,     "red": -1.0, "discovered": false, "is_dead": false, "last_seen_white": -1.0, "last_seen_red": -1.0}
+	}
+	
+	# --- 生存フラグ・タイマー稼働状態をリセット ---
+	is_kokorone_dead = false
+	is_homura_dead = false
+	is_rei_dead = false
+	
+	is_timer_active = false
+	is_death_timer_active = false
+	
+	# ※その他、BGMや背景などの演出用変数もあればここでリセット
+	current_bg_path = ""
+	print("ゲーム進行状況を完全にリセットしました。")
+	
 	is_part2 = false
 	current_day = 1
 	current_period = 0
-	is_timer_active = false
 	# 他の変数も初期値にリセット
 	
 	

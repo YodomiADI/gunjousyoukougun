@@ -32,8 +32,15 @@ func _setup_chapter_logic(id: String):
 		Global.is_death_timer_active = false
 	
 	if id == "day_7":
-		Global.kokorone_death_seconds = 239.0
 		Global.is_timer_active = true
+		
+		# --- 追加：ココロネの関連タイマー変数を全て239秒（約4分）に同期する ---
+		Global.kokorone_death_seconds = 20.0
+		Global.death_timers["Kokorone"] = 20.0
+		
+		# UI表示用の新しいデータ構造の方も上書きする（これが画面に反映される）
+		if Global.death_data.has("Kokorone"):
+			Global.death_data["Kokorone"]["red"] = 20.0
 
 # --- 2. 進行管理 ---
 func play_current_event():
@@ -81,9 +88,10 @@ func _finish_chapter():
 		"Flame": Global.flame_count += 1
 		"Soul": Global.soul_count += 1
 	
-	if not Global.is_part2 and current_data.chapter_id != "prologue":
+	# "day_7" の終わりはまだ選択肢（続き）があるので、1日経過の処理を除外する
+	if not Global.is_part2 and current_data.chapter_id != "prologue" and current_data.chapter_id != "day_7":
 		Global.advance_all_timers(Global.SECONDS_PER_DAY)
-
+		
 	# 次の行動の判定
 	match current_data.next_action:
 		ScenarioData.NextAction.AUTO_NEXT:
@@ -94,16 +102,22 @@ func _finish_chapter():
 			
 		ScenarioData.NextAction.DETERMINE_END:
 			if Global.current_chapter_id == "day_7":
-				Global.is_timer_active = false 
-				if Global.kokorone_death_seconds > 0:
-					stage.show_choices(["運命に抗う（通常エンドへ）", "諦める（バッドエンドへ）"])
-				else:
-					stage.show_choices(["……（手遅れだった、バッドエンドへ）"])
-			else:
-				# 第2部のエンディング判定
-				Global.current_chapter_id = Global.evaluate_part2_ending()
-				Global.current_line_index = 0
-				get_tree().reload_current_scene()
+				
+				# ココロネの red (歪み死期) の現在値を取得
+				# ※ Global.get_current_death_time は、red/whiteのうち
+				#   その時表示されている（または優先される）方を返す想定です。
+				var current_red_time = Global.get_current_death_time("Kokorone")
+				
+				var choice_texts = ["運命に抗う（通常エンドへ）", "諦める（バッドエンドへ）"]
+				var disabled_list = []
+				
+				# redの数値が0以下なら、0番目のボタン（運命に抗う）を無効化リストに入れる
+				if current_red_time <= 0:
+					disabled_list.append(0)
+				
+				# 拡張した show_choices を呼び出す
+				stage.show_choices(choice_texts, disabled_list)
+				
 			
 		ScenarioData.NextAction.OPEN_MAP:
 			get_tree().change_scene_to_file("res://map_selection.tscn")
