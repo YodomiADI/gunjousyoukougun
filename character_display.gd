@@ -190,6 +190,7 @@ func get_current_key() -> String:
 		1: return "Kokorone"
 		2: return "Homura"
 		3: return "Rei"
+		4: return "Cat"
 		# モブ(一般人)の場合はID:4などを割り当てる予定
 		# 4: return "Mob" 
 	return ""

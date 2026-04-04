@@ -67,10 +67,14 @@ func handle_choice(index: int):
 			Global.current_chapter_id = "happy_end1"
 		else: 
 			Global.current_chapter_id = "bad_end1"
+		Global.current_line_index = 0
+		get_tree().reload_current_scene()
+		return
+		
+	# day_7 以外の章（今回のプロローグなど）で選択肢が出た場合
+	# どっちを選んでもシナリオは合流するので、単に次の行へ進める
+	next_line()
 	
-	Global.current_line_index = 0
-	get_tree().reload_current_scene()
-
 # マップで場所を選んだ時の処理
 func handle_location_selected(_location_id: String):
 	Global.advance_all_timers(Global.SECONDS_PER_PERIOD)

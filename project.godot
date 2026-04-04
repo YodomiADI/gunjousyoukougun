@@ -21,7 +21,7 @@ Global="*res://Global.gd"
 
 [editor]
 
-movie_writer/movie_file="D:/godotdebuc/refleshDeathtime.avi"
+movie_writer/movie_file="D:/godotdebuc/prologue.avi"
 
 [filesystem]
 
