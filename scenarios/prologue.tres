@@ -1,9 +1,13 @@
-[gd_resource type="Resource" script_class="ScenarioData" load_steps=7 format=3 uid="uid://bxlid8u80h413"]
+[gd_resource type="Resource" script_class="ScenarioData" load_steps=35 format=3 uid="uid://bxlid8u80h413"]
 
 [ext_resource type="Texture2D" uid="uid://2bsifjo7yiq0" path="res://images/ステグラと星空.jpg" id="1_4mfdp"]
 [ext_resource type="Script" uid="uid://cl3bhx8qa8d5x" path="res://dialogue_event.gd" id="1_phd66"]
 [ext_resource type="Script" uid="uid://nsjru0u7n42l" path="res://scenario_date.gd" id="2_4mfdp"]
 [ext_resource type="AudioStream" uid="uid://dpxbbwvug6m60" path="res://BGM/プロローグ.mp3" id="2_l5nuy"]
+[ext_resource type="Texture2D" uid="uid://sugcybn04qn2" path="res://images/路地裏3.jpg" id="4_bs7l3"]
+[ext_resource type="Texture2D" uid="uid://vycniucbdjsr" path="res://立ち絵/猫立ち絵.png" id="5_fh20x"]
+[ext_resource type="Texture2D" uid="uid://p6vktkcypyyd" path="res://images/路地裏猫.png" id="6_fh20x"]
+[ext_resource type="Texture2D" uid="uid://b4nu5so7vgn04" path="res://立ち絵/無.png" id="7_4gooj"]
 
 [sub_resource type="Resource" id="Resource_8x785"]
 script = ExtResource("1_phd66")
@@ -17,13 +21,170 @@ metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
 
 [sub_resource type="Resource" id="Resource_l5nuy"]
 script = ExtResource("1_phd66")
-text = "aaaaaaa"
+text = "いつから見えるようになったかは覚えていない。
+最初はただ数字が頭上に浮かんでいるだけだと思っていた。"
+metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
+
+[sub_resource type="Resource" id="Resource_bs7l3"]
+script = ExtResource("1_phd66")
+text = "俺は不謹慎にもその数字が当日と一致する日を待ちわびてしまった。
+というのも、毎朝元気な挨拶をしてくれる近所のおじいさんがもうすぐでその数字が近づいていたのだ。"
+metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
+
+[sub_resource type="Resource" id="Resource_4gooj"]
+script = ExtResource("1_phd66")
+text = "当日の朝、おじいさんの挨拶はなかった。"
+metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
+
+[sub_resource type="Resource" id="Resource_igjyp"]
+script = ExtResource("1_phd66")
+text = "その日の夕方、パトカーが物々しく赤いランプを音を立てずに回っていたのが脳裏にこびりついている。"
+metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
+
+[sub_resource type="Resource" id="Resource_l0lse"]
+script = ExtResource("1_phd66")
+text = "原因は夜中の心筋梗塞。
+発見に至ったのはおじいさんと面識のある町内会のおばさん達。"
+metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
+
+[sub_resource type="Resource" id="Resource_fmsum"]
+script = ExtResource("1_phd66")
+text = "毎朝のご近所づきあいに決められた時間に世間話しに来なかったため確認しに行ったところ、違和感を覚え警察を呼びそのまま確認に至る。"
+metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
+
+[sub_resource type="Resource" id="Resource_0xtgi"]
+script = ExtResource("1_phd66")
+text = "そんな詳しい話を晩ご飯の最中に聞かされ、食べ物が喉を通りにくかったことを覚えている。だが、もっと喉を通らなくなったことがある。"
+metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
+
+[sub_resource type="Resource" id="Resource_8kqiv"]
+script = ExtResource("1_phd66")
+text = "近所の野良猫だ。"
+metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_8x785"]
+load_path = "res://.godot/imported/猫立ち絵.png-f72c252f9d0963fec3f9e073a7d3fbee.ctex"
+
+[sub_resource type="Resource" id="Resource_1rey7"]
+script = ExtResource("1_phd66")
+char_id = 4
+text = "この猫も同じく頭上の数字が近づいていた。
+まるで自分の死期を眺めるように中空をじっと眺めていた猫はとても年老いていた。"
+character_sprite = SubResource("CompressedTexture2D_8x785")
+background = ExtResource("4_bs7l3")
+require_hover_tutorial = true
+target_char_id = "Cat"
+metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
+
+[sub_resource type="Resource" id="Resource_fh20x"]
+script = ExtResource("1_phd66")
+char_id = 4
+text = "俺はその後ろを一日中追いかけた。"
+character_sprite = ExtResource("5_fh20x")
+timer_offset = Vector2(0, 10)
+metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
+
+[sub_resource type="Resource" id="Resource_gyt3u"]
+script = ExtResource("1_phd66")
+char_id = 4
+text = "花瓶が落ちてきそうだ。"
+character_sprite = ExtResource("5_fh20x")
+target_char_id = "Cat"
+choices = Array[String](["放置する", "猫を守る"])
+metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
+
+[sub_resource type="Resource" id="Resource_h26x6"]
+script = ExtResource("1_phd66")
+text = "花瓶が落ちてきた。
+猫は無事だった。"
+shake_screen = true
+metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
+
+[sub_resource type="Resource" id="Resource_eh8fi"]
+script = ExtResource("1_phd66")
+char_id = 4
+text = "車が急発進しそうだ。"
+target_char_id = "Cat"
+choices = Array[String](["放置する。", "猫を守る。"])
+metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
+
+[sub_resource type="Resource" id="Resource_0hyci"]
+script = ExtResource("1_phd66")
+char_id = 4
+text = "車がエンジンをたてて走り出した。
+猫は無事だった。"
+character_sprite = ExtResource("5_fh20x")
+shake_screen = true
+metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
+
+[sub_resource type="Resource" id="Resource_eumky"]
+script = ExtResource("1_phd66")
+char_id = 4
+text = "怪しい男がいる。
+手元が光っている。
+どうする？"
+character_sprite = ExtResource("5_fh20x")
+target_char_id = "Cat"
+choices = Array[String](["放置する。", "猫を守る。"])
+metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
+
+[sub_resource type="Resource" id="Resource_23kif"]
+script = ExtResource("1_phd66")
+char_id = 4
+text = "男は魚をエサにして猫を釣ろうとしていただけだった。
+猫は無事だった。"
+character_sprite = ExtResource("5_fh20x")
+shake_screen = true
+metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
+
+[sub_resource type="Resource" id="Resource_0dons"]
+script = ExtResource("1_phd66")
+text = "真夜中、静まった裏路地、くぼみの隙間で丸くなり、それから重い瞼が開くことも、一声鳴くこともなく、猫の頭上から数字が消えた。"
+character_sprite = ExtResource("7_4gooj")
+background = ExtResource("6_fh20x")
+metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
+
+[sub_resource type="Resource" id="Resource_ym0hg"]
+script = ExtResource("1_phd66")
+text = "その場を藍色の闇が静寂を支配し、藍色の月がにやにやと笑うように淡く光っていた。"
+background = ExtResource("6_fh20x")
+metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
+
+[sub_resource type="Resource" id="Resource_vkfql"]
+script = ExtResource("1_phd66")
+text = "死からは逃げられない。"
+metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
+
+[sub_resource type="Resource" id="Resource_pvnh8"]
+script = ExtResource("1_phd66")
+text = "どんな過程をたどろうとも夜は等しく降りてくるのだと。"
+metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
+
+[sub_resource type="Resource" id="Resource_blm8q"]
+script = ExtResource("1_phd66")
+text = "そのときから自分にとって死の数字は隣人になった。"
+metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
+
+[sub_resource type="Resource" id="Resource_utxy7"]
+script = ExtResource("1_phd66")
+text = "夜遅く帰宅して親にこっぴどく叱られた。泣かれて怒られて抱きしめられ、そんな親の姿は初めてで、自分の身体が軋みに耐えかね悲鳴をあげる中、親の頭上には長生きの数字が記載されていた。ひどく安心してしまった。"
+background = ExtResource("1_4mfdp")
+metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
+
+[sub_resource type="Resource" id="Resource_wsape"]
+script = ExtResource("1_phd66")
+text = "自分の頭の上を鏡で見て、親不孝者にはならないことを何度も確認したのは……恥ずかしいかも。"
+metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
+
+[sub_resource type="Resource" id="Resource_d3kfn"]
+script = ExtResource("1_phd66")
+text = "今までの話は俺が中学生までの過去話だ。"
 metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
 
 [resource]
 script = ExtResource("2_4mfdp")
 chapter_id = "prologue"
 chapter_title = "プロローグ"
-events = Array[ExtResource("1_phd66")]([SubResource("Resource_8x785"), SubResource("Resource_l5nuy")])
+events = Array[ExtResource("1_phd66")]([SubResource("Resource_8x785"), SubResource("Resource_l5nuy"), SubResource("Resource_bs7l3"), SubResource("Resource_4gooj"), SubResource("Resource_igjyp"), SubResource("Resource_l0lse"), SubResource("Resource_fmsum"), SubResource("Resource_0xtgi"), SubResource("Resource_8kqiv"), SubResource("Resource_1rey7"), SubResource("Resource_fh20x"), SubResource("Resource_gyt3u"), SubResource("Resource_h26x6"), SubResource("Resource_eh8fi"), SubResource("Resource_0hyci"), SubResource("Resource_eumky"), SubResource("Resource_23kif"), SubResource("Resource_0dons"), SubResource("Resource_ym0hg"), SubResource("Resource_vkfql"), SubResource("Resource_pvnh8"), SubResource("Resource_blm8q"), SubResource("Resource_utxy7"), SubResource("Resource_wsape"), SubResource("Resource_d3kfn")])
 next_chapter_id = "day_1"
 metadata/_custom_type_script = "uid://nsjru0u7n42l"

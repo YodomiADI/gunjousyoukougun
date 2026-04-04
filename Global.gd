@@ -27,6 +27,7 @@ var player_death_seconds: float = 2587670064.0
 var kokorone_death_seconds: float = 582252.0  # 約6日18時間
 var homura_death_seconds: float = 600000.0
 var rei_death_seconds: float = 600000.0
+var cat_death_seconds: float = 3200.0
 
 # 生存フラグ
 var is_kokorone_dead: bool = false
@@ -54,7 +55,8 @@ var death_data = {
 	"Player":   {"white": 2587670064.0, "red": -1.0, "discovered": true, "is_dead": false, "last_seen_white": 2587670064.0, "last_seen_red": -1.0},
 	"Kokorone": {"white": 1356048000.0, "red": 529200.0, "discovered": false, "is_dead": false, "last_seen_white": -1.0, "last_seen_red": -1.0},
 	"Homura":   {"white": 600000.0,     "red": -1.0, "discovered": false, "is_dead": false, "last_seen_white": -1.0, "last_seen_red": -1.0},
-	"Rei":      {"white": 600000.0,     "red": -1.0, "discovered": false, "is_dead": false, "last_seen_white": -1.0, "last_seen_red": -1.0}
+	"Rei":      {"white": 600000.0,     "red": -1.0, "discovered": false, "is_dead": false, "last_seen_white": -1.0, "last_seen_red": -1.0},
+	"cat":      {"white": 3200.0,     "red": 3200.0, "discovered": false, "is_dead": false, "last_seen_white": 3200.0, "last_seen_red": -1.0}
 }
 # 次の遷移時に実行すべき死亡イベント（キャラIDを入れる）
 var pending_death_event: String = ""
@@ -136,7 +138,8 @@ var death_timers = {
 	"Player": 2587670064.0, # プレイヤーも辞書に入れると管理が楽です
 	"Kokorone": 582252.0,
 	"Homura": 600000.0,
-	"Rei": 600000.0
+	"Rei": 600000.0,
+	"Cat": 3200.0
 }
 
 # --- 処理部 ---
@@ -313,14 +316,15 @@ func reset_game_progress():
 	kokorone_death_seconds = 582252.0  # 約6日18時間
 	homura_death_seconds = 600000.0
 	rei_death_seconds = 600000.0
-	
+	cat_death_seconds = 3200.0
 	# --- 判定に使っている死期データ(death_data)を空にする ---
 	# --- 判定に使っている死期データ(death_data)を初期状態にリセットする ---
 	death_data = {
 		"Player":   {"white": 2587670064.0, "red": -1.0, "discovered": true, "is_dead": false, "last_seen_white": 2587670064.0, "last_seen_red": -1.0},
 		"Kokorone": {"white": 1356048000.0, "red": 529200.0, "discovered": false, "is_dead": false, "last_seen_white": -1.0, "last_seen_red": -1.0},
 		"Homura":   {"white": 600000.0,     "red": -1.0, "discovered": false, "is_dead": false, "last_seen_white": -1.0, "last_seen_red": -1.0},
-		"Rei":      {"white": 600000.0,     "red": -1.0, "discovered": false, "is_dead": false, "last_seen_white": -1.0, "last_seen_red": -1.0}
+		"Rei":      {"white": 600000.0,     "red": -1.0, "discovered": false, "is_dead": false, "last_seen_white": -1.0, "last_seen_red": -1.0},
+		"Cat":      {"white": 3200.0,     "red": -1.0, "discovered": false, "is_dead": false, "last_seen_white": 3200.0, "last_seen_red": -1.0}
 	}
 	
 	# --- 生存フラグ・タイマー稼働状態をリセット ---

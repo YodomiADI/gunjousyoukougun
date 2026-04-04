@@ -5,7 +5,7 @@ class_name DialogueEvent
 enum CharacterPos { NONE, LEFT, RIGHT, CENTER } # 表示位置の定義
 @export var position: CharacterPos = CharacterPos.CENTER # デフォルトを真ん中に
 
-enum CharID { NONE, KOKORONE, HOMURA, REI }
+enum CharID { NONE, KOKORONE, HOMURA, REI, CAT }
 @export var char_id: CharID = CharID.NONE # これで誰のタイマーか判定する
 
 @export_group("Text")
@@ -29,3 +29,13 @@ enum CharID { NONE, KOKORONE, HOMURA, REI }
 
 @export_group("Position Control")
 @export var clear_other_slots: bool = true # デフォルトは「消す（今まで通り）」
+
+@export_group("System Commands")
+# trueにすると、このセリフの時にクリック進行を止め、対象キャラへのマウスオーバーを待つ
+@export var require_hover_tutorial: bool = false
+# チュートリアルや選択肢で対象とするキャラID (例: "Cat")
+@export var target_char_id: String = ""
+
+@export_group("Choices")
+# 選択肢のテキスト。空配列なら通常のクリック進行、テキストが入っていれば選択肢を表示する
+@export var choices: Array[String] = []

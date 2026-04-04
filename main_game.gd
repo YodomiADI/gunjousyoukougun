@@ -26,16 +26,34 @@ var is_skipping: bool = false
 
 var day7_resist_button: Button = null
 
+var is_waiting_for_hover: bool = false # ホバー待ち状態のフラグ
+var hover_target_id: String = ""       # 待っている対象のキャラID
+var active_choice_labels: Array = []   # 選択肢の死期更新用
+
+# チュートリアル用のメッセージラベルを動的に作る（シーンに直接配置してもOKです）
+var tutorial_label: Label
+
 # --- 3. 初期化処理 ---
 func _ready():
-	message_window.message_finished.connect(_on_message_window_finished)
 	
+	# チュートリアルラベルの作成
+	tutorial_label = Label.new()
+	tutorial_label.text = "対象にマウスを重ねて、死期を視てみよう"
+	tutorial_label.add_theme_font_size_override("font_size", 30)
+	tutorial_label.add_theme_color_override("font_color", Color.CYAN)
+	tutorial_label.hide()
+	# 画面中央付近に配置
+	tutorial_label.position = Vector2(300, 300) 
+	add_child(tutorial_label)
+	message_window.message_finished.connect(_on_message_window_finished)
+	# --- 2. 初期化処理 ---
 	if Global.is_loading_process:
 		_restore_visuals_from_save()
 		Global.is_loading_process = false 
-	
+	# --- 3. 最後にシナリオを開始する ---
+	# これを呼ぶと render_event が動くので、必ず一番最後に書く
 	director.start_scenario(Global.current_chapter_id)
-
+	
 func _restore_visuals_from_save():
 	if Global.current_bg_path != "":
 		background.texture = load(Global.current_bg_path)
@@ -60,7 +78,20 @@ func render_event(ev: DialogueEvent):
 	Global.add_to_backlog(ev.character_name, ev.text)
 	%CharacterContainer.update_portraits(ev)
 	if ev.shake_screen: apply_shake()
+	
+	if ev.require_hover_tutorial and ev.target_char_id != "":
+		# ホバー待ち状態に突入
+		is_waiting_for_hover = true
+		hover_target_id = ev.target_char_id
+		tutorial_label.show()
+	else:
+		is_waiting_for_hover = false
+		tutorial_label.hide()
 
+	# 選択肢があるかチェック
+	if ev.choices.size() > 0:
+		show_choices(ev.choices, [], ev.target_char_id) # 引数を追加
+	
 	if is_skipping:
 		message_window.display_message(ev.character_name, ev.text)
 		message_window.skip_typing()
@@ -95,6 +126,10 @@ func _unhandled_input(event):
 	var is_accept_key = event.is_action_pressed("ui_accept")
 
 	if is_left_click or is_accept_key:
+		# ホバー待機中ならクリック進行をブロックして無視する
+		if is_waiting_for_hover:
+			return
+		
 		# オートやスキップ中なら停止するだけ
 		if is_auto or is_skipping:
 			stop_modes()
@@ -160,15 +195,32 @@ func _update_button_visuals():
 	skip_button.modulate = Color.ORANGE if is_skipping else Color.WHITE
 
 # --- 8. 選択肢・特殊演出 ---
-func show_choices(choices: Array, disabled_indices: Array = []):
-	day7_resist_button = null # 初期化
+func show_choices(choices: Array, disabled_indices: Array = [], target_id: String = ""):
+	day7_resist_button = null 
+	active_choice_labels.clear() # リセット
+	hover_target_id = target_id  # _processで更新するために保存
+	
 	for child in choice_container.get_children(): child.queue_free()
 	
 	for i in range(choices.size()):
 		var btn = Button.new()
 		btn.text = choices[i]
-		btn.custom_minimum_size = Vector2(200, 50)
+		btn.custom_minimum_size = Vector2(400, 80) # 死期を表示するため少し大きめに
 		
+		# --- 対象キャラが指定されていれば、右下に死期ラベルを追加 ---
+		if target_id != "" and Global.death_data.has(target_id):
+			var time_label = Label.new()
+			# 初期テキスト
+			time_label.text = "死期: " + Global.format_death_time(Global.get_current_death_time(target_id))
+			time_label.add_theme_font_size_override("font_size", 16)
+			time_label.add_theme_color_override("font_color", Color.WHITE)
+			# 右下にアンカーを設定
+			time_label.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+			time_label.position = Vector2(-10, -30) # 少し内側にずらす
+			
+			btn.add_child(time_label)
+			active_choice_labels.append(time_label) # リアルタイム更新用リストに追加
+			
 		# ---「運命に抗う」ボタンを後で監視するために変数に入れておく---
 		if choices[i].contains("運命に抗う"):
 			day7_resist_button = btn
@@ -217,3 +269,19 @@ func _process(_delta):
 			# ついでにタイマーをここで止めてもいいかもしれません
 			Global.is_timer_active = false
 			print("時間切れにより選択肢が封鎖されました")
+	# ★ホバー待ちチュートリアルの監視
+	if is_waiting_for_hover and hover_target_id != "":
+		# Globalのデータで、対象キャラが「発見済み(discovered)」になったらクリア！
+		if Global.death_data.has(hover_target_id) and Global.death_data[hover_target_id]["discovered"]:
+			is_waiting_for_hover = false
+			tutorial_label.hide()
+			# 0.5秒くらい余韻を残してから自動で次の行へ進む
+			get_tree().create_timer(0.5).timeout.connect(advance_line)
+			
+	# ★選択肢ボタンの死期リアルタイム更新
+	if active_choice_labels.size() > 0 and hover_target_id != "":
+		var current_time = Global.get_current_death_time(hover_target_id)
+		var time_str = Global.format_death_time(current_time)
+		for label in active_choice_labels:
+			if is_instance_valid(label):
+				label.text = "死期: " + time_str
