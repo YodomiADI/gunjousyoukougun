@@ -33,6 +33,7 @@ var cat_death_seconds: float = 3200.0
 var is_kokorone_dead: bool = false
 var is_homura_dead: bool = false
 var is_rei_dead: bool = false
+var is_cat_dead: bool = false
 
 # --- 4. システム設定・定数 ---
 var system_data = {
@@ -54,9 +55,9 @@ const SECONDS_PER_PERIOD = 43200.0 # 12時間（第2部用）
 var death_data = {
 	"Player":   {"white": 2587670064.0, "red": -1.0, "discovered": true, "is_dead": false, "last_seen_white": 2587670064.0, "last_seen_red": -1.0},
 	"Kokorone": {"white": 1356048000.0, "red": 529200.0, "discovered": false, "is_dead": false, "last_seen_white": -1.0, "last_seen_red": -1.0},
-	"Homura":   {"white": 600000.0,     "red": -1.0, "discovered": false, "is_dead": false, "last_seen_white": -1.0, "last_seen_red": -1.0},
+	"Homura":   {"white": 600000.0,     "red": 300000.0, "discovered": false, "is_dead": false, "last_seen_white": -1.0, "last_seen_red": -1.0},
 	"Rei":      {"white": 600000.0,     "red": -1.0, "discovered": false, "is_dead": false, "last_seen_white": -1.0, "last_seen_red": -1.0},
-	"cat":      {"white": 3200.0,     "red": 3200.0, "discovered": false, "is_dead": false, "last_seen_white": 3200.0, "last_seen_red": -1.0}
+	"Cat":      {"white": 3200.0,     "red": 3200.0, "discovered": false, "is_dead": false, "last_seen_white": -1.0, "last_seen_red": -1.0}
 }
 # 次の遷移時に実行すべき死亡イベント（キャラIDを入れる）
 var pending_death_event: String = ""
@@ -85,6 +86,9 @@ func record_observed_time(char_id: String):
 		
 # 死期を減らす（時間経過）
 func advance_death_time(char_id: String, seconds: float):
+	# 【追加】プロローグ中、プレイヤーの死期だけは減らさない
+	if current_chapter_id == "prologue" and char_id == "Player": return
+	
 	if not death_data.has(char_id) or death_data[char_id]["is_dead"]: return
 	
 	var data = death_data[char_id]
@@ -179,6 +183,7 @@ func update_heroine_timers(delta):
 	if not is_kokorone_dead: death_timers["Kokorone"] = max(0, death_timers["Kokorone"] - delta)
 	if not is_homura_dead: death_timers["Homura"] = max(0, death_timers["Homura"] - delta)
 	if not is_rei_dead: death_timers["Rei"] = max(0, death_timers["Rei"] - delta)
+	if not is_rei_dead: death_timers["Cat"] = max(0, death_timers["Cat"] - delta)
 
 func add_flag(flag_name: String):
 	if flag_name == "": return
@@ -322,15 +327,16 @@ func reset_game_progress():
 	death_data = {
 		"Player":   {"white": 2587670064.0, "red": -1.0, "discovered": true, "is_dead": false, "last_seen_white": 2587670064.0, "last_seen_red": -1.0},
 		"Kokorone": {"white": 1356048000.0, "red": 529200.0, "discovered": false, "is_dead": false, "last_seen_white": -1.0, "last_seen_red": -1.0},
-		"Homura":   {"white": 600000.0,     "red": -1.0, "discovered": false, "is_dead": false, "last_seen_white": -1.0, "last_seen_red": -1.0},
+		"Homura":   {"white": 600000.0,     "red": 300000.0, "discovered": false, "is_dead": false, "last_seen_white": -1.0, "last_seen_red": -1.0},
 		"Rei":      {"white": 600000.0,     "red": -1.0, "discovered": false, "is_dead": false, "last_seen_white": -1.0, "last_seen_red": -1.0},
-		"Cat":      {"white": 3200.0,     "red": -1.0, "discovered": false, "is_dead": false, "last_seen_white": 3200.0, "last_seen_red": -1.0}
+		"Cat":      {"white": 3200.0,     "red": 3200.0, "discovered": false, "is_dead": false, "last_seen_white": -1.0, "last_seen_red": -1.0}
 	}
 	
 	# --- 生存フラグ・タイマー稼働状態をリセット ---
 	is_kokorone_dead = false
 	is_homura_dead = false
 	is_rei_dead = false
+	is_cat_dead = false
 	
 	is_timer_active = false
 	is_death_timer_active = false
