@@ -24,13 +24,12 @@ func start_scenario(id: String):
 
 # 章ごとの特殊なロジック設定
 func _setup_chapter_logic(id: String):
-	if id != "prologue":
-		Global.prepare_death_timer_for_next_day()
-		Global.is_death_timer_active = true
-	else:
-		Global.current_death_floor = Global.player_death_seconds - Global.SECONDS_PER_DAY
-		Global.is_death_timer_active = false
+	# プロローグかどうかに関わらず、タイマーの計算自体は動かす
+	Global.is_death_timer_active = true
 	
+	if id != "prologue":
+		Global.current_death_floor = Global.player_death_seconds - Global.SECONDS_PER_DAY
+		
 	if id == "day_7":
 		Global.is_timer_active = true
 		
