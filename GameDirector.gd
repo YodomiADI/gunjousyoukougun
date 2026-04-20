@@ -10,16 +10,33 @@ var current_index: int = 0
 var is_changing_scene: bool = false # 二重処理防止フラグ
 # --- 1. シナリオ開始 ---
 func start_scenario(id: String):
+	# 1. データのロード
 	current_data = Global.get_scenario_resource(id)
-	if not current_data:
-		printerr("シナリオが見つかりません: ", id)
-		get_tree().change_scene_to_file("res://title_screen.tscn")
+	if current_data == null:
+		printerr("シナリオが見らつかりません: ", id)
 		return
-
-	# 章ごとの初期設定（元の main_game の _ready からの引っ越し）
+	
+	# ★追加: Global側の現在IDも更新しておく（セーブ時などに重要）
+	Global.current_chapter_id = id
+	
+	# 2. 下限値の更新
+	Global.current_death_floor = current_data.chapter_death_floor
+	
+	# 3. インデックスのリセット
+	# 新しくシナリオを始める時は常に 0 から。
+	# ただし、ロード直後だけは Global の値を引き継ぎたいので条件分岐させます。
+	if Global.is_loading_process:
+		current_index = Global.current_line_index
+		# ロード処理が終わったらフラグを下ろす（Global.gd側でやっていれば不要）
+		# Global.is_loading_process = false 
+	else:
+		current_index = 0
+		Global.current_line_index = 0 # Global側もリセット
+	
+	# 4. 章ごとの特殊ロジック
 	_setup_chapter_logic(id)
 	
-	current_index = Global.current_line_index
+	# 5. 再生開始
 	play_current_event()
 
 # 章ごとの特殊なロジック設定
@@ -59,21 +76,31 @@ func next_line():
 
 # --- 3. 選択肢や場所の「判定」 ---
 
-# プレイヤーが選択肢を選んだ時の処理（main_gameから呼ばれる）
+# 選択肢が選ばれた時
 func handle_choice(index: int):
-	if Global.current_chapter_id == "day_7":
-		if index == 0: 
-			Global.current_chapter_id = "happy_end1"
-		else: 
-			Global.current_chapter_id = "bad_end1"
-		Global.current_line_index = 0
-		get_tree().reload_current_scene()
-		return
-		
-	# day_7 以外の章（今回のプロローグなど）で選択肢が出た場合
-	# どっちを選んでもシナリオは合流するので、単に次の行へ進める
-	next_line()
+	# 現在のイベントデータを取得（変数名はそちらの環境に合わせてください）
+	var current_event = current_data.events[current_index]
 	
+	# 1. 選んだ選択肢による死期の増減を適用（プレイヤー対象の場合）
+	# ※target_char_idに適用するようにも作れますが、一旦メインの寿命と仮定
+	if current_event.choice_time_modifiers.size() > index:
+		var mod = current_event.choice_time_modifiers[index]
+		if mod != 0.0:
+			# マイナスの値が設定されていれば寿命が減る
+			Global.player_death_seconds += mod 
+			# 下限を下回らないようにする
+			Global.player_death_seconds = max(Global.current_death_floor, Global.player_death_seconds)
+
+	# 2. 分岐先が指定されていれば、そのシナリオIDへジャンプ！
+	if current_event.choice_next_scenario_ids.size() > index:
+		var next_id = current_event.choice_next_scenario_ids[index]
+		if next_id != "":
+			print("シナリオ分岐: ", next_id, " へジャンプします")
+			start_scenario(next_id)
+			return # ジャンプしたのでここで終了
+			
+	# 3. 分岐先がない（空文字）場合は、単純に合流して次の行へ
+	next_line()
 # マップで場所を選んだ時の処理
 func handle_location_selected(_location_id: String):
 	Global.advance_all_timers(Global.SECONDS_PER_PERIOD)

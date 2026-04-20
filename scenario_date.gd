@@ -24,3 +24,7 @@ enum NextAction {
 @export var reward_flag: String = ""          # 読み終わった時に貰えるフラグ（例: "心その1"）
 
 @export_enum("None", "Heart", "Flame", "Soul") var reward_type: String = "None"
+
+@export_group("Death Time Limits")
+# このシナリオ（または章）での死期の下限値（秒）。これ以上は減らない。
+@export var chapter_death_floor: float = 0.0

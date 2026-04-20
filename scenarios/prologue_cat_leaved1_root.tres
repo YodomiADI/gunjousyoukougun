@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="ScenarioData" load_steps=6 format=3 uid="uid://c81orm0bkwxfd"]
+
+[ext_resource type="Script" uid="uid://cl3bhx8qa8d5x" path="res://dialogue_event.gd" id="1_lrbby"]
+[ext_resource type="Script" uid="uid://nsjru0u7n42l" path="res://scenario_date.gd" id="2_21i66"]
+[ext_resource type="Texture2D" uid="uid://vycniucbdjsr" path="res://立ち絵/猫立ち絵.png" id="2_e510h"]
+
+[sub_resource type="Resource" id="Resource_foagb"]
+script = ExtResource("1_lrbby")
+char_id = 4
+text = "猫は無事だった。花瓶は猫のそばに落ちたが、
+破片で傷を負わなかったようだ。"
+character_sprite = ExtResource("2_e510h")
+shake_screen = true
+metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
+
+[sub_resource type="Resource" id="Resource_21i66"]
+script = ExtResource("1_lrbby")
+text = "猫の後を追い続けよう。"
+metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
+
+[resource]
+script = ExtResource("2_21i66")
+chapter_id = "prologue"
+events = Array[ExtResource("1_lrbby")]([SubResource("Resource_foagb"), SubResource("Resource_21i66")])
+next_chapter_id = "prologue2"
+metadata/_custom_type_script = "uid://nsjru0u7n42l"

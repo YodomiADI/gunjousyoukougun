@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="ScenarioData" load_steps=8 format=3 uid="uid://c6hxm42my7do8"]
+
+[ext_resource type="Script" uid="uid://cl3bhx8qa8d5x" path="res://dialogue_event.gd" id="1_61w23"]
+[ext_resource type="Texture2D" uid="uid://sugcybn04qn2" path="res://images/路地裏3.jpg" id="2_pnxs2"]
+[ext_resource type="AudioStream" uid="uid://dq3ainftkexdg" path="res://BGM/huwa.wav" id="3_h3rc4"]
+[ext_resource type="Texture2D" uid="uid://vycniucbdjsr" path="res://立ち絵/猫立ち絵.png" id="4_t6xgw"]
+[ext_resource type="Script" uid="uid://nsjru0u7n42l" path="res://scenario_date.gd" id="5_imrjk"]
+
+[sub_resource type="Resource" id="Resource_s6ww8"]
+script = ExtResource("1_61w23")
+text = "猫を抱き寄せたと同時に花瓶が猫のいたところに落ちてくる。
+猫は無事だった。"
+character_sprite = ExtResource("4_t6xgw")
+background = ExtResource("2_pnxs2")
+bgm = ExtResource("3_h3rc4")
+shake_screen = true
+metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
+
+[sub_resource type="Resource" id="Resource_61w23"]
+script = ExtResource("1_61w23")
+text = "猫の後を追いかけよう。"
+metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
+
+[resource]
+script = ExtResource("5_imrjk")
+chapter_id = "prologue"
+events = Array[ExtResource("1_61w23")]([SubResource("Resource_s6ww8"), SubResource("Resource_61w23")])
+next_chapter_id = "prologue2"
+metadata/_custom_type_script = "uid://nsjru0u7n42l"
