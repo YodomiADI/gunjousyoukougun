@@ -86,18 +86,26 @@ func record_observed_time(char_id: String):
 		
 # 死期を減らす（時間経過）
 func advance_death_time(char_id: String, seconds: float):
-	# 【追加】プロローグ中、プレイヤーの死期だけは減らさない
+	# プロローグ中、プレイヤーの死期だけは減らさない
 	if current_chapter_id == "prologue" and char_id == "Player": return
-	
 	if not death_data.has(char_id) or death_data[char_id]["is_dead"]: return
 	
 	var data = death_data[char_id]
 	
-	# 赤の状態に関わらず、白(本来の死期)は常に時間を進める
-	data["white"] = max(0, data["white"] - seconds)
+# 減少処理
+	var new_white = data["white"] - seconds
+	var new_red = data["red"] - seconds
 	
-	if data["red"] > 0:
-		data["red"] = max(0, data["red"] - seconds)
+	# ★ プレイヤーの死期なら下限(current_death_floor)で止める
+	if char_id == "Player":
+		data["white"] = max(current_death_floor, new_white)
+		if data["red"] > 0:
+			data["red"] = max(current_death_floor, new_red)
+	else:
+		# ヒロインたちは通常通り0が下限
+		data["white"] = max(0.0, new_white)
+		if data["red"] > 0:
+			data["red"] = max(0.0, new_red)
 	
 	# 0になったら死亡フラグを立てる
 	if get_current_death_time(char_id) <= 0:
@@ -112,6 +120,9 @@ func advance_all_timers(seconds: float):
 # シナリオのリソース登録
 var scenario_registry = {
 	"prologue": "res://scenarios/prologue.tres",
+	"prologue_cat_leaved1_root" :"res://scenarios/prologue_cat_leaved1_root.tres",
+	"prologue_cat_saved1_root" :"res://scenarios/prologue_cat_saved1_root.tres",
+	"prologue2": "res://scenarios/prologue2.tres",
 	"day_1": "res://scenarios/day_1.tres",
 	"day_2": "res://scenarios/day_2.tres",
 	"day_3": "res://scenarios/day_3.tres",
@@ -183,7 +194,7 @@ func update_heroine_timers(delta):
 	if not is_kokorone_dead: death_timers["Kokorone"] = max(0, death_timers["Kokorone"] - delta)
 	if not is_homura_dead: death_timers["Homura"] = max(0, death_timers["Homura"] - delta)
 	if not is_rei_dead: death_timers["Rei"] = max(0, death_timers["Rei"] - delta)
-	if not is_rei_dead: death_timers["Cat"] = max(0, death_timers["Cat"] - delta)
+	if not is_cat_dead: death_timers["Cat"] = max(0, death_timers["Cat"] - delta)
 
 func add_flag(flag_name: String):
 	if flag_name == "": return

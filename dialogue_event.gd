@@ -31,11 +31,23 @@ enum CharID { NONE, KOKORONE, HOMURA, REI, CAT }
 @export var clear_other_slots: bool = true # デフォルトは「消す（今まで通り）」
 
 @export_group("System Commands")
-# trueにすると、このセリフの時にクリック進行を止め、対象キャラへのマウスオーバーを待つ
+
+## trueにすると、このセリフの時にクリック進行を止め、対象キャラへのマウスオーバーを待つ
 @export var require_hover_tutorial: bool = false
-# チュートリアルや選択肢で対象とするキャラID (例: "Cat")
+
+## チュートリアルや選択肢で対象とするキャラID (例: "Cat")
 @export var target_char_id: String = ""
 
-@export_group("Choices")
-# 選択肢のテキスト。空配列なら通常のクリック進行、テキストが入っていれば選択肢を表示する
+@export_group("Choices & Branching")
+
+## 選択肢として表示されるテキストのリスト
 @export var choices: Array[String] = []
+
+## 分岐先シナリオID（選択肢の数と合わせる。空文字ならそのまま次の行へ）
+@export var choice_next_scenario_ids: Array[String] = []
+
+## 各選択肢を選んだ時の死期増減（秒）。マイナスなら死期が縮む。
+@export var choice_time_modifiers: Array[float] = [] 
+
+## 選択肢ボタンでの死期表示タイプ　0:Auto, 1:White, 2:Red 
+@export var choice_time_display_types: Array[int] = []

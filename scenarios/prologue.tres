@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="ScenarioData" load_steps=35 format=3 uid="uid://bxlid8u80h413"]
+[gd_resource type="Resource" script_class="ScenarioData" load_steps=20 format=3 uid="uid://bxlid8u80h413"]
 
 [ext_resource type="Texture2D" uid="uid://2bsifjo7yiq0" path="res://images/ステグラと星空.jpg" id="1_4mfdp"]
 [ext_resource type="Script" uid="uid://cl3bhx8qa8d5x" path="res://dialogue_event.gd" id="1_phd66"]
@@ -6,8 +6,6 @@
 [ext_resource type="AudioStream" uid="uid://dpxbbwvug6m60" path="res://BGM/プロローグ.mp3" id="2_l5nuy"]
 [ext_resource type="Texture2D" uid="uid://sugcybn04qn2" path="res://images/路地裏3.jpg" id="4_bs7l3"]
 [ext_resource type="Texture2D" uid="uid://vycniucbdjsr" path="res://立ち絵/猫立ち絵.png" id="5_fh20x"]
-[ext_resource type="Texture2D" uid="uid://p6vktkcypyyd" path="res://images/路地裏猫.png" id="6_fh20x"]
-[ext_resource type="Texture2D" uid="uid://b4nu5so7vgn04" path="res://立ち絵/無.png" id="7_4gooj"]
 
 [sub_resource type="Resource" id="Resource_8x785"]
 script = ExtResource("1_phd66")
@@ -90,101 +88,15 @@ char_id = 4
 text = "花瓶が落ちてきそうだ。"
 character_sprite = ExtResource("5_fh20x")
 target_char_id = "Cat"
-choices = Array[String](["放置する", "猫を守る"])
-metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
-
-[sub_resource type="Resource" id="Resource_h26x6"]
-script = ExtResource("1_phd66")
-text = "花瓶が落ちてきた。
-猫は無事だった。"
-shake_screen = true
-metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
-
-[sub_resource type="Resource" id="Resource_eh8fi"]
-script = ExtResource("1_phd66")
-char_id = 4
-text = "車が急発進しそうだ。"
-target_char_id = "Cat"
-choices = Array[String](["放置する。", "猫を守る。"])
-metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
-
-[sub_resource type="Resource" id="Resource_0hyci"]
-script = ExtResource("1_phd66")
-char_id = 4
-text = "車がエンジンをたてて走り出した。
-猫は無事だった。"
-character_sprite = ExtResource("5_fh20x")
-shake_screen = true
-metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
-
-[sub_resource type="Resource" id="Resource_eumky"]
-script = ExtResource("1_phd66")
-char_id = 4
-text = "怪しい男がいる。
-手元が光っている。
-どうする？"
-character_sprite = ExtResource("5_fh20x")
-target_char_id = "Cat"
-choices = Array[String](["放置する。", "猫を守る。"])
-metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
-
-[sub_resource type="Resource" id="Resource_23kif"]
-script = ExtResource("1_phd66")
-char_id = 4
-text = "男は魚をエサにして猫を釣ろうとしていただけだった。
-猫は無事だった。"
-character_sprite = ExtResource("5_fh20x")
-shake_screen = true
-metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
-
-[sub_resource type="Resource" id="Resource_0dons"]
-script = ExtResource("1_phd66")
-text = "真夜中、静まった裏路地、くぼみの隙間で丸くなり、それから重い瞼が開くことも、一声鳴くこともなく、猫の頭上から数字が消えた。"
-character_sprite = ExtResource("7_4gooj")
-background = ExtResource("6_fh20x")
-metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
-
-[sub_resource type="Resource" id="Resource_ym0hg"]
-script = ExtResource("1_phd66")
-text = "その場を藍色の闇が静寂を支配し、藍色の月がにやにやと笑うように淡く光っていた。"
-background = ExtResource("6_fh20x")
-metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
-
-[sub_resource type="Resource" id="Resource_vkfql"]
-script = ExtResource("1_phd66")
-text = "死からは逃げられない。"
-metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
-
-[sub_resource type="Resource" id="Resource_pvnh8"]
-script = ExtResource("1_phd66")
-text = "どんな過程をたどろうとも夜は等しく降りてくるのだと。"
-metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
-
-[sub_resource type="Resource" id="Resource_blm8q"]
-script = ExtResource("1_phd66")
-text = "そのときから自分にとって死の数字は隣人になった。"
-metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
-
-[sub_resource type="Resource" id="Resource_utxy7"]
-script = ExtResource("1_phd66")
-text = "夜遅く帰宅して親にこっぴどく叱られた。泣かれて怒られて抱きしめられ、そんな親の姿は初めてで、自分の身体が軋みに耐えかね悲鳴をあげる中、親の頭上には長生きの数字が記載されていた。ひどく安心してしまった。"
-background = ExtResource("1_4mfdp")
-metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
-
-[sub_resource type="Resource" id="Resource_wsape"]
-script = ExtResource("1_phd66")
-text = "自分の頭の上を鏡で見て、親不孝者にはならないことを何度も確認したのは……恥ずかしいかも。"
-metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
-
-[sub_resource type="Resource" id="Resource_d3kfn"]
-script = ExtResource("1_phd66")
-text = "今までの話は俺が中学生までの過去話だ。"
+choices = Array[String](["猫を放置する", "花瓶から守る"])
+choice_next_scenario_ids = Array[String](["prologue_cat_leaved1_root", "prologue_cat_saved1_root"])
+choice_time_modifiers = Array[float]([-12.0, 12.0])
+choice_time_display_types = Array[int]([2, 2])
 metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
 
 [resource]
 script = ExtResource("2_4mfdp")
 chapter_id = "prologue"
 chapter_title = "プロローグ"
-events = Array[ExtResource("1_phd66")]([SubResource("Resource_8x785"), SubResource("Resource_l5nuy"), SubResource("Resource_bs7l3"), SubResource("Resource_4gooj"), SubResource("Resource_igjyp"), SubResource("Resource_l0lse"), SubResource("Resource_fmsum"), SubResource("Resource_0xtgi"), SubResource("Resource_8kqiv"), SubResource("Resource_1rey7"), SubResource("Resource_fh20x"), SubResource("Resource_gyt3u"), SubResource("Resource_h26x6"), SubResource("Resource_eh8fi"), SubResource("Resource_0hyci"), SubResource("Resource_eumky"), SubResource("Resource_23kif"), SubResource("Resource_0dons"), SubResource("Resource_ym0hg"), SubResource("Resource_vkfql"), SubResource("Resource_pvnh8"), SubResource("Resource_blm8q"), SubResource("Resource_utxy7"), SubResource("Resource_wsape"), SubResource("Resource_d3kfn")])
-next_chapter_id = "day_1"
+events = Array[ExtResource("1_phd66")]([SubResource("Resource_8x785"), SubResource("Resource_l5nuy"), SubResource("Resource_bs7l3"), SubResource("Resource_4gooj"), SubResource("Resource_igjyp"), SubResource("Resource_l0lse"), SubResource("Resource_fmsum"), SubResource("Resource_0xtgi"), SubResource("Resource_8kqiv"), SubResource("Resource_1rey7"), SubResource("Resource_fh20x"), SubResource("Resource_gyt3u")])
 metadata/_custom_type_script = "uid://nsjru0u7n42l"

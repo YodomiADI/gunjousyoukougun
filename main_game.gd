@@ -28,7 +28,8 @@ var day7_resist_button: Button = null
 
 var is_waiting_for_hover: bool = false # ホバー待ち状態のフラグ
 var hover_target_id: String = ""       # 待っている対象のキャラID
-var active_choice_labels: Array = []   # 選択肢の死期更新用
+# active_choice_labels を単なるラベル配列から、辞書の配列に変更して詳細なデータを保持させます
+var active_choice_data: Array[Dictionary] = []
 
 # チュートリアル用のメッセージラベルを動的に作る（シーンに直接配置してもOKです）
 var tutorial_label: Label
@@ -197,8 +198,12 @@ func _update_button_visuals():
 # --- 8. 選択肢・特殊演出 ---
 func show_choices(choices: Array, disabled_indices: Array = [], target_id: String = ""):
 	day7_resist_button = null 
-	active_choice_labels.clear() # リセット
+	active_choice_data.clear() # リセット
 	hover_target_id = target_id  # _processで更新するために保存
+	
+	
+	# ★現在実行中のイベントを取得（ディレクターから）
+	var current_event = director.current_data.events[director.current_index]
 	
 	for child in choice_container.get_children(): child.queue_free()
 	
@@ -217,9 +222,24 @@ func show_choices(choices: Array, disabled_indices: Array = [], target_id: Strin
 			# 右下にアンカーを設定
 			time_label.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
 			time_label.position = Vector2(-10, -30) # 少し内側にずらす
-			
 			btn.add_child(time_label)
-			active_choice_labels.append(time_label) # リアルタイム更新用リストに追加
+			
+			# ★_processで計算できるように、ラベルと一緒に増減値と表示タイプを保存
+			# ★ここを修正：配列からその選択肢専用の表示タイプを取得する
+			var modifier = 0.0
+			if current_event.choice_time_modifiers.size() > i:
+				modifier = current_event.choice_time_modifiers[i]
+				
+			# 追加：表示タイプを配列から取得（足りなければデフォルト 0:Auto）
+			var display_type = 0
+			if current_event.choice_time_display_types.size() > i:
+				display_type = current_event.choice_time_display_types[i]
+				
+			active_choice_data.append({
+				"label": time_label,
+				"modifier": modifier,
+				"display_type": display_type # ここに個別の設定が入る！
+			})
 			
 		# ---「運命に抗う」ボタンを後で監視するために変数に入れておく---
 		if choices[i].contains("運命に抗う"):
@@ -278,10 +298,42 @@ func _process(_delta):
 			# 0.5秒くらい余韻を残してから自動で次の行へ進む
 			get_tree().create_timer(0.5).timeout.connect(advance_line)
 			
-	# ★選択肢ボタンの死期リアルタイム更新
-	if active_choice_labels.size() > 0 and hover_target_id != "":
-		var current_time = Global.get_current_death_time(hover_target_id)
-		var time_str = Global.format_death_time(current_time)
-		for label in active_choice_labels:
-			if is_instance_valid(label):
-				label.text = "死期: " + time_str
+# ★選択肢ボタンの死期リアルタイム更新（予測計算対応）
+	if active_choice_data.size() > 0 and hover_target_id != "":
+		for data in active_choice_data:
+			if is_instance_valid(data["label"]):
+				# 1. 基準となる時間を決定 (Auto / White / Red)
+				var base_time = 0.0
+				if data["display_type"] == 1: # White強制
+					base_time = Global.death_data[hover_target_id]["white"]
+				elif data["display_type"] == 2: # Red強制
+					base_time = Global.death_data[hover_target_id]["red"]
+					if base_time == -1.0: base_time = Global.death_data[hover_target_id]["white"]
+				else: # Auto (デフォルト)
+					base_time = Global.get_current_death_time(hover_target_id)
+				
+				# 2. 増減予測の計算
+				var predicted_time = base_time + data["modifier"]
+				
+				# プレイヤーなら下限を考慮して予測
+				if hover_target_id == "Player":
+					predicted_time = max(Global.current_death_floor, predicted_time)
+				else:
+					predicted_time = max(0.0, predicted_time)
+
+				# 3. テキストの構築
+				var time_str = Global.format_death_time(base_time)
+				if data["modifier"] != 0.0:
+					var predicted_str = Global.format_death_time(predicted_time)
+					data["label"].text = "死期: %s\n ⇒ %s" % [time_str, predicted_str]
+				else:
+					data["label"].text = "死期: " + time_str
+
+				# ★ここから色指定：Display Type に基づいてラベルの色を変える
+				match data["display_type"]:
+					1: # White（真実）
+						data["label"].add_theme_color_override("font_color", Color.CYAN) # 鮮やかな水色
+					2: # Red（歪み）
+						data["label"].add_theme_color_override("font_color", Color(1, 0.3, 0.3)) # 警告の赤
+					_: # Auto または 0
+						data["label"].add_theme_color_override("font_color", Color.WHITE) # 通常の白
