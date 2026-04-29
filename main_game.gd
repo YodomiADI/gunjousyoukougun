@@ -24,8 +24,6 @@ var is_skipping: bool = false
 @onready var pause_menu = $PauseMenu 
 @onready var menu_button = $SystemButtons/MenuButton # 追加したボタン
 
-var day7_resist_button: Button = null
-
 var is_waiting_for_hover: bool = false # ホバー待ち状態のフラグ
 var hover_target_id: String = ""       # 待っている対象のキャラID
 # active_choice_labels を単なるラベル配列から、辞書の配列に変更して詳細なデータを保持させます
@@ -197,7 +195,6 @@ func _update_button_visuals():
 
 # --- 8. 選択肢・特殊演出 ---
 func show_choices(choices: Array, disabled_indices: Array = [], target_id: String = ""):
-	day7_resist_button = null 
 	active_choice_data.clear() # リセット
 	hover_target_id = target_id  # _processで更新するために保存
 	
@@ -241,14 +238,42 @@ func show_choices(choices: Array, disabled_indices: Array = [], target_id: Strin
 				"display_type": display_type # ここに個別の設定が入る！
 			})
 			
-		# ---「運命に抗う」ボタンを後で監視するために変数に入れておく---
-		if choices[i].contains("運命に抗う"):
-			day7_resist_button = btn
+		# ★ここから新規追加：データに基づく無効化判定
+		var is_disabled = false
 		
-		# --- 無効化の判定 ---
-		if i in disabled_indices:
-			btn.disabled = true # ボタンをグレーアウトして押せなくする
-			btn.focus_mode = Control.FOCUS_NONE # 選択もできないようにする
+		# 既存の disabled_indices の判定（念のため残す）
+		if disabled_indices.has(i):
+			is_disabled = true
+			
+		# 新しいデータ駆動の無効化判定
+		if current_event != null:
+			if current_event.disable_target_chars.size() > i:
+				var target_char = current_event.disable_target_chars[i]
+				
+				# ターゲットが設定されていて、Globalに存在する場合
+				if target_char != "" and Global.death_data.has(target_char):
+					var time_type = 0
+					if current_event.disable_time_types.size() > i:
+						time_type = current_event.disable_time_types[i]
+					
+					var threshold = -1.0
+					if current_event.disable_thresholds.size() > i:
+						threshold = current_event.disable_thresholds[i]
+					
+					# タイプが設定(1 or 2)されており、閾値も設定されている場合
+					if time_type > 0 and threshold >= 0.0:
+						var current_val = 0.0
+						if time_type == 1: # White (真実)
+							current_val = Global.death_data[target_char]["white"]
+						elif time_type == 2: # Red (歪み)
+							current_val = Global.death_data[target_char]["red"]
+							
+						# ★現在の死期が閾値「以下」ならボタンを無効化！
+						if current_val <= threshold:
+							is_disabled = true
+
+		# 判定結果をボタンに適用
+		btn.disabled = is_disabled
 		
 		btn.pressed.connect(_on_choice_selected.bind(i))
 		choice_container.add_child(btn)
@@ -280,15 +305,6 @@ func _on_menu_button_pressed() -> void:
 	
 # --- _process 関数を追加（または既存のものに追記） ---
 func _process(_delta):
-	# 監視中のボタンがあり、かつまだ無効化されていない場合
-	if day7_resist_button and not day7_resist_button.disabled:
-		# リアルタイムで死期をチェック
-		if Global.get_current_death_time("Kokorone") <= 0:
-			day7_resist_button.disabled = true
-			day7_resist_button.focus_mode = Control.FOCUS_NONE
-			# ついでにタイマーをここで止めてもいいかもしれません
-			Global.is_timer_active = false
-			print("時間切れにより選択肢が封鎖されました")
 	# ★ホバー待ちチュートリアルの監視
 	if is_waiting_for_hover and hover_target_id != "":
 		# Globalのデータで、対象キャラが「発見済み(discovered)」になったらクリア！
@@ -337,3 +353,29 @@ func _process(_delta):
 						data["label"].add_theme_color_override("font_color", Color(1, 0.3, 0.3)) # 警告の赤
 					_: # Auto または 0
 						data["label"].add_theme_color_override("font_color", Color.WHITE) # 通常の白
+	# --- ★選択肢のリアルタイム無効化監視（汎用版） ---
+	# 選択肢が表示されている間だけ実行
+	if choice_container.visible:
+		var current_event = director.current_data.events[director.current_index]
+		var buttons = choice_container.get_children()
+		
+		for i in range(buttons.size()):
+			var btn = buttons[i] as Button
+			if not btn or btn.disabled: continue # すでに無効ならスルー
+			
+			# current_event の disable 設定をチェック
+			if current_event.disable_target_chars.size() > i:
+				var t_char = current_event.disable_target_chars[i]
+				var t_type = current_event.disable_time_types[i]
+				var threshold = current_event.disable_thresholds[i]
+				
+				if t_char != "" and t_type > 0 and Global.death_data.has(t_char):
+					var current_val = 0.0
+					if t_type == 1: current_val = Global.death_data[t_char]["white"]
+					elif t_type == 2: current_val = Global.death_data[t_char]["red"]
+					
+					# リアルタイムで閾値を下回ったら無効化！
+					if current_val <= threshold:
+						btn.disabled = true
+						btn.focus_mode = Control.FOCUS_NONE
+						print(t_char, " の時間切れによりボタン ", i, " を無効化しました")

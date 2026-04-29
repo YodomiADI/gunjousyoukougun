@@ -51,3 +51,13 @@ enum CharID { NONE, KOKORONE, HOMURA, REI, CAT }
 
 ## 選択肢ボタンでの死期表示タイプ　0:Auto, 1:White, 2:Red 
 @export var choice_time_display_types: Array[int] = []
+
+# --- 条件による選択肢の無効化 ---
+## 無効化条件: 対象キャラID ("Kokorone"など)。空文字なら判定なし
+@export var disable_target_chars: Array[String] = []
+
+## 無効化条件: 判定に使う死期 (1: White, 2: Red) ※0や未設定は判定なし
+@export var disable_time_types: Array[int] = []
+
+## 無効化条件: 対象の死期がこの秒数「以下」ならボタンを押せなくする
+@export var disable_thresholds: Array[float] = []

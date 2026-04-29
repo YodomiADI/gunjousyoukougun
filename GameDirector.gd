@@ -16,8 +16,9 @@ func start_scenario(id: String):
 		printerr("シナリオが見らつかりません: ", id)
 		return
 	
-	# ★追加: Global側の現在IDも更新しておく（セーブ時などに重要）
-	Global.current_chapter_id = id
+	#  Global側の現在IDも更新しておく（セーブ時などに重要）
+	# ファイル名ではなく、.tresファイル内に設定したChapter IDを正とする
+	Global.current_chapter_id = current_data.chapter_id
 	
 	# 2. 下限値の更新
 	Global.current_death_floor = current_data.chapter_death_floor
@@ -40,14 +41,16 @@ func start_scenario(id: String):
 	play_current_event()
 
 # 章ごとの特殊なロジック設定
-func _setup_chapter_logic(id: String):
+func _setup_chapter_logic(_id: String):
 	# プロローグかどうかに関わらず、タイマーの計算自体は動かす
 	Global.is_death_timer_active = true
 	
-	if id != "prologue":
+	var chapter = current_data.chapter_id # 変数に入れておくとスッキリします
+	
+	if chapter != "prologue":
 		Global.current_death_floor = Global.player_death_seconds - Global.SECONDS_PER_DAY
 		
-	if id == "day_7":
+	if chapter == "day_7":
 		Global.is_timer_active = true
 		
 		# --- 追加：ココロネの関連タイマー変数を全て239秒（約4分）に同期する ---
@@ -60,8 +63,9 @@ func _setup_chapter_logic(id: String):
 
 # --- 2. 進行管理 ---
 func play_current_event():
-	# すでにシーン切り替え中なら何もしない
-	if is_changing_scene: return
+	# データがない、または切り替え中なら即座に帰る
+	if current_data == null or is_changing_scene: 
+		return
 	
 	if current_index < current_data.events.size():
 		Global.current_line_index = current_index
@@ -110,6 +114,7 @@ func handle_location_selected(_location_id: String):
 # --- 4. 章終了のロジック（ここが一番重要！） ---
 func _finish_chapter():
 	if is_changing_scene: return
+	is_changing_scene = true # 二重処理防止
 	# 報酬とフラグの処理（元のコードから完全移植）
 	Global.add_flag(current_data.reward_flag)
 	
@@ -130,29 +135,30 @@ func _finish_chapter():
 			# 安全のため call_deferred で実行
 			get_tree().call_deferred("reload_current_scene")
 			
-		ScenarioData.NextAction.DETERMINE_END:
-			if Global.current_chapter_id == "day_7":
-				
-				# ココロネの red (歪み死期) の現在値を取得
-				# ※ Global.get_current_death_time は、red/whiteのうち
-				#   その時表示されている（または優先される）方を返す想定です。
-				var current_red_time = Global.get_current_death_time("Kokorone")
-				
-				var choice_texts = ["運命に抗う（通常エンドへ）", "諦める（バッドエンドへ）"]
-				var disabled_list = []
-				
-				# redの数値が0以下なら、0番目のボタン（運命に抗う）を無効化リストに入れる
-				if current_red_time <= 0:
-					disabled_list.append(0)
-				
-				# 拡張した show_choices を呼び出す
-				stage.show_choices(choice_texts, disabled_list)
-				
-			
 		ScenarioData.NextAction.OPEN_MAP:
 			get_tree().change_scene_to_file("res://map_selection.tscn")
 			
 		ScenarioData.NextAction.GO_TO_TITLE:
+			# ★バッドエンド等からタイトルへ戻る処理
+			# 次に「つづきから」を選んだ時のためにIDだけ設定しておく
+			# バッドエンド1なら次はDay7から、という設定なら変数はそのままでOK
 			if Global.current_chapter_id == "bad_end1":
-				# バッドエンド1からのリトライ処理
 				Global.current_chapter_id = "day_7"
+			
+			# ★実際にタイトルシーンへ切り替える（パスは実際の環境に合わせてください）
+			get_tree().change_scene_to_file("res://title_screen.tscn")
+
+		# --- デバッグ用：ハッピーエンド（または特定の章）が終わったらタイトルへ ---
+		ScenarioData.NextAction.DETERMINE_END:
+			# --- ★ハッピーエンド・真エンド後の処理 ---
+			# chapter_id が "true_end" や "happy_end" ならタイトルへ
+			var c_id = current_data.chapter_id
+			if c_id == "true_end" or c_id == "happy_end":
+				print("エンディング到達。タイトルへ戻ります。")
+				get_tree().change_scene_to_file("res://title_screen.tscn")
+			else:
+				# それ以外（Day 7の末尾など）でここに来た場合
+				# 基本的にDay 7の分岐は .tres の「最後のイベント」に
+				# 選択肢を持たせる設計にしたので、ここは予備の安全装置にします。
+				print("チャプター終了: 次のアクションが未定義です。")
+				get_tree().change_scene_to_file("res://title_screen.tscn")

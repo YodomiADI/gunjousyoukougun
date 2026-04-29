@@ -61,6 +61,13 @@ text = "死は目の前にある。
 "
 character_sprite = ExtResource("4_trxda")
 background = ExtResource("3_ya636")
+target_char_id = "Kokorone"
+choices = Array[String](["運命に抗う", "諦める"])
+choice_next_scenario_ids = Array[String](["happy_end1", "bad_end1"])
+choice_time_display_types = Array[int]([2, 2])
+disable_target_chars = Array[String](["Kokorone", ""])
+disable_time_types = Array[int]([2, 0])
+disable_thresholds = Array[float]([0.0, -1.0])
 metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
 
 [resource]
