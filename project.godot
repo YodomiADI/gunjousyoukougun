@@ -21,7 +21,7 @@ Global="*res://Global.gd"
 
 [editor]
 
-movie_writer/movie_file="D:/godotdebuc/ScinarioDivide.avi"
+movie_writer/movie_file="D:/godotdebuc/ScinarioDivide2.avi"
 
 [filesystem]
 
