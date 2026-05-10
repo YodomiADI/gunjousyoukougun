@@ -156,14 +156,23 @@ func _process(delta):
 		follow_mouse(delta)
 	else:
 		handle_repulsion()
-	# --- ★重要追加: 動いた結果に合わせて、当たり判定の場所とサイズを更新する ---
+	# ---  動いた結果に合わせて、当たり判定の場所とサイズを更新する ---
 	update_collision_runtime()
 
 	# --- 3. 見た目（テクスチャ更新）の処理 ---
 	var data = Global.death_data[target_char_id]
-	# is_revealed(白)なら白の秒数を、違うなら赤の秒数をチェックする
-	var current_sec_int = int(data["white"]) if is_revealed else int(data["red"])
 	
+	# is_revealed(白)なら白の秒数を、違うなら赤の秒数をチェックする
+	# 表示すべき現在の秒数を取得
+	var current_sec_float = 0.0
+	if is_revealed:
+		current_sec_float = data["white"]
+	else:
+		current_sec_float = data["red"] if data["red"] != -1.0 else data["white"]
+	
+	var current_sec_int = int(current_sec_float)
+	
+	# 1秒経過した時だけ画像を更新する
 	if current_sec_int != last_displayed_seconds:
 		update_display_by_state()
 		last_displayed_seconds = current_sec_int
@@ -228,9 +237,12 @@ func update_display_by_state():
 
 	var data = Global.death_data[target_char_id]
 	if is_revealed:
-		update_timer_images(int(data["white"]), false) # 琥珀色
+		# 真実を表示（琥珀色）
+		update_timer_images(int(data["white"]), false) 
 	else:
-		update_timer_images(int(data["red"]), true)   # 赤色
+		# 偽りを表示（赤色）。ただし赤が-1なら白を表示する
+		var display_val = data["red"] if data["red"] != -1.0 else data["white"]
+		update_timer_images(int(display_val), true)
 		
 # --- マウスから逃げる（座標計算の修正） ---
 func handle_repulsion():
@@ -323,6 +335,10 @@ func _on_area_2d_mouse_entered():
 	is_captured = true 
 	start_glow_effect() # ★追加：光らせる
 	print("マウスが入った！")
+	
+	# このキャラの死期を「見た」ことにする
+	Global.discover_death_time(target_char_id)
+	
 func _on_area_2d_mouse_exited():
 	is_hovering = false
 	print("マウスがでた！")
