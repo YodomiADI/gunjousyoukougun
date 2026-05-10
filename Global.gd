@@ -1,57 +1,39 @@
 # Global.gd
 extends Node
 
-# --- 1. 基本的な進行状況 ---
+# ==========================================
+# 1. 基本的な進行状況
+# ==========================================
+## 現在進行中のシナリオID（tresファイル名と紐付け）
 var current_chapter_id: String = "prologue"
+## シナリオ内での現在の行数
 var current_line_index: int = 0
+## 獲得したフラグを保存する辞書
 var flags: Dictionary = {}
+## 累計プレイ時間（秒）
 var total_play_time: float = 0.0
 
-# --- 2. 第2部用ステータス ---
+# ==========================================
+# 2. 第2部用ステータス（探索・ポイント制）
+# ==========================================
+## 第2部（探索パート）に突入しているか
 var is_part2: bool = false
+## 第2部での現在の日数
 var current_day: int = 1
-var current_period: int = 0  # 0:午前, 1:午後
+## 0:午前, 1:午後
+var current_period: int = 0
 
-# 第2部用ポイント（個数管理）
+## 第2部専用の収集ポイント
 var heart_count: int = 0 # 心
 var flame_count: int = 0 # 焔
 var soul_count: int = 0  # 魂
 
-# --- 3. 死期システム関連 ---
-var is_timer_active: bool = false
-# 現在の章での「死期の底（これ以上減らない値）」
-var current_death_floor: float = 0.0
-
-# 秒単位での残り寿命
-var player_death_seconds: float = 2587670064.0
-var kokorone_death_seconds: float = 582252.0  # 約6日18時間
-var homura_death_seconds: float = 600000.0
-var rei_death_seconds: float = 600000.0
-var cat_death_seconds: float = 3200.0
-
-# 生存フラグ
-var is_kokorone_dead: bool = false
-var is_homura_dead: bool = false
-var is_rei_dead: bool = false
-var is_cat_dead: bool = false
-
-# --- 4. システム設定・定数 ---
-var system_data = {
-	"is_part1_cleared": false
-}
-
-const SAVE_PATH = "user://save_%d.dat"
-const SYSTEM_SAVE_PATH = "user://system.dat"
-
-# 追加
-var is_hovering_proxy: bool = false
-
-# --- 死期システムの定数 ---
-# 1日の秒数 (24時間 * 60分 * 60秒)
-const SECONDS_PER_DAY = 86400.0
-const SECONDS_PER_PERIOD = 43200.0 # 12時間（第2部用）
+# ==========================================
+# 3. 死期システム（データ構造）
+# ==========================================
 # --- 死期データの新構造 ---
-# white: 本来の死期, red: 変動する死期（-1.0は未設定）, discovered: マウスオーバーしたか
+## 【最重要】キャラクター全員の死期情報を一括管理する辞書
+## white: 真実の秒数 / red: 偽りの秒数（-1.0は未設定） / discovered: 目視フラグ(マウスオーバーしたか) / is_dead: 死亡フラグ
 var death_data = {
 	"Player":   {"white": 2587670064.0, "red": -1.0, "discovered": true, "is_dead": false, "last_seen_white": 2587670064.0, "last_seen_red": -1.0},
 	"Kokorone": {"white": 1356048000.0, "red": 529200.0, "discovered": false, "is_dead": false, "last_seen_white": -1.0, "last_seen_red": -1.0},
@@ -59,10 +41,34 @@ var death_data = {
 	"Rei":      {"white": 600000.0,     "red": -1.0, "discovered": false, "is_dead": false, "last_seen_white": -1.0, "last_seen_red": -1.0},
 	"Cat":      {"white": 3200.0,     "red": 3200.0, "discovered": false, "is_dead": false, "last_seen_white": -1.0, "last_seen_red": -1.0}
 }
-# 次の遷移時に実行すべき死亡イベント（キャラIDを入れる）
-var pending_death_event: String = ""
-# --- 便利関数（計算・判定用） ---
+# ------------------------------------------
 
+# ==========================================
+# 4. 死期システム（制御用）
+# ==========================================
+## タイマー全体の稼働フラグ（_processでの減算を止める _processに関与）
+var is_death_timer_active: bool = true
+## 現在の章での死期の減少限界値（これより下には減らない）
+var current_death_floor: float = 0.0
+## 次のシーン遷移時に発生させる死亡イベントのキャラID
+var pending_death_event: String = ""
+
+# ==========================================
+# 5. システム設定・定数
+# ==========================================
+# --- 死期システムの定数 ---
+# 1日の秒数 (24時間 * 60分 * 60秒)
+const SECONDS_PER_DAY = 86400.0
+const SECONDS_PER_PERIOD = 43200.0 # 12時間（第2部用）
+
+var system_data = {"is_part1_cleared": false}
+const SAVE_PATH = "user://save_%d.dat"
+const SYSTEM_SAVE_PATH = "user://system.dat"
+
+# 追加
+var is_hovering_proxy: bool = false
+
+# --- 便利関数（計算・判定用） ---
 # 現在表示すべき「死期」の数値を返す
 func get_current_death_time(char_id: String) -> float:
 	if not death_data.has(char_id): return 0.0
@@ -112,12 +118,8 @@ func advance_death_time(char_id: String, seconds: float):
 		data["is_dead"] = true
 		pending_death_event = char_id # 次の画面遷移でイベント発生
 
-# 全員の死期を一括で進める（第1部・第2部用）
-func advance_all_timers(seconds: float):
-	for char_id in death_data.keys():
-		advance_death_time(char_id, seconds)
 		
-# シナリオのリソース登録
+## シナリオのリソース登録
 var scenario_registry = {
 	"prologue": "res://scenarios/prologue.tres",
 	"prologue_cat_leaved1_root" :"res://scenarios/prologue_cat_leaved1_root.tres",
@@ -140,7 +142,7 @@ var scenario_registry = {
 var current_bg_path: String = ""
 var current_bgm_path: String = ""
 
-# 章の日本語名辞書（セーブ画面などで使用）
+## 章の日本語名辞書（セーブ画面などで使用）
 var chapter_names = {
 	"prologue": "プロローグ",
 	"day_1": "第一日",
@@ -148,15 +150,31 @@ var chapter_names = {
 	"day1_am_church": "第2部 1日目・教会"
 }
 
-# 
-var death_timers = {
-	"Player": 2587670064.0, # プレイヤーも辞書に入れると管理が楽です
-	"Kokorone": 582252.0,
-	"Homura": 600000.0,
-	"Rei": 600000.0,
-	"Cat": 3200.0
-}
+# ==========================================
+# 便利なエイリアス（別名アクセス用）
+# 変数のように使えますが、実際は death_data を読み書きしています
+# ==========================================
 
+var player_death_seconds: float:
+	get: return death_data["Player"]["white"]
+	set(value): death_data["Player"]["white"] = value
+
+var kokorone_death_seconds: float:
+	get: return death_data["Kokorone"]["white"]
+	set(value): death_data["Kokorone"]["white"] = value
+
+var homura_death_seconds: float:
+	get: return death_data["Homura"]["white"]
+	set(value): death_data["Homura"]["white"] = value
+
+var rei_death_seconds: float:
+	get: return death_data["Rei"]["white"]
+	set(value): death_data["Rei"]["white"] = value
+
+var cat_death_seconds: float:
+	get: return death_data["Cat"]["white"]
+	set(value): death_data["Cat"]["white"] = value
+	
 # --- 処理部 ---
 
 func _ready():
@@ -166,36 +184,27 @@ var is_loading_process: bool = false
 
 	
 # --- 死期システム ---
-# タイマーが動いているかどうかのフラグ
-var is_death_timer_active: bool = true
-
 func _process(delta):
 	# 第1部や第2部で、タイマーを動かしたいシーンの時だけ減らす
 	if is_death_timer_active:
 		# 全員の寿命を現実の1秒（delta）ずつ減らしていく
 		advance_all_timers(delta)
-		
-	if not get_tree().paused:
-		# プレイヤーの死期を減らすが、current_death_floor よりは減らさない
-		if player_death_seconds > current_death_floor:
-			player_death_seconds -= delta
-			if player_death_seconds < current_death_floor:
-				player_death_seconds = current_death_floor
-		
-		# ヒロインたちのタイマー（こちらは制限なし、または別途管理）
-		if is_timer_active:
-			update_heroine_timers(delta)
+	
 	# ゲーム中（メイン画面が表示されている間）だけカウントを進める
 	# シーン名が "MainGame"（または実際のメインシーン名）であることを確認してください
 	if get_tree().current_scene and get_tree().current_scene.name == "MainGame":
 		total_play_time += delta
 
-func update_heroine_timers(delta):
-	if not is_kokorone_dead: death_timers["Kokorone"] = max(0, death_timers["Kokorone"] - delta)
-	if not is_homura_dead: death_timers["Homura"] = max(0, death_timers["Homura"] - delta)
-	if not is_rei_dead: death_timers["Rei"] = max(0, death_timers["Rei"] - delta)
-	if not is_cat_dead: death_timers["Cat"] = max(0, death_timers["Cat"] - delta)
-
+func advance_all_timers(seconds: float):
+	# 全員の死期を一括で進める（第1部・第2部用）
+	for char_id in death_data.keys():
+		# すでに死んでいる、またはプレイヤー以外でタイマー停止中なら飛ばす
+		if death_data[char_id]["is_dead"]: continue
+		
+		# 実際の減少処理（advance_death_time）を呼ぶ
+		# この中で Player の下限値判定も 0 の下限値判定も一括で行う
+		advance_death_time(char_id, seconds)
+		
 func add_flag(flag_name: String):
 	if flag_name == "": return
 	flags[flag_name] = true
@@ -229,9 +238,7 @@ func save_game(slot_id: int):
 		"flags": flags,
 		
 		# 死期システム（最新の変数たち）
-		"player_death_seconds": player_death_seconds,
 		"current_death_floor": current_death_floor,
-		"death_timers": death_timers, # 辞書ごと保存
 		"death_data": death_data, # 辞書ごと保存
 		"pending_death_event": pending_death_event,
 		
@@ -259,12 +266,15 @@ func load_game(slot_id: int) -> bool:
 	
 	var file = FileAccess.open(path, FileAccess.READ)
 	var data = JSON.parse_string(file.get_as_text())
+	
+	# これで全員のタイマーと生存フラグが復元されます
 	death_data = data.get("death_data", death_data)
-	pending_death_event = data.get("pending_death_event", "")
+	
+	
 	
 	# データの復元
 	total_play_time = data.get("total_play_time", 0.0)
-	
+	pending_death_event = data.get("pending_death_event", "")
 	current_bg_path = data.get("current_bg_path", "")
 	current_bgm_path = data.get("current_bgm_path", "")
 	
@@ -272,9 +282,7 @@ func load_game(slot_id: int) -> bool:
 	current_line_index = data.get("current_line_index", 0)
 	flags = data.get("flags", {})
 	
-	player_death_seconds = data.get("player_death_seconds", player_death_seconds)
 	current_death_floor = data.get("current_death_floor", 0.0)
-	death_timers = data.get("death_timers", death_timers)
 	
 	heart_count = data.get("heart_count", 0)
 	flame_count = data.get("flame_count", 0)
@@ -328,11 +336,6 @@ func reset_game_progress():
 	flags = {}
 	
 	# --- 死期変数を初期値にリセット ---
-	player_death_seconds = 2587670064.0
-	kokorone_death_seconds = 582252.0  # 約6日18時間
-	homura_death_seconds = 600000.0
-	rei_death_seconds = 600000.0
-	cat_death_seconds = 3200.0
 	# --- 判定に使っている死期データ(death_data)を空にする ---
 	# --- 判定に使っている死期データ(death_data)を初期状態にリセットする ---
 	death_data = {
@@ -343,13 +346,7 @@ func reset_game_progress():
 		"Cat":      {"white": 3200.0,     "red": 3200.0, "discovered": false, "is_dead": false, "last_seen_white": -1.0, "last_seen_red": -1.0}
 	}
 	
-	# --- 生存フラグ・タイマー稼働状態をリセット ---
-	is_kokorone_dead = false
-	is_homura_dead = false
-	is_rei_dead = false
-	is_cat_dead = false
 	
-	is_timer_active = false
 	is_death_timer_active = false
 	
 	# ※その他、BGMや背景などの演出用変数もあればここでリセット
@@ -384,9 +381,11 @@ func clear_backlog():
 	backlog.clear()
 
 func get_death_time_string(char_name: String) -> String:
-	if death_timers.has(char_name):
-		return format_death_time(death_timers[char_name])
+	if death_data.has(char_name):
+		# 現在表示すべき数値(赤か白)を取得して、文字列に変換
+		return format_death_time(get_current_death_time(char_name))
 	return ""
+	
 # スロットの情報を取得する関数（ポーズメニューやロード画面用）
 func get_slot_info(slot_id: int) -> Dictionary:
 	var path = SAVE_PATH % slot_id

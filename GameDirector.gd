@@ -40,27 +40,27 @@ func start_scenario(id: String):
 	# 5. 再生開始
 	play_current_event()
 
+	# 6. セットアップが終わったので、ロード中フラグを確実に下ろす
+	Global.is_loading_process = false
+
 # 章ごとの特殊なロジック設定
 func _setup_chapter_logic(_id: String):
-	# プロローグかどうかに関わらず、タイマーの計算自体は動かす
+	# 基本的にどの章でも計算は動かす
 	Global.is_death_timer_active = true
 	
-	var chapter = current_data.chapter_id # 変数に入れておくとスッキリします
+	var chapter = current_data.chapter_id
 	
+	# プロローグ以外なら、その日の「死の下限値」を設定する
 	if chapter != "prologue":
+		# 今のプレイヤーの残り秒数から24時間分を引いた場所が、この章の限界
 		Global.current_death_floor = Global.player_death_seconds - Global.SECONDS_PER_DAY
 		
+	# Day 7（審判）の特殊演出
 	if chapter == "day_7":
-		Global.is_timer_active = true
-		
-		# --- 追加：ココロネの関連タイマー変数を全て239秒（約4分）に同期する ---
 		Global.kokorone_death_seconds = 20.0
-		Global.death_timers["Kokorone"] = 20.0
-		
-		# UI表示用の新しいデータ構造の方も上書きする（これが画面に反映される）
 		if Global.death_data.has("Kokorone"):
 			Global.death_data["Kokorone"]["red"] = 20.0
-
+			
 # --- 2. 進行管理 ---
 func play_current_event():
 	# データがない、または切り替え中なら即座に帰る
