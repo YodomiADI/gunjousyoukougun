@@ -1,13 +1,15 @@
-#pause_menu.gd
-extends CanvasLayer# ルートノードがCanvasLayerならここは extends CanvasLayer になります
+# pause_menu.gd
+extends CanvasLayer
 
-# タイトル画面のファイルパス（※自分のファイル名に合わせて書き換えてください！）
-const TITLE_SCENE_PATH =  "res://title_screen.tscn"
+# タイトル画面のファイルパス
+const TITLE_SCENE_PATH = "res://title_screen.tscn"
 
-
-# 2つのコンテナを取得します（パスは実際の構成に合わせて修正してください）
+# --- 1. ノード参照 ---
 @onready var main_buttons_container = $Control/Panel/MainButtons
 @onready var save_slots_menu = $Control/Panel/SaveSlotsMenu
+@onready var config_menu = $Control/Panel/ConfigMenu
+@onready var death_memo = $Control/Panel/DeathMemoUi
+@onready var death_timer_label = $Control/Panel/DeathTimerLabel
 
 # スロットボタンの配列
 @onready var slot_buttons = [
@@ -15,93 +17,98 @@ const TITLE_SCENE_PATH =  "res://title_screen.tscn"
 	$Control/Panel/SaveSlotsMenu/Slot2_Button,
 	$Control/Panel/SaveSlotsMenu/Slot3_Button
 ]
-# SEPlayerを取得
-@onready var se_player = $SEPlayer # エディタでAudioStreamPlayerを追加しておくこと
 
-# 音源のロード
-var sound_hover = preload("res://SE/時計の針マウスオーバー.mp3") # ※ホバー用の音
-var sound_click = preload("res://SE/シ.mp3")      # ※クリック用の音
+# SEPlayerと音源
+@onready var se_player = $SEPlayer
+var sound_hover = preload("res://SE/時計の針マウスオーバー.mp3")
+var sound_click = preload("res://SE/シ.mp3")
 
-@onready var config_menu = $Control/Panel/ConfigMenu # ドラッグ＆ドロップしたコンフィグ画面へのパス
 
-@onready var death_memo = $Control/Panel/DeathMemoUi # 追加した手記シーンへのパス
-
+# --- 2. 初期化処理 ---
 func _ready():
-	# ゲーム開始時は見えないように隠しておく
 	visible = false
-	# 初期状態：メインを表示、セーブ画面を隠す
 	main_buttons_container.visible = true
 	save_slots_menu.visible = false
-	config_menu.hide() # コンフィグ画面も隠しておく
-	# コンフィグ画面が閉じたという合図を受け取る設定
+	config_menu.hide()
+	
+	# シグナル接続
 	config_menu.menu_closed.connect(_on_config_menu_closed)
-	
-	# ボタンのシグナルをコードで接続する場合（エディタで接続してもOKです）
-	# 引数を持たせるために bind を使っています
-	for i in range(slot_buttons.size()):
-		var btn = slot_buttons[i]
-		# slot_id は 1 から始めたいので i + 1 を渡す
-		if !btn.pressed.is_connected(_on_save_slot_pressed):
-			btn.pressed.connect(_on_save_slot_pressed.bind(i + 1))
-	#SEのセットアップを実行
-	setup_pause_sound_effects()
-	
-	# 手記が閉じられたらメインメニューを表示するようにつなぐ
 	death_memo.closed.connect(_on_death_memo_closed)
 	
-# ポーズ画面の全ボタンにSEを設定する関数
+	# セーブスロットの自動接続
+	for i in range(slot_buttons.size()):
+		var btn = slot_buttons[i]
+		if !btn.pressed.is_connected(_on_save_slot_pressed):
+			btn.pressed.connect(_on_save_slot_pressed.bind(i + 1))
+			
+	setup_pause_sound_effects()
+
+
+# --- 3. 音声・共通演出 ---
 func setup_pause_sound_effects():
-	# ポーズ画面にあるボタンをすべてリストアップする
-	# ※階層が変わった場合はパスを修正してください
+	# コンフィグボタンなども含めて、音を鳴らすボタンをリストアップ
 	var all_buttons = [
 		$Control/Panel/MainButtons/go_back_game_Button,
 		$Control/Panel/MainButtons/ToSaveMenuButton,
 		$Control/Panel/MainButtons/go_to_title_Button,
 		$Control/Panel/MainButtons/DeathMemoButton,
+		$Control/Panel/MainButtons/ConfigButton, # リストに追加
 		$Control/Panel/SaveSlotsMenu/BackButton
-	] + slot_buttons # スロットボタン配列も結合
+	] + slot_buttons
 	
 	for btn in all_buttons:
-		# マウスオーバー時 -> ホバー音
+		if btn == null: continue
 		if !btn.mouse_entered.is_connected(play_se):
 			btn.mouse_entered.connect(play_se.bind(sound_hover))
-			
-		# クリック時 -> 決定音
-		# 注意: 既にシグナル接続されているボタンも多いですが、
-		# play_seは「音を鳴らすだけ」の独立した関数として追加接続してOKです
 		if !btn.pressed.is_connected(play_se):
 			btn.pressed.connect(play_se.bind(sound_click))
 
-# SE再生用関数
 func play_se(stream_data):
-	# エラー回避：ノードがシーンツリーから削除されている（画面遷移中など）場合は何もしない
-	if not is_inside_tree():
-		return
-
+	if not is_inside_tree(): return
 	if se_player and stream_data:
 		se_player.stream = stream_data
 		se_player.play()
 
+
+# --- 4. 進行・ポーズ制御 ---
 func _input(event):
-	#Escボタンでメニュー開くやつ
 	if event.is_action_pressed("ui_cancel"):
 		toggle_pause()
-# ポーズ状態を切り替える関数
+
 func toggle_pause():
 	var tree = get_tree()
-	
-	# 現在のポーズ状態を反転させる（trueならfalseに、falseならtrueに）
 	tree.paused = !tree.paused
-	
-	# メニューの表示状態もポーズ状態に合わせる
-	# ポーズ中(true)なら表示(true)、動いてる(false)なら非表示(false)
 	visible = tree.paused
 
 	if visible:
-		# ポーズを開いたときは必ず「メインメニュー」から始める
 		switch_to_main_menu()
 
-# スロットボタンの表示を更新する関数
+func _process(_delta):
+	# ポーズ画面が開いている間だけ、プレイヤーの死期タイマーをリアルタイム更新
+	if visible:
+		# ★新システムに合わせて、Globalから安全にプレイヤーの現在の死期を取得
+		var p_time = Global.get_current_death_time("Player")
+		death_timer_label.text = "あなたの死期まで\n" + Global.format_death_time(p_time)
+		
+		# 残り7日（604800秒）を切ったら文字を警告の赤にする
+		if p_time < 604800.0:
+			death_timer_label.modulate = Color.RED
+		else:
+			death_timer_label.modulate = Color.WHITE
+
+
+# --- 5. メニュー画面の切り替え ---
+func switch_to_main_menu():
+	main_buttons_container.visible = true
+	save_slots_menu.visible = false
+	config_menu.hide()
+	# 手記はオープン関数側で管理されるため、ここでは閉じられた状態にする
+	
+func switch_to_save_menu():
+	main_buttons_container.visible = false
+	save_slots_menu.visible = true
+	update_save_slots_display()
+
 func update_save_slots_display():
 	for i in range(slot_buttons.size()):
 		var slot_id = i + 1
@@ -109,102 +116,50 @@ func update_save_slots_display():
 		var data = Global.get_slot_info(slot_id)
 		
 		if data.is_empty():
-			# データがない場合
 			btn.text = "スロット %d : ---- データなし ----" % slot_id
 		else:
-			# データがある場合
-			# Global.gd で定義した日本語の章の名前を取得
 			var ch_name = Global.chapter_names.get(data["chapter_id"], data["chapter_id"])
-			# 時間をフォーマット
 			var time_str = Global.format_time(data.get("play_time", 0))
-			
-			# 表示テキストを作成
-			# 例: "スロット 1 : 第一章 / 00:15:30"
 			btn.text = "スロット %d : %s / %s" % [slot_id, ch_name, time_str]
 
-# --- ボタン処理 ---
 
-# 「セーブする」ボタンが押されたとき
-# エディタでこのボタンの pressed シグナルをこの関数に接続してください
+# --- 6. 各種ボタン・UIシグナル処理 ---
+
+# ゲームに戻る
+func _on_go_back_game_button_pressed() -> void:
+	toggle_pause()
+
+# タイトルへ
+func _on_go_to_title_button_pressed() -> void:
+	toggle_pause() 
+	get_tree().change_scene_to_file(TITLE_SCENE_PATH)
+
+# セーブメニューへ開く・戻る
 func _on_to_save_menu_button_pressed():
 	switch_to_save_menu()
 
-#  セーブ画面の「戻る」ボタンが押されたとき
-# エディタでこのボタンの pressed シグナルをこの関数に接続してください
 func _on_back_button_pressed():
 	switch_to_main_menu()
 
-# セーブスロットが押されたときの処理
+# セーブ実行
 func _on_save_slot_pressed(slot_id):
-	# 全て引数を渡してセーブ
 	Global.save_game(slot_id)
 	update_save_slots_display()
-	
 	print("スロット %d にセーブしました" % slot_id)
-	# 必要なら「セーブしました！」というポップアップを出しても良いでしょう
 
-# 「ゲームに戻る」ボタンが押されたとき
-func _on_go_back_game_button_pressed() -> void:
-	pass # Replace with function body.
-	toggle_pause()
-	
-	
-# 「タイトルへ戻る」ボタンが押されたとき
-func _on_go_to_title_button_pressed() -> void:
-	pass # Replace with function body.
-		# ★最重要：シーン移動する前に必ずポーズを解除する！
-	toggle_pause() 
-	
-	# タイトル画面へ移動
-	get_tree().change_scene_to_file(TITLE_SCENE_PATH)
-
-# メインメニューを表示する
-func switch_to_main_menu():
-	main_buttons_container.visible = true
-	save_slots_menu.visible = false
-
-# セーブ画面を表示する
-func switch_to_save_menu():
-	main_buttons_container.visible = false
-	save_slots_menu.visible = true
-	# セーブ画面を開いたタイミングで表示内容を更新
-	update_save_slots_display()
-# pause_menu.gd の一部
-
-@onready var death_timer_label = $Control/Panel/DeathTimerLabel # ラベルを新設
-
-func _process(_delta):
-	if visible: # ポーズ画面が開いている間だけ更新
-		death_timer_label.text = "あなたの死期まで\n" + Global.format_death_time(Global.player_death_seconds)
-		# (おまけ) 死期が近づいたら文字を赤くする演出
-		if Global.player_death_seconds < Global.SECONDS_PER_DAY * 7: # 残り7日切ったら
-			death_timer_label.modulate = Color.RED
-# 「設定（コンフィグ）」ボタンが押されたとき
-# ※エディタで ConfigButton の pressed シグナルをこの関数に接続してください
+# コンフィグ画面
 func _on_config_button_pressed():
-	# 必要なら効果音を鳴らす
-	se_player.stream = sound_click
-	se_player.play()
-	
-	config_menu.show() # コンフィグ画面を表示
-	
-	# ※もしコンフィグを開いている間、後ろのメインボタンを押せないように隠したい場合は以下を追加
+	# 音は setup_pause_sound_effects で自動再生されるため、ここの再生処理は削除してクリーンに
+	config_menu.show()
 	main_buttons_container.visible = false
-# コンフィグ画面が閉じたときに実行される関数
+
 func _on_config_menu_closed():
-	# 既存のメインメニューを表示する関数を使い回す
 	switch_to_main_menu()
 
-# 手記ボタンが押された時の処理
+# 手記画面
 func _on_death_memo_button_pressed():
-	# 必要ならSE再生
-	se_player.stream = sound_click
-	se_player.play()
-	
-	# メインボタンを隠して手記を開く
 	main_buttons_container.visible = false
 	death_memo.open_memo()
 
-# 手記が閉じられた時に呼ばれる関数
 func _on_death_memo_closed():
-	switch_to_main_menu() # メインボタン類を再表示する
+	switch_to_main_menu()
