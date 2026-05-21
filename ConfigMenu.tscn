@@ -27,7 +27,6 @@ offset_left = 860.0
 offset_top = 210.0
 offset_right = 923.0
 offset_bottom = 241.0
-text = "Master"
 
 [node name="MasterSlider" type="HSlider" parent="BackgroundPanel"]
 layout_mode = 0

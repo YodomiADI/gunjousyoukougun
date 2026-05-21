@@ -1,82 +1,65 @@
-#title_screen.gd
+# title_screen.gd
 extends Control
 
 # --- UIノードへの参照 ---
-# メインメニュー（はじめから、ロード、終了ボタンがある親ノード）
 @onready var main_menu = $MainMenu
-# ロードメニュー（各スロットボタンがある親ノード）
 @onready var load_menu = $LoadMenu
+@onready var chapter_select_menu = $ChapterSelectMenu
 
 # 第2部・チャプターセレクトボタン
 @onready var part2_button = $MainMenu/Part2Button
 @onready var chapter_select_button = $MainMenu/ChapterSelectButton
 
-# チャプターセレクト画面
-@onready var chapter_select_menu = $ChapterSelectMenu
-
 # 確認ダイアログと削除モードボタン
 @onready var delete_confirm_dialog = $DeletConfirmDialog
-@onready var confirmation_dialog = $ConfirmationDialog # ← 全初期化用も追加
+@onready var confirmation_dialog = $ConfirmationDialog # 全初期化用
 @onready var delete_mode_button = $LoadMenu/VBoxContainer/DeletModeButton
-# 設定画面自体も % を付けておくと楽です
+
+# 設定画面・オーディオ設定画面
 @onready var settings_canvas = $SettingCanvas
+@onready var config_menu = $ConfigMenu # ルート直下にあるConfigMenuを指定
+
 # 効果音用のプレイヤーを取得
 @onready var se_player = $SEPlayer
 
-@onready var config_menu = $ConfigMenu # ルート直下にあるConfigMenuを指定
-
-# 効果音のファイルをロード（※ファイルパスは実際の場所に合わせて書き換えてください！）
-var sound_si = preload("res://SE/シ.mp3") # 「シ」
+# --- 効果音アセットのロード ---
+var sound_si = preload("res://SE/シ.mp3") 
 var scale_sounds = [
-	preload("res://SE/ド.mp3"), # 「ド」 AutoSaveButton用
-	preload("res://SE/レ.mp3"), # 「レ」 Slot1Button用
-	preload("res://SE/ミ.mp3"), # 「ミ」 Slot2Button用
-	preload("res://SE/ファ.mp3"), # 「ファ」 Slot3Button用
-	preload("res://SE/ソ.mp3")  # 「ソ」 BackButton用
+	preload("res://SE/ド.mp3"), # AutoSaveButton用
+	preload("res://SE/レ.mp3"), # Slot1Button用
+	preload("res://SE/ミ.mp3"), # Slot2Button用
+	preload("res://SE/ファ.mp3"), # Slot3Button用
+	preload("res://SE/ソ.mp3")  # BackButton用
 ]
-# クリック（決定）用の音をロード
 var sound_click = preload("res://SE/時計の針マウスオーバー.mp3")
+
 # --- ロード用ボタンの配列 ---
-# 0番目はオートセーブ、1～3番目は手動セーブに対応させます
-# エディタ上のノードパスに合わせて書き換えてください
 @onready var load_slot_buttons = [
 	$LoadMenu/VBoxContainer/AutoSaveButton, # Slot 0 (Auto Save)
-	$LoadMenu/VBoxContainer/Slot1Button, # Slot 1
-	$LoadMenu/VBoxContainer/Slot2Button, # Slot 2
-	$LoadMenu/VBoxContainer/Slot3Button# Slot 3
+	$LoadMenu/VBoxContainer/Slot1Button,     # Slot 1
+	$LoadMenu/VBoxContainer/Slot2Button,     # Slot 2
+	$LoadMenu/VBoxContainer/Slot3Button      # Slot 3
 ]
-
-# ロード画面の「戻る」ボタンも取得（音階の「ソ」を鳴らすため）
 @onready var load_back_button = $LoadMenu/VBoxContainer/BackButton
 
-# 削除しようとしているスロット番号を一時保存する変数
+# 削除一時保存用
 var pending_delete_slot_id: int = -1
 
 func _ready():
 	get_tree().paused = false
-	# 1. まずシステムデータを読み込む（最新の状態にする）
+	
+	# 1. システムデータを読み込んで最新状態にする
 	Global.load_system_data()
 	
-	# 2. フラグの状態を取得
+	# 2. 第1部クリアフラグの状態を取得してボタンを制御
 	var is_cleared = Global.system_data.get("is_part1_cleared", false)
 	print("第1部クリア状況: ", is_cleared)
 	
-	# 3. 画面の初期化（メニューを表示、サブ画面を隠す）
-	main_menu.visible = true
-	load_menu.visible = false
-	chapter_select_menu.visible = false
-	# --- ここから「グレーアウト」の組み込み ---
-	
-	# 第2部ボタンとチャプターセレクトボタンを常に表示する
 	part2_button.visible = true
 	chapter_select_button.visible = true
-	
-	# クリアしていない場合はボタンを押せなくする（disabled = true）
-	# !is_cleared は「クリアしていないなら」という意味
 	part2_button.disabled = !is_cleared
 	chapter_select_button.disabled = !is_cleared
 	
-	# (オプション) クリアしていない時のボタンテキストを変更する場合
 	if not is_cleared:
 		part2_button.text = "??? (第1部クリアで解放)"
 		chapter_select_button.text = "Locked"
@@ -84,140 +67,111 @@ func _ready():
 		part2_button.text = "第2部：日々の章"
 		chapter_select_button.text = "チャプターセレクト"
 		
-	# --- ここまで ---
-
-	setup_chapter_buttons()
+	# 3. 画面の初期状態をセット
+	main_menu.visible = true
+	load_menu.visible = false
+	chapter_select_menu.visible = false
 	
-	# ロードボタンのシグナル接続
+	# 4. 各種ボタン・ダイアログのシグナル接続
+	_setup_signals()
+	
+	# 5. チャプターセレクト・効果音のセットアップ
+	setup_chapter_buttons()
+	setup_sound_effects()
+
+# --- 内部的なシグナル接続処理 ---
+func _setup_signals():
+	# ロードスロットボタンの接続
 	for i in range(load_slot_buttons.size()):
 		var btn = load_slot_buttons[i]
-		# Global.gdに合わせ、i=0はオートセーブ、i=1以降は通常セーブとして扱います
 		if !btn.pressed.is_connected(_on_slot_button_pressed):
 			btn.pressed.connect(_on_slot_button_pressed.bind(i))
-	
-	# ★注: $VBoxContainer/ContinueButton.disabled = true の行は、
-	# UI構成が不明確なため、エラーが出る場合は削除するか、正しいパスに修正してください。
-	# 「つづきから」ボタンがあるなら、その制御ロジックを残します。
-	# if not FileAccess.file_exists(Global.SAVE_PATH_TEMPLATE % Global.AUTO_SAVE_SLOT):
-	# 	# もしContinueButtonがあれば、ここで無効化する
-	# 	pass 
-	
-	#  ダイアログの「OK(削除)」が押されたときのシグナル接続
-	# 安全に接続するためのチェック
-		if delete_confirm_dialog:
-			if !delete_confirm_dialog.confirmed.is_connected(_on_delete_confirmed):
-				delete_confirm_dialog.confirmed.connect(_on_delete_confirmed)
-		else:
-			print("警告: DeleteConfirmDialogが見つかりません。名前や階層を確認してください。")
-			 # 全初期化ダイアログの接続もここで行うと確実です
-		if confirmation_dialog:
-			if !confirmation_dialog.confirmed.is_connected(_on_confirmation_dialog_confirmed):
-				confirmation_dialog.confirmed.connect(_on_confirmation_dialog_confirmed)
-	# 効果音（SE）のセットアップ
-	setup_sound_effects()
-	
-	
-	
-	# すべてのボタンに音を割り当てる関数
+			
+	# セーブ削除確認ダイアログの接続（※インデントのバグを修正）
+	if delete_confirm_dialog:
+		if !delete_confirm_dialog.confirmed.is_connected(_on_delete_confirmed):
+			delete_confirm_dialog.confirmed.connect(_on_delete_confirmed)
+	else:
+		print("警告: DeleteConfirmDialogが見つかりません。")
+		
+	# 全データ初期化ダイアログの接続
+	if confirmation_dialog:
+		if !confirmation_dialog.confirmed.is_connected(_on_confirmation_dialog_confirmed):
+			confirmation_dialog.confirmed.connect(_on_confirmation_dialog_confirmed)
+	else:
+		print("警告: ConfirmationDialogが見つかりません。")
+
+# --- 効果音（SE）のセットアップ ---
 func setup_sound_effects():
-	# 1. タイトル画面のボタン（Start, Load, Quit） -> 「シ」の音
-	# VBoxContainerの中にあるボタンを取得して設定します
+	# メインメニューボタン -> 「シ」の音
 	var title_buttons = [
 		$MainMenu/StartButton,
-		$MainMenu/LoadButton, # メインメニューにある「つづきから」ボタン
+		$MainMenu/LoadButton, 
 		$MainMenu/QuitButton
 	]
-	
 	for btn in title_buttons:
-		# マウスが入ったとき（ホバー）
-		if !btn.mouse_entered.is_connected(play_se):
-			btn.mouse_entered.connect(play_se.bind(sound_si))
-		# 押したとき
-		# クリック時は「決定音」 (sound_click)
-		if !btn.pressed.is_connected(play_se):
-			btn.pressed.connect(play_se.bind(sound_click))
-
-
-	# 2. ロードメニューのボタン（AutoSave～Back） -> 「ドレミファソ」
-	# 既存のload_slot_buttons（4つ）に BackButton（1つ）を足してリストを作ります
-	var scale_buttons = load_slot_buttons + [load_back_button]
-	
-	for i in range(scale_buttons.size()):
-		# scale_soundsの数が足りているか確認
-		if i < scale_sounds.size():
-			var btn = scale_buttons[i]
-			var sound = scale_sounds[i]
-			
-			# マウスが入ったとき（ホバー）
+		if btn:
 			if !btn.mouse_entered.is_connected(play_se):
-				btn.mouse_entered.connect(play_se.bind(sound))
-			# クリック時は統一して「決定音」(sound_click) 
-			# もしクリック時も音階を鳴らしたい場合は bind(sound_hover) のままにします
+				btn.mouse_entered.connect(play_se.bind(sound_si))
 			if !btn.pressed.is_connected(play_se):
 				btn.pressed.connect(play_se.bind(sound_click))
 
+	# ロードメニューのボタン -> 「ドレミファソ」
+	var scale_buttons = load_slot_buttons + [load_back_button]
+	for i in range(scale_buttons.size()):
+		if i < scale_sounds.size():
+			var btn = scale_buttons[i]
+			var sound = scale_sounds[i]
+			if btn:
+				if !btn.mouse_entered.is_connected(play_se):
+					btn.mouse_entered.connect(play_se.bind(sound))
+				if !btn.pressed.is_connected(play_se):
+					btn.pressed.connect(play_se.bind(sound_click))
+
 # 音を再生する共通関数
-# ★修正: 安全な再生関数
 func play_se(stream_data):
-	# ノード自体がシーンツリーにいない（画面切り替え中など）場合は再生処理をスキップしてエラーを防ぐ
-	if not is_inside_tree():
-		return
-		
+	if not is_inside_tree(): return
 	if se_player and stream_data:
-		# 念のためPlayerノードもツリーにいるか確認
 		if se_player.is_inside_tree():
 			se_player.stream = stream_data
 			se_player.play()
-	
-# ★追加：チャプター選択ボタンたちのセットアップ
-	setup_chapter_buttons()
 
 # --- ボタン処理（メインメニュー） ---
 
-# 「はじめから」 (統合された定義)
+# 「はじめから」
 func _on_start_button_pressed():
 	Global.reset_game_progress()
 	get_tree().change_scene_to_file("res://main_game.tscn")
 
-# 「ロード（つづきから選択）」ボタンを押したとき
+# 「つづきから」
 func _on_load_menu_button_pressed():
 	switch_to_load_menu()
 
-# 「終了」 (統合された定義)
+# 「終了」
 func _on_quit_button_pressed():
 	get_tree().quit()
 
 # 第2部開始ボタン
 func _on_part2_button_pressed():
-	# 第2部のメインシーンへ移動
 	get_tree().change_scene_to_file("res://main_game2.tscn")
-	
-	
+
 # --- ボタン処理（チャプターセレクト画面） ---
 
-# ■ チャプターセレクト画面を開くボタンが押されたとき
 func _on_chapter_select_button_pressed():
-	# 1. メインメニュー（はじめから等のボタン群）を隠す
 	main_menu.visible = false
-	# 2. チャプターセレクト画面を表示する
 	chapter_select_menu.visible = true
 
-# ■ チャプターセレクト画面の「戻る」ボタンが押されたとき
 func _on_chapter_back_button_pressed():
-	# 1. チャプターセレクト画面を隠す
 	chapter_select_menu.visible = false
-	# 2. メインメニューを再び表示する
 	main_menu.visible = true
 	
-# チャプターボタンをまとめて設定する関数
 func setup_chapter_buttons():
-	# 1. ノードを辞書にまとめる（IDとボタンを正しくペアにする）
 	var chapter_map = {
 		"prologue": get_node_or_null("ChapterSelectMenu/VBoxContainer/GridContainer/Btn_Prologue"),
 		"day_1":    get_node_or_null("ChapterSelectMenu/VBoxContainer/GridContainer/Btn_Day1"),
 		"day_2":    get_node_or_null("ChapterSelectMenu/VBoxContainer/GridContainer/Btn_Day2"),
 		"day_3":    get_node_or_null("ChapterSelectMenu/VBoxContainer/GridContainer/Btn_Day3"),
-		"day_4":    get_node_or_null("ChapterSelectMenu/VBoxContainer/GridContainer/Btn_Day4"),
+		"day_4":    get_node_or_null("ChapterSelectMenu/VBoxContainer/GridContainer/GridContainer/Btn_Day4"), # 階層ミス防止に get_node_or_null を使用
 		"day_5":    get_node_or_null("ChapterSelectMenu/VBoxContainer/GridContainer/Btn_Day5"),
 		"day_6":    get_node_or_null("ChapterSelectMenu/VBoxContainer/GridContainer/Btn_Day6"),
 		"day_7":    get_node_or_null("ChapterSelectMenu/VBoxContainer/GridContainer/Btn_Day7")
@@ -226,69 +180,42 @@ func setup_chapter_buttons():
 	for chapter_id in chapter_map.keys():
 		var btn = chapter_map[chapter_id]
 		if btn:
-			# すでにエディタ側で接続されているかもしれないので、一旦切断するか、
-			# 重複接続を避けるためにチェックを入れる
 			if btn.pressed.is_connected(_start_chapter):
 				btn.pressed.disconnect(_start_chapter)
-			
-			# 共通の開始関数にIDを渡して接続
 			btn.pressed.connect(_start_chapter.bind(chapter_id))
-			print("Connected: ", chapter_id) # デバッグ用にログを出す
-	
-# 実際に章を開始する関数
+
 func _start_chapter(chapter_id_to_start):
-	# 1. Global変数をリセット・設定
-	Global.reset_game_progress() # 一旦リセット
+	Global.reset_game_progress() 
 	Global.current_chapter_id = chapter_id_to_start
-	
-	# 2. ゲーム画面へ移動
 	print("チャプター選択から開始: ", chapter_id_to_start)
 	get_tree().change_scene_to_file("res://main_game.tscn")
 
-
-
 # --- ボタン処理（ロードメニュー） ---
 
-# 各スロットボタンが押されたときの共通処理
 func _on_slot_button_pressed(slot_id):
-	# 　1. 削除モードがONの場合の処理
+	# 削除モードがONの場合
 	if delete_mode_button.button_pressed:
-		# データが存在するか確認（データがないボタンを押しても何も起きないようにする）
 		var data = Global.get_slot_info(slot_id)
-		if data.is_empty():
-			return # データがないなら削除処理もしない
-			
-		# 削除対象のスロットIDを記録
-		pending_delete_slot_id = slot_id
+		if data.is_empty(): return 
 		
-		# 確認ダイアログを画面中央に表示
+		pending_delete_slot_id = slot_id
 		delete_confirm_dialog.popup_centered()
-	# 　 2. 通常（ロード）モードの場合の処理
+	# 通常ロードモードの場合
 	else:
 		if Global.load_game(slot_id):
-			print("スロット", slot_id, "をロードしてゲームを開始します")
+			print("スロット", slot_id, "をロードしました")
 		else:
 			print("ロードに失敗しました")
 
-#  ダイアログで「削除（OK）」が押されたときに実行される関数
 func _on_delete_confirmed():
 	if pending_delete_slot_id != -1:
-		# Globalの削除関数を呼ぶ
 		Global.delete_save(pending_delete_slot_id)
-		
-		# 画面の表示を更新（「データなし」にするため）
 		update_load_slots_display()
-		
-		# 変数をリセット
 		pending_delete_slot_id = -1
 
-#  削除モードボタンを切り替えたときの見た目更新
 func _on_delete_mode_toggled(_toggled_on):
 	update_load_slots_display()
 
-
-
-# ロード画面の「戻る」ボタン
 func _on_back_button_pressed():
 	switch_to_main_menu()
 
@@ -303,31 +230,23 @@ func switch_to_load_menu():
 	load_menu.visible = true
 	update_load_slots_display()
 
-# スロットボタンの表示（テキスト・有効無効）を更新する
 func update_load_slots_display():
-	# 現在、削除モードかどうか取得
 	var is_delete_mode = delete_mode_button.button_pressed
 	for i in range(load_slot_buttons.size()):
-		var slot_id = i # 配列のインデックスとスロットIDを一致させます（0=オートセーブ）
+		var slot_id = i 
 		var btn = load_slot_buttons[i]
+		if not btn: continue
 		
-		# Globalからデータを取得（ファイルがない場合は空の辞書が返る）
 		var data = Global.get_slot_info(slot_id)
 		
 		if data.is_empty():
-			# データなし
 			if slot_id == 0:
 				btn.text = "オートセーブ : -- データなし --"
 			else:
 				btn.text = "スロット %d : -- データなし --" % slot_id
-			
-			# データがないボタンは押せないようにする
 			btn.disabled = true
-			
-			# 見た目の調整: データなしなら通常色
 			btn.modulate = Color(1, 1, 1, 1)
 		else:
-			# データあり
 			var ch_name = Global.chapter_names.get(data["chapter_id"], data["chapter_id"])
 			var time_str = Global.format_time(data.get("play_time", 0))
 			
@@ -336,45 +255,38 @@ func update_load_slots_display():
 			else:
 				btn.text = "スロット %d : %s / %s" % [slot_id, ch_name, time_str]
 			
-			# データがあるので押せるようにする
 			btn.disabled = false
-			# 見た目の調整: 削除モード中はボタンを赤っぽくして警告する
 			if is_delete_mode:
-				btn.modulate = Color(1, 0.5, 0.5, 1) # 赤みがかった色
-				btn.text = "[削除] " + btn.text # テキストにも[削除]とつける
+				btn.modulate = Color(1, 0.5, 0.5, 1) 
+				btn.text = "[削除] " + btn.text 
 			else:
-				btn.modulate = Color(1, 1, 1, 1) # 通常色（白）
+				btn.modulate = Color(1, 1, 1, 1)
 
-func _on_part_2_button_pressed() -> void:
-	pass # Replace with function body.
+# --- 設定（セッティング）画面関連 ---
 
 # 設定画面を開く
-# 1. メインメニューの「設定」ボタンが押されたとき
 func _on_setting_button_pressed():
 	play_se(sound_click)
-	
-	if has_node("SettingCanvas"):
-		$SettingCanvas.visible = true # 設定メニュー（分岐画面）を表示
-		main_menu.visible = false     # メインメニューを隠す
+	if settings_canvas:
+		settings_canvas.visible = true 
+		main_menu.visible = false     
 	else:
 		print("エラー: SettingCanvasが見つかりません")
 		
-# 2. 設定メニューの「音量設定」ボタンが押されたとき
-# ※エディタから ConfigOpenButton の pressed シグナルをここに接続してください！
+# 音量設定を開く (ConfigMenu)
 func _on_config_open_button_pressed():
 	play_se(sound_click)
-	
-	$SettingCanvas.visible = false # 設定メニューを一旦隠す
+	if settings_canvas:
+		settings_canvas.visible = false 
 	if config_menu:
-		config_menu.show()         # 音量調節画面(ConfigMenu)を開く
-		
-# 3. 音量調節画面(ConfigMenu)の「戻る」ボタンが押されたとき
+		config_menu.show()         
+
+# 音量設定 (ConfigMenu) から戻る
 func _on_config_menu_closed():
-	# 音量調節画面が閉じたので、分岐画面（SettingCanvas）に戻る
-	$SettingCanvas.visible = true
+	if settings_canvas:
+		settings_canvas.visible = true
 	
-# 4. 設定メニューの「初期化」ボタンが押されたとき
-# 設定画面内の「初期化ボタン」
+# 「初期化」ボタン（確認ダイアログ表示）
 func _on_init_button_pressed():
 	play_se(sound_click)
 	if confirmation_dialog:
@@ -383,18 +295,15 @@ func _on_init_button_pressed():
 	else:
 		print("エラー: ConfirmationDialogが見つかりません")
 
-# 全初期化の確定（OKが押された時）
+# 全初期化の確定（OK押下時）
 func _on_confirmation_dialog_confirmed():
 	print("全データの初期化を実行します...")
 	Global.initialize_all_data()
-	# 画面をリロードして反映
 	get_tree().reload_current_scene()
 
-# 5. 設定メニューの「閉じる」ボタンが押されたとき
-# 設定画面の「戻る」ボタンが押されたとき
+# 設定画面を閉じてメインへ戻る
 func _on_setting_back_button_pressed():
 	play_se(sound_click)
-	if has_node("SettingCanvas"):
-		$SettingCanvas.visible = false # 設定メニューを閉じる
+	if settings_canvas:
+		settings_canvas.visible = false 
 		main_menu.visible = true
-		print("設定画面を閉じました")

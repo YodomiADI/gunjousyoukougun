@@ -25,7 +25,7 @@ func update_portraits(ev: DialogueEvent):
 		target_slot.display(
 			ev.character_name, 
 			ev.character_sprite, 
-			ev.char_id, 
+			ev.target_char_id, 
 			ev.timer_offset.y, 
 			ev.character_scale, 
 			ev.base_scale

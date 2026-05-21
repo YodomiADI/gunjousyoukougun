@@ -6,7 +6,6 @@
 
 [sub_resource type="Resource" id="Resource_foagb"]
 script = ExtResource("1_lrbby")
-char_id = 4
 text = "猫は無事だった。花瓶は猫のそばに落ちたが、
 破片で傷を負わなかったようだ。"
 character_sprite = ExtResource("2_e510h")

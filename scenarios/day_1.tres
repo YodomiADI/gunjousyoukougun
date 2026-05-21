@@ -8,12 +8,13 @@
 
 [sub_resource type="Resource" id="Resource_0qbs8"]
 script = ExtResource("3_qn13f")
-char_id = 1
 character_name = "ココロネ"
 text = "「どうして……？」"
 character_sprite = ExtResource("3_0qbs8")
+char_expression = "Kokorone"
 background = ExtResource("2_0qbs8")
 bgm = ExtResource("3_aiaaw")
+target_char_id = "Kokorone"
 metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
 
 [sub_resource type="Resource" id="Resource_aiaaw"]

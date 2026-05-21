@@ -65,7 +65,6 @@ load_path = "res://.godot/imported/猫立ち絵.png-f72c252f9d0963fec3f9e073a7d3
 
 [sub_resource type="Resource" id="Resource_1rey7"]
 script = ExtResource("1_phd66")
-char_id = 4
 text = "この猫も同じく頭上の数字が近づいていた。
 まるで自分の死期を眺めるように中空をじっと眺めていた猫はとても年老いていた。"
 character_sprite = SubResource("CompressedTexture2D_8x785")
@@ -76,7 +75,6 @@ metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
 
 [sub_resource type="Resource" id="Resource_fh20x"]
 script = ExtResource("1_phd66")
-char_id = 4
 text = "俺はその後ろを一日中追いかけた。"
 character_sprite = ExtResource("5_fh20x")
 timer_offset = Vector2(0, 10)
@@ -84,9 +82,9 @@ metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
 
 [sub_resource type="Resource" id="Resource_gyt3u"]
 script = ExtResource("1_phd66")
-char_id = 4
 text = "花瓶が落ちてきそうだ。"
 character_sprite = ExtResource("5_fh20x")
+char_expression = "Cat"
 target_char_id = "Cat"
 choices = Array[String](["猫を放置する", "花瓶から守る"])
 choice_next_scenario_ids = Array[String](["prologue_cat_leaved1_root", "prologue_cat_saved1_root"])

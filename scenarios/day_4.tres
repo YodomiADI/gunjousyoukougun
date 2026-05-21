@@ -8,7 +8,6 @@
 
 [sub_resource type="Resource" id="Resource_liwxa"]
 script = ExtResource("3_642v5")
-char_id = 1
 character_name = "ココロネ"
 text = "「なんか顔についてる？
 なんてね、あなたは十分寄り添えてるよ。
@@ -16,6 +15,7 @@ text = "「なんか顔についてる？
 character_sprite = ExtResource("4_sykfb")
 background = ExtResource("2_liwxa")
 bgm = ExtResource("3_qvomr")
+target_char_id = "Kokorone"
 metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
 
 [sub_resource type="Resource" id="Resource_qvomr"]

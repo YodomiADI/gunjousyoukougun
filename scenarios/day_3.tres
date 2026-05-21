@@ -9,29 +9,29 @@
 
 [sub_resource type="Resource" id="Resource_y0tl7"]
 script = ExtResource("3_16wp1")
-position = 1
-char_id = 1
 character_name = "ココロネ"
 text = "「ふ～ん。あと4日なんだね
 思ったよりもやりたいことって
 見つからないもんだね。」"
+position = 1
 character_sprite = ExtResource("4_rypxw")
 background = ExtResource("2_y0tl7")
 bgm = ExtResource("3_b5onh")
+target_char_id = "Kokorone"
 metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
 
 [sub_resource type="Resource" id="Resource_b5onh"]
 script = ExtResource("3_16wp1")
-position = 2
-char_id = 2
 character_name = "シキ"
 text = "近づいてくる死神の鎌。
 理不尽に、不条理に、理を崩して。
 僕にできることは、これだけなんだ。"
+position = 2
 character_sprite = ExtResource("5_b5onh")
-timer_offset = Vector2(-200, -450)
 base_scale = 0.4
+timer_offset = Vector2(-200, -450)
 clear_other_slots = false
+target_char_id = "Homura"
 metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
 
 [resource]

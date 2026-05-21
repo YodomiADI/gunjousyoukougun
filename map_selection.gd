@@ -18,14 +18,23 @@ func _on_location_pressed(location_id: String):
 		# 誰もいない、または死後イベントへ
 		pass
 
+# --- 修正案（未来を見据えた形） ---
+
 func check_character_deaths():
-	if Global.kokorone_death_seconds <= 0 and not Global.is_kokorone_dead:
-		Global.is_kokorone_dead = true
-		play_death_effect("ココロネ")
-	# ...他のキャラも判定
+	# 全キャラをループでチェックして、HP(white)が0以下のキャラを死亡処理する
+	for char_id in Global.death_data.keys():
+		var data = Global.death_data[char_id]
+		
+		# まだ死んでいないのに、寿命が尽きていたら死亡フラグを立てる
+		if data["white"] <= 0 and not data["is_dead"]:
+			# Globalの関数を呼んで死亡フラグを立てる
+			Global.mark_as_dead(char_id)
+			play_death_effect(char_id) # IDをそのまま渡すのが楽です
 
 func is_character_available(location_id: String) -> bool:
-	# 例えば「教会」には「ココロネ」がいる設定なら
-	if location_id == "church" and Global.is_kokorone_dead:
-		return false
+	# キャラIDと場所を紐付けるテーブルなどがあると管理が楽になります
+	if location_id == "church":
+		# ココロネが死んでいるかチェック
+		if Global.death_data["Kokorone"]["is_dead"]:
+			return false
 	return true

@@ -54,7 +54,6 @@ metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
 
 [sub_resource type="Resource" id="Resource_r2q23"]
 script = ExtResource("3_6ganv")
-char_id = 1
 character_name = "シキ"
 text = "死は目の前にある。
 何か変えられる方法はあるだろうか？
