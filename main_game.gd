@@ -6,7 +6,7 @@ extends Control
 @onready var bgm_player = $BGMPlayer
 @onready var se_player = $SEPlayer
 
-@onready var choice_container = $ChoiceContainer
+@onready var choice_container = %ChoiceContainer
 @onready var message_window = %Panel 
 @onready var director = $GameDirector 
 
@@ -18,11 +18,11 @@ var is_auto: bool = false
 var is_skipping: bool = false
 @export var auto_wait_time: float = 1.5
 
-@onready var auto_button = $SystemButtons/AutoButton
-@onready var skip_button = $SystemButtons/SkipButton
+@onready var auto_button = %AutoButton
+@onready var skip_button = %SkipButton
 
 @onready var pause_menu = $PauseMenu 
-@onready var menu_button = $SystemButtons/MenuButton # 追加したボタン
+@onready var menu_button = %MenuButton # 追加したボタン
 
 var is_waiting_for_hover: bool = false # ホバー待ち状態のフラグ
 var hover_target_id: String = ""       # 待っている対象のキャラID
