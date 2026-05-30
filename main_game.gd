@@ -13,6 +13,8 @@ extends Control
 @onready var backlog_canvas = $BacklogCanvas
 @onready var log_list = $BacklogCanvas/Panel/ScrollContainer/LogList
 
+@onready var fade_overlay = $TransitionLayer/FadeOverLay
+
 # --- 2. システム変数 ---
 var is_auto: bool = false
 var is_skipping: bool = false
@@ -29,8 +31,13 @@ var hover_target_id: String = ""       # 待っている対象のキャラID
 # active_choice_labels を単なるラベル配列から、辞書の配列に変更して詳細なデータを保持させます
 var active_choice_data: Array[Dictionary] = []
 
+# トランジション実行中フラグ（二重起動・誤クリック防止）
+var is_transitioning: bool = false
+
 # チュートリアル用のメッセージラベルを動的に作る（シーンに直接配置してもOKです）
 var tutorial_label: Label
+
+
 
 # --- 3. 初期化処理 ---
 func _ready():
@@ -49,16 +56,152 @@ func _ready():
 	if Global.is_loading_process:
 		_restore_visuals_from_save()
 		Global.is_loading_process = false 
+		
 	# --- 3. 最後にシナリオを開始する ---
+	# 章移行後フラグの確認と二重トランジション防止
+	# start_scenario() より前にフラグを読んで is_transitioning を立てておく。
+	# こうすることで、start_scenario() 内から呼ばれる render_event() が
+	# bg_transition=AUTO のトランジションを自動スキップし、二重にならない。
+	var coming_from_chapter_change = Global.start_with_transition
+	if coming_from_chapter_change:
+		Global.start_with_transition = false
+		is_transitioning = true  # render_event のAUTO判定をブロック
+		# オーバーレイを「塗りつぶし済み」状態でセットしておく
+		var mat := fade_overlay.material as ShaderMaterial
+		if mat:
+			mat.set_shader_parameter("progress", 1.0)
+		fade_overlay.show()
 	# これを呼ぶと render_event が動くので、必ず一番最後に書く
+	# シナリオ開始（render_event が呼ばれる。is_transitioning=true なら AUTO はスキップ）
 	director.start_scenario(Global.current_chapter_id)
 	
+
 func _restore_visuals_from_save():
 	if Global.current_bg_path != "":
 		background.texture = load(Global.current_bg_path)
 	if Global.current_bgm_path != "":
 		bgm_player.stream = load(Global.current_bgm_path)
 		bgm_player.play()
+
+# ==============================================================
+# トランジション関数群
+# ==============================================================
+
+## フェードアウト共通処理
+## transition_do と _apply_background（章移行直後）の両方で使う
+func _fade_out_overlay(duration: float = 0.6) -> void:
+	# タメ：テクスチャ反映の1フレーム遅れを吸収する
+	await get_tree().create_timer(0.08).timeout
+ 
+	if not fade_overlay:
+		is_transitioning = false
+		return
+ 
+	var mat := fade_overlay.material as ShaderMaterial
+	if mat:
+		var tween = create_tween()
+		tween.tween_property(mat, "shader_parameter/progress", 1.0, duration)
+		await tween.finished
+ 
+	fade_overlay.hide()
+	is_transitioning = false
+ 
+ 
+## 背景切り替え用：水彩で覆う → callback実行 → _fade_out_overlay()
+## render_event() → _apply_background() から await で呼ばれる
+func transition_do(callback: Callable, duration: float = 1.0) -> void:
+	if not fade_overlay:
+		callback.call()
+		return
+ 
+	var mat := fade_overlay.material as ShaderMaterial
+	if not mat:
+		callback.call()
+		return
+ 
+	is_transitioning = true
+	fade_overlay.show()
+ 
+	# フェードイン（水彩が画面を塗りつぶす）
+	var tween = create_tween()
+	tween.tween_property(mat, "shader_parameter/progress", 0.0, duration * 0.45)
+	await tween.finished
+ 
+	# 完全に隠れた瞬間に背景を差し替える
+	callback.call()
+ 
+	# フェードアウト（共通処理）
+	await _fade_out_overlay(duration * 0.45)
+ 
+ 
+## 章移行用（フェードインのみ）：画面を水彩で覆い、シーン遷移を渡す
+## GameDirector._finish_chapter() から await で呼ばれる
+## フェードアウトは新シーンの _apply_background() が担当する
+func fade_in_for_scene_change(duration: float = 0.6) -> void:
+	if not fade_overlay: return
+ 
+	var mat := fade_overlay.material as ShaderMaterial
+	if not mat: return
+ 
+	is_transitioning = true
+	fade_overlay.show()
+ 
+	var tween = create_tween()
+	tween.tween_property(mat, "shader_parameter/progress", 0.0, duration)
+	await tween.finished
+ 
+	# 次のシーンに「覆われた状態から始まる」ことを伝える
+	Global.start_with_transition = true
+ 
+# ==============================================================
+# 背景トランジションの振り分けロジック（render_event から呼ぶ）
+# ==============================================================
+ 
+## ev.bg_transition の設定に従って背景を切り替える。
+## 章移行直後（is_transitioning=true）は fade-out のみ担当する。
+## 戻り値なし。await で呼ぶこと。
+func _apply_background(ev: DialogueEvent) -> void:
+	# 背景指定がない場合でも、章移行直後ならフェードアウトだけ担当する
+	if not ev.background:
+		if is_transitioning:
+			await _fade_out_overlay(0.6)
+		return
+ 
+	var do_change = func():
+		background.texture = ev.background
+		Global.current_bg_path = ev.background.resource_path
+ 
+	match ev.bg_transition:
+ 
+		DialogueEvent.BgTransition.NONE:
+			# トランジションなし：即差し替え
+			# 章移行直後でもフェードアウトは行わない（即見せる）
+			do_change.call()
+			if is_transitioning:
+				# 覆われたままなのでフェードアウトだけする
+				await _fade_out_overlay(0.6)
+ 
+		DialogueEvent.BgTransition.WATERCOLOR:
+			if is_transitioning:
+				# 章移行直後：すでに覆われているので bg変更 → フェードアウトのみ
+				do_change.call()
+				await _fade_out_overlay(0.6)
+			else:
+				# 通常：フェードイン → bg変更 → フェードアウト
+				await transition_do(do_change, 1.0)
+ 
+		DialogueEvent.BgTransition.AUTO, _:
+			if is_transitioning:
+				# 章移行直後：すでに覆われているので bg変更 → フェードアウトのみ
+				do_change.call()
+				await _fade_out_overlay(0.6)
+			elif ev.background != background.texture:
+				# 通常：背景が変わるときだけトランジション
+				await transition_do(do_change, 1.0)
+			else:
+				# 同じ背景：何もしない
+				do_change.call()
+ 
 
 func _check_button_disabled(ev: DialogueEvent, index: int) -> bool:
 	if ev.disable_target_chars.size() <= index: return false
@@ -79,20 +222,20 @@ func _check_button_disabled(ev: DialogueEvent, index: int) -> bool:
 
 # --- 4. 演出の実行（監督から命令される） ---
 func render_event(ev: DialogueEvent):
-	# 背景・BGMの更新
-	if ev.background:
-		background.texture = ev.background
-		Global.current_bg_path = ev.background.resource_path
-		
+	# BGM・SEは背景トランジション前に先行して変える
+	# （音は視覚より早く変わることで、場面転換の予感を演出できる）
 	if ev.bgm and bgm_player.stream != ev.bgm:
 		bgm_player.stream = ev.bgm
 		bgm_player.play()
 		Global.current_bgm_path = ev.bgm.resource_path
-		
+ 
 	if ev.se:
 		se_player.stream = ev.se
 		se_player.play()
-
+	
+	# 背景の切り替え（BgTransition設定に従って振り分け）
+	await _apply_background(ev)
+	
 	# バックログ・立ち絵更新・画面揺れ
 	Global.add_to_backlog(ev.character_name, ev.text)
 	%CharacterContainer.update_portraits(ev)
@@ -120,10 +263,12 @@ func render_event(ev: DialogueEvent):
 		message_window.skip_typing()
 		get_tree().create_timer(0.05).timeout.connect(advance_line)
 
+
 # --- 5. 進行管理と入力 ---
 func advance_line():
 	# 選択肢が出ている時や、ホバー待ちの時は勝手に進ませない
-	if choice_container.visible or is_waiting_for_hover: 
+	# トランジション中も進行をブロックする
+	if choice_container.visible or is_waiting_for_hover or is_transitioning:
 		return
 	director.next_line()
 
@@ -133,7 +278,8 @@ func _unhandled_input(event):
 	if backlog_canvas and backlog_canvas.visible: return # 履歴を見ている
 	if choice_container.visible: return # 選択肢を選んでいる
 	if is_waiting_for_hover: return # チュートリアル中
-
+	if is_transitioning: return # トランジション中はクリック・キー入力を無視する
+	
 	# B. システム操作
 	if event.is_action_pressed("ui_auto"): 
 		toggle_auto()

@@ -5,6 +5,18 @@ class_name DialogueEvent
 # 表示位置の定義
 enum CharacterPos { NONE, LEFT, RIGHT, CENTER }
 
+# 背景トランジションの種類
+# エディタのインスペクターで各セリフごとに選択できる
+enum BgTransition {
+	## 章が変わり背景も変わる（最初のイベント）
+	## 同じ章内で背景を切り替えたい
+	AUTO,       # 【デフォルト】背景が変わる時だけ水彩トランジション。章移行直後は重複しないよう自動スキップ。
+	## 背景を切り替えるがトランジション不要
+	NONE,       # トランジションなし。背景を即座に差し替える。
+	## 同じ背景のまま演出として水彩を挟みたい
+	WATERCOLOR  # 背景が変わらなくても強制的に水彩トランジションを実行する。演出上の強調に使う。
+}
+
 @export_group("Text")
 @export var character_name: String = ""       # キャラ名（空なら名前枠非表示）
 @export_multiline var text: String = ""       # セリフ本文
@@ -14,6 +26,7 @@ enum CharacterPos { NONE, LEFT, RIGHT, CENTER }
 @export var character_sprite: Texture2D       # 立ち絵
 @export var char_expression: String = ""      # (任意) 表情の識別子（"angry", "smile"など）
 @export var background: Texture2D             # 背景（変更時のみセット）
+@export var bg_transition: BgTransition = BgTransition.AUTO #この行の背景トランジションの種類。AUTOで通常の自動判定。
 @export var base_scale: float = 1.0          # 素材本来の大きさを調整する用
 @export var character_scale: float = 1.0      # 1.0 が標準。1.2なら20%拡大、0.8なら20%縮小。
 @export var timer_offset: Vector2 = Vector2() # タイマーの表示位置微調整
@@ -30,7 +43,7 @@ enum CharacterPos { NONE, LEFT, RIGHT, CENTER }
 ## trueにすると、このセリフの時にクリック進行を止め、対象キャラへのマウスオーバーを待つ
 @export var require_hover_tutorial: bool = false
 ## チュートリアルや選択肢、死期表示で対象とするキャラID。
-## ★バグ防止のため、Global.death_dataのキー（"Player", "Kokorone", "Homura", "Rei", "Cat"）と完全に一致させてください。
+## バグ防止のため、Global.death_dataのキー（"Player", "Kokorone", "Homura", "Rei", "Cat"）と完全に一致させてください。
 @export var target_char_id: String = ""
 
 @export_group("Choices & Branching")

@@ -67,6 +67,8 @@ const SYSTEM_SAVE_PATH = "user://system.dat"
 
 # 追加
 var is_hovering_proxy: bool = false
+# 場面切り替え
+var start_with_transition: bool = false
 
 # --- 便利関数（計算・判定用） ---
 # 現在表示すべき「死期」の数値を返す
