@@ -13,7 +13,7 @@ func start_scenario(id: String):
 	# 1. データのロード
 	current_data = Global.get_scenario_resource(id)
 	if current_data == null:
-		printerr("シナリオが見らつかりません: ", id)
+		printerr("シナリオが見つかりません: ", id)
 		return
 	
 	#  Global側の現在IDも更新しておく（セーブ時などに重要）
@@ -127,12 +127,18 @@ func _finish_chapter():
 	if not Global.is_part2 and current_data.chapter_id != "prologue" and current_data.chapter_id != "day_7":
 		Global.advance_all_timers(Global.SECONDS_PER_DAY)
 		
+	# シーン遷移の前に水彩フェードインで画面を覆う
+	# await で完全に塗りつぶされるまで待ってからシーンを切り替える
+	await stage.fade_in_for_scene_change(0.6)
+	
 	# 次の行動の判定
 	match current_data.next_action:
 		ScenarioData.NextAction.AUTO_NEXT:
 			Global.current_chapter_id = current_data.next_chapter_id
 			Global.current_line_index = 0
 			# 安全のため call_deferred で実行
+			# reload_current_scene はフレーム末尾に実行されるため
+			# call_deferred で安全にキューイングする
 			get_tree().call_deferred("reload_current_scene")
 			
 		ScenarioData.NextAction.OPEN_MAP:

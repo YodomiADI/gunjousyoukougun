@@ -1,4 +1,4 @@
-[gd_scene load_steps=22 format=3 uid="uid://cllpcuaeq424j"]
+[gd_scene load_steps=27 format=3 uid="uid://cllpcuaeq424j"]
 
 [ext_resource type="Script" uid="uid://b7scfg1k3ox20" path="res://main_game.gd" id="1_1oj5k"]
 [ext_resource type="Script" uid="uid://cspbt4kiho02r" path="res://GameDirector.gd" id="2_4srsv"]
@@ -12,9 +12,9 @@
 [ext_resource type="Shader" uid="uid://b1ebrc8ut2kq2" path="res://main_game.gdshader" id="5_2pltu"]
 [ext_resource type="Texture2D" uid="uid://devwgvlu5hciy" path="res://images/紙.png" id="5_krmtw"]
 [ext_resource type="Texture2D" uid="uid://b47cr6rft7vqt" path="res://water_noise.tres" id="6_f52ns"]
-[ext_resource type="Texture2D" uid="uid://0aosbm30laop" path="res://images/道路.png" id="6_jgkyn"]
 [ext_resource type="Shader" uid="uid://cp5y0asu2h6xg" path="res://water_ripple.gdshader" id="9_qpaub"]
 [ext_resource type="Script" uid="uid://6scip3yxyq4e" path="res://ripple_layer.gd" id="10_an1vu"]
+[ext_resource type="Shader" uid="uid://cj8etpfl5pe5v" path="res://watercolor_transition.gdshader" id="13_an1vu"]
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_krmtw"]
 frequency = 0.02
@@ -44,6 +44,34 @@ shader_parameter/time_decay = 1.6
 shader_parameter/max_age = 2.8
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_krmtw"]
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_borgi"]
+frequency = 0.0121
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_ih6an"]
+noise = SubResource("FastNoiseLite_borgi")
+seamless = true
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_umrn2"]
+noise_type = 2
+frequency = 0.07
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_2i4tw"]
+noise = SubResource("FastNoiseLite_umrn2")
+seamless = true
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_euc45"]
+shader = ExtResource("13_an1vu")
+shader_parameter/base_noise = SubResource("NoiseTexture2D_ih6an")
+shader_parameter/detail_noise = SubResource("NoiseTexture2D_2i4tw")
+shader_parameter/progress = 1.0
+shader_parameter/smoothness = 0.08
+shader_parameter/ink_color = Color(0, 0.25197893, 0.4002653, 1)
+shader_parameter/edge_color = Color(0.55, 0.65, 0.75, 1)
+shader_parameter/edge_intensity = 1.2
+shader_parameter/noise_blend = 0.65
+shader_parameter/flow_speed = 0.12
+shader_parameter/noise_scale = 1.5400000494
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_l5ukw"]
 shader = ExtResource("5_2pltu")
@@ -119,7 +147,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-texture = ExtResource("6_jgkyn")
+texture = ExtResource("3_02kkc")
 expand_mode = 1
 stretch_mode = 6
 
@@ -248,13 +276,20 @@ text = "▼"
 horizontal_alignment = 2
 vertical_alignment = 2
 
-[node name="FadeOverLay" type="ColorRect" parent="."]
+[node name="TransitionLayer" type="CanvasLayer" parent="."]
+layer = 11
+
+[node name="FadeOverLay" type="ColorRect" parent="TransitionLayer"]
 visible = false
-layout_mode = 0
-offset_right = 1168.0
-offset_bottom = 669.0
+material = SubResource("ShaderMaterial_euc45")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 mouse_filter = 2
 color = Color(0, 0, 0, 1)
+metadata/_edit_group_ = true
 
 [node name="PauseMenu" parent="." instance=ExtResource("2_yx7mw")]
 layer = 10

@@ -14,6 +14,7 @@ text = "死期が見えるようになった。
 時間までは書いていない。
 でもその日に必ず死は訪れる。"
 background = ExtResource("1_4mfdp")
+bg_transition = 1
 bgm = ExtResource("2_l5nuy")
 metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
 
@@ -21,6 +22,7 @@ metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
 script = ExtResource("1_phd66")
 text = "いつから見えるようになったかは覚えていない。
 最初はただ数字が頭上に浮かんでいるだけだと思っていた。"
+bg_transition = 1
 metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
 
 [sub_resource type="Resource" id="Resource_bs7l3"]
@@ -69,6 +71,7 @@ text = "この猫も同じく頭上の数字が近づいていた。
 まるで自分の死期を眺めるように中空をじっと眺めていた猫はとても年老いていた。"
 character_sprite = SubResource("CompressedTexture2D_8x785")
 background = ExtResource("4_bs7l3")
+bg_transition = 2
 require_hover_tutorial = true
 target_char_id = "Cat"
 metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
