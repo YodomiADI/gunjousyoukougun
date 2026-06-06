@@ -1,0 +1,10 @@
+[gd_scene format=3 uid="uid://weather_layer_scene"]
+
+[ext_resource type="Script" path="res://weather_particles.gd" id="1_weather"]
+
+[node name="WeatherLayer" type="CanvasLayer"]
+layer = 5
+script = ExtResource("1_weather")
+initial_weather = ""
+viewport_width = 1152.0
+viewport_height = 648.0

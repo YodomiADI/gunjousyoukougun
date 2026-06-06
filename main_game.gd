@@ -223,19 +223,25 @@ func _check_button_disabled(ev: DialogueEvent, index: int) -> bool:
 # --- 4. 演出の実行（監督から命令される） ---
 func render_event(ev: DialogueEvent):
 	# BGM・SEは背景トランジション前に先行して変える
-	# （音は視覚より早く変わることで、場面転換の予感を演出できる）
 	if ev.bgm and bgm_player.stream != ev.bgm:
 		bgm_player.stream = ev.bgm
 		bgm_player.play()
 		Global.current_bgm_path = ev.bgm.resource_path
- 
+
 	if ev.se:
 		se_player.stream = ev.se
 		se_player.play()
 	
 	# 背景の切り替え（BgTransition設定に従って振り分け）
 	await _apply_background(ev)
-	
+
+	# ★ 追加：天気エフェクトの切り替え
+	# ev.weather が空文字の場合は「変更しない」（前の天気を維持する）
+	if ev.weather != "":
+		var weather_layer = get_node_or_null("%WeatherLayer")
+		if weather_layer and weather_layer.has_method("set_weather"):
+			weather_layer.set_weather(ev.weather)
+
 	# バックログ・立ち絵更新・画面揺れ
 	Global.add_to_backlog(ev.character_name, ev.text)
 	%CharacterContainer.update_portraits(ev)
@@ -252,7 +258,6 @@ func render_event(ev: DialogueEvent):
 
 	# 選択肢があるかチェック
 	if ev.choices.size() > 0:
-		# 第3引数にターゲットIDを渡すことで、選択肢に死期が出るようになる
 		show_choices(ev.choices, [], ev.target_char_id)
 	
 	# テキスト表示
