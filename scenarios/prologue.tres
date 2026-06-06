@@ -1,39 +1,41 @@
-[gd_resource type="Resource" script_class="ScenarioData" load_steps=20 format=3 uid="uid://bxlid8u80h413"]
+[gd_resource type="Resource" script_class="ScenarioData" load_steps=21 format=3 uid="uid://bxlid8u80h413"]
 
 [ext_resource type="Texture2D" uid="uid://2bsifjo7yiq0" path="res://images/ステグラと星空.jpg" id="1_4mfdp"]
 [ext_resource type="Script" uid="uid://cl3bhx8qa8d5x" path="res://dialogue_event.gd" id="1_phd66"]
 [ext_resource type="Script" uid="uid://nsjru0u7n42l" path="res://scenario_date.gd" id="2_4mfdp"]
 [ext_resource type="AudioStream" uid="uid://dpxbbwvug6m60" path="res://BGM/プロローグ.mp3" id="2_l5nuy"]
 [ext_resource type="Texture2D" uid="uid://sugcybn04qn2" path="res://images/路地裏3.jpg" id="4_bs7l3"]
+[ext_resource type="Texture2D" uid="uid://bf4cmo22uv8s" path="res://images/礼拝堂　ココロネ.png" id="4_fh20x"]
 [ext_resource type="Texture2D" uid="uid://vycniucbdjsr" path="res://立ち絵/猫立ち絵.png" id="5_fh20x"]
 
 [sub_resource type="Resource" id="Resource_8x785"]
 script = ExtResource("1_phd66")
-text = "死期が見えるようになった。
-西暦何年何月何日。
-時間までは書いていない。
-でもその日に必ず死は訪れる。"
+text = "weather none"
 background = ExtResource("1_4mfdp")
 bg_transition = 1
+weather = "none"
 bgm = ExtResource("2_l5nuy")
 metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
 
 [sub_resource type="Resource" id="Resource_l5nuy"]
 script = ExtResource("1_phd66")
-text = "いつから見えるようになったかは覚えていない。
-最初はただ数字が頭上に浮かんでいるだけだと思っていた。"
-bg_transition = 1
+text = "weahter light-rain"
+background = ExtResource("4_fh20x")
+bg_transition = 2
+weather = "light-rain"
 metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
 
 [sub_resource type="Resource" id="Resource_bs7l3"]
 script = ExtResource("1_phd66")
-text = "俺は不謹慎にもその数字が当日と一致する日を待ちわびてしまった。
-というのも、毎朝元気な挨拶をしてくれる近所のおじいさんがもうすぐでその数字が近づいていたのだ。"
+text = "weather heavy-rain"
+background = ExtResource("1_4mfdp")
+weather = "heavy-rain"
 metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
 
 [sub_resource type="Resource" id="Resource_4gooj"]
 script = ExtResource("1_phd66")
-text = "当日の朝、おじいさんの挨拶はなかった。"
+text = "weather snow"
+weather = "snow"
 metadata/_custom_type_script = "uid://cl3bhx8qa8d5x"
 
 [sub_resource type="Resource" id="Resource_igjyp"]

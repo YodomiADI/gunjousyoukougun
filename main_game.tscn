@@ -1,4 +1,4 @@
-[gd_scene load_steps=27 format=3 uid="uid://cllpcuaeq424j"]
+[gd_scene load_steps=28 format=3 uid="uid://cllpcuaeq424j"]
 
 [ext_resource type="Script" uid="uid://b7scfg1k3ox20" path="res://main_game.gd" id="1_1oj5k"]
 [ext_resource type="Script" uid="uid://cspbt4kiho02r" path="res://GameDirector.gd" id="2_4srsv"]
@@ -14,6 +14,7 @@
 [ext_resource type="Texture2D" uid="uid://b47cr6rft7vqt" path="res://water_noise.tres" id="6_f52ns"]
 [ext_resource type="Shader" uid="uid://cp5y0asu2h6xg" path="res://water_ripple.gdshader" id="9_qpaub"]
 [ext_resource type="Script" uid="uid://6scip3yxyq4e" path="res://ripple_layer.gd" id="10_an1vu"]
+[ext_resource type="PackedScene" path="res://WeatherLayer.tscn" id="10_borgi"]
 [ext_resource type="Shader" uid="uid://cj8etpfl5pe5v" path="res://watercolor_transition.gdshader" id="13_an1vu"]
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_krmtw"]
@@ -104,8 +105,10 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="Background" type="TextureRect" parent="BackgroundControl"]
-layout_mode = 1
+[node name="CanvasLayer" type="CanvasLayer" parent="BackgroundControl"]
+layer = 0
+
+[node name="Background" type="TextureRect" parent="BackgroundControl/CanvasLayer"]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -138,6 +141,9 @@ physics_object_picking = true
 size = Vector2i(1141, 638)
 render_target_update_mode = 4
 
+[node name="WeatherLayer" parent="BackgroundControl/SubViewLayer/SubViewportContainer/SubViewport" instance=ExtResource("10_borgi")]
+unique_name_in_owner = true
+
 [node name="Foreground" type="TextureRect" parent="BackgroundControl/SubViewLayer/SubViewportContainer/SubViewport"]
 unique_name_in_owner = true
 clip_contents = true
@@ -147,7 +153,6 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-texture = ExtResource("3_02kkc")
 expand_mode = 1
 stretch_mode = 6
 
@@ -344,7 +349,7 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
-layer = 3
+layer = 6
 
 [node name="ChoiceContainer" type="VBoxContainer" parent="CanvasLayer"]
 unique_name_in_owner = true

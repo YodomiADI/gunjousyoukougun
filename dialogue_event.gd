@@ -31,6 +31,16 @@ enum BgTransition {
 @export var character_scale: float = 1.0      # 1.0 が標準。1.2なら20%拡大、0.8なら20%縮小。
 @export var timer_offset: Vector2 = Vector2() # タイマーの表示位置微調整
 
+# 天気エフェクト設定
+@export_group("Weather")
+## 天気エフェクトを変更する。
+## 空文字（"continue"）: このイベントでは変更しない（前のイベントの天気を維持）
+## "none"      : 天気なし（止める）
+## "heavy-rain": 本格的な雨（斜めに強く降る）
+## "light-rain": 小雨（しとしと、ほぼ垂直）
+## "snow"      : 雪（ふわふわ揺れながら舞い散る）
+@export_enum("continue", "none", "heavy-rain", "light-rain", "snow")  var weather: String = ""
+
 @export_group("Audio")
 @export var bgm: AudioStream                  # BGM（変更時のみセット）
 @export var se: AudioStream                   # 効果音（再生したい時のみセット）
